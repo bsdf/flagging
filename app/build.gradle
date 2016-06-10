@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+
+android {
+    buildToolsVersion "24.0.0-rc3"
+    compileSdkVersion "android-N"
+
+    defaultConfig {
+        applicationId "android.theporouscity.com.flagging"
+        minSdkVersion "N"
+        targetSdkVersion "N"
+        versionCode 1
+        versionName "1.0"
+        jackOptions {
+            enabled true
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+ext {
+    supportLibVersion = "24.0.0-alpha1"
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile "com.android.support:appcompat-v7:${supportLibVersion}"
+    compile "com.android.support:recyclerview-v7:${supportLibVersion}"
+    compile "com.android.support:design:${supportLibVersion}"
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile 'org.simpleframework:simple-xml:2.7.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha1'
+}

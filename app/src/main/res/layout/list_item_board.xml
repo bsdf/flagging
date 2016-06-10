@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="38dp"
+              android:paddingLeft="16dp"
+              android:paddingRight="16dp"
+              android:paddingTop="5dp"
+              android:paddingBottom="5dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="something"
+        android:maxLines="1"
+        android:textSize="16sp"
+        android:layout_marginBottom="2sp"
+        android:textColor="@color/colorTextPrimary"
+        android:id="@+id/list_item_board_title_text_view"/>
+<!--
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLines="2"
+        android:text="something in the way, she moves. and all i have to do is think of her. something in the way she moves ... don't want to leave her now"
+        android:textSize="14sp"
+        android:lineSpacingExtra="2sp"
+        android:background="@android:color/holo_blue_bright"
+        android:textColor="@color/colorTextSecondary"
+        android:layout_below="@id/list_item_board_title_text_view"
+        android:id="@+id/list_item_board_description_text_view"/>
+-->
+</LinearLayout>
