@@ -3,6 +3,7 @@ package android.theporouscity.com.flagging;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.theporouscity.com.flagging.ilx.Board;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,8 +22,8 @@ import android.support.v4.app.Fragment;
  */
 public class ViewBoardFragment extends Fragment {
 
-    private static final String ARG_BOARD_ID = "param1";
-    private int mBoardId;
+    private static final String ARG_BOARD = "board";
+    private Board mBoard;
 
     private OnFragmentInteractionListener mListener;
 
@@ -30,10 +31,10 @@ public class ViewBoardFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static ViewBoardFragment newInstance(int boardId) {
+    public static ViewBoardFragment newInstance(Board board) {
         ViewBoardFragment fragment = new ViewBoardFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_BOARD_ID, boardId);
+        args.putParcelable(ARG_BOARD, board);
         fragment.setArguments(args);
         return fragment;
     }
@@ -42,7 +43,7 @@ public class ViewBoardFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mBoardId = getArguments().getInt(ARG_BOARD_ID, -1);
+            mBoard = getArguments().getParcelable(ARG_BOARD);
         }
     }
 
@@ -56,6 +57,7 @@ public class ViewBoardFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        getActivity().setTitle(mBoard.getName());
         return inflater.inflate(R.layout.fragment_view_board, container, false);
     }
 

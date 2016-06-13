@@ -1,5 +1,6 @@
 package android.theporouscity.com.flagging;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -88,7 +89,10 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
         }
 
         @Override
-        public void onClick(View v) { /* start view board activity */ }
+        public void onClick(View v) {
+            Intent intent = ViewBoardActivity.newIntent(getActivity(), mBoard);
+            startActivity(intent);
+        }
     }
 
     private class BoardAdapter extends RecyclerView.Adapter<BoardHolder> {

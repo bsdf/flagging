@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.theporouscity.com.flagging.ilx.Board;
 
 /**
  * Created by bergstroml on 6/6/16.
@@ -13,7 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 
 public class ViewBoardActivity extends AppCompatActivity {
 
-    public static final String EXTRA_BOARD_ID = "com.theporouscity.android.flagging.boardId";
+    public static final String EXTRA_BOARD = "com.theporouscity.android.flagging.board";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -24,17 +25,17 @@ public class ViewBoardActivity extends AppCompatActivity {
         ViewBoardFragment fragment = (ViewBoardFragment) fm.findFragmentById(R.id.fragment_container);
 
         if (fragment == null) {
-            int boardId = (int) getIntent().getSerializableExtra(EXTRA_BOARD_ID);
-            fragment = ViewBoardFragment.newInstance(boardId);
+            Board board = (Board) getIntent().getParcelableExtra(EXTRA_BOARD);
+            fragment = ViewBoardFragment.newInstance(board);
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
                     .commit();
         }
     }
 
-    public static Intent newIntent(Context packageContent, int boardId) {
+    public static Intent newIntent(Context packageContent, Board board) {
         Intent intent = new Intent(packageContent, ViewBoardActivity.class);
-        intent.putExtra(EXTRA_BOARD_ID, boardId);
+        intent.putExtra(EXTRA_BOARD, board);
         return intent;
     }
 
