@@ -1,31 +1,35 @@
 package android.theporouscity.com.flagging;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.theporouscity.com.flagging.ilx.Board;
+import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
+import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.app.Fragment;
+import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ViewBoardFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ViewBoardFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ViewBoardFragment extends Fragment {
 
     private static final String ARG_BOARD = "board";
     private Board mBoard;
-
-    private OnFragmentInteractionListener mListener;
+    private RecentlyUpdatedThreads mThreads;
+    private RecyclerView mRecyclerView;
+    private ThreadAdapter mThreadAdapter;
 
     public ViewBoardFragment() {
         // Required empty public constructor
@@ -42,8 +46,28 @@ public class ViewBoardFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
         if (getArguments() != null) {
             mBoard = getArguments().getParcelable(ARG_BOARD);
+            updateThreads();
+        } else {
+            mBoard = null;
+        }
+    }
+
+    private void updateThreads() {
+        ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getBoardId(),
+                (RecentlyUpdatedThreads threads) -> {
+            mThreads = threads;
+                    Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
+                    updateUI();
+        });
+    }
+
+    private void updateUI() {
+        if (mRecyclerView != null && mThreads != null) {
+            mThreadAdapter = new ThreadAdapter();
+            mRecyclerView.setAdapter(mThreadAdapter);
         }
     }
 
@@ -58,45 +82,82 @@ public class ViewBoardFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         getActivity().setTitle(mBoard.getName());
-        return inflater.inflate(R.layout.fragment_view_board, container, false);
-    }
+        View view = inflater.inflate(R.layout.fragment_view_board, container, false);
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_threads_recyclerview);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        updateUI();
+        return view;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    private class ThreadHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener {
+
+        private RecentlyUpdatedThread mThread;
+        private TextView mTitleTextView;
+        private TextView mDateTextView;
+
+        public ThreadHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(this);
+            mTitleTextView = (TextView) itemView
+                    .findViewById(R.id.list_item_thread_title_text_view);
+            mDateTextView = (TextView) itemView
+                    .findViewById(R.id.list_item_thread_date_text_view);
+        }
+
+        public void bindThread(RecentlyUpdatedThread thread) {
+            mThread = thread;
+            mTitleTextView.setText(mThread.getTitle());
+            Date lastUpdated = mThread.getLastUpdated();
+            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(lastUpdated));
+        }
+
+        @Override
+        public void onClick(View view) {
+            Intent intent = ViewThreadActivity
+                    .newIntent(getActivity(), mThread.getBoardId(), mThread.getThreadId());
+            startActivity(intent);
+        }
     }
+
+    private class ThreadAdapter extends RecyclerView.Adapter<ThreadHolder> {
+
+        @Override
+        public void onBindViewHolder(ThreadHolder holder, int position) {
+            holder.bindThread(
+                    (RecentlyUpdatedThread) mThreads.getRecentlyUpdatedThreads().get(position));
+        }
+
+        @Override
+        public ThreadHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+            View view = layoutInflater.inflate(R.layout.list_item_thread, parent, false);
+            return new ThreadHolder(view);
+        }
+
+        @Override
+        public int getItemCount() {
+            List<RecentlyUpdatedThread> threads = mThreads.getRecentlyUpdatedThreads();
+            if (threads != null) {
+                return threads.size();
+            } else {
+                Log.d("ThreadAdapter", "no threads");
+                return 0;
+            }
+
+        }
+    }
+
 }

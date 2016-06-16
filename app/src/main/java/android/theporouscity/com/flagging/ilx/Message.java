@@ -3,6 +3,7 @@ package android.theporouscity.com.flagging.ilx;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
+import java.sql.Time;
 import java.util.Date;
 
 /**
@@ -25,4 +26,14 @@ public class Message {
 
     @Element(data=true)
     private String Body;
+
+    public int getMessageId() { return MessageId; }
+
+    public Boolean getDeleted() { return Deleted; }
+
+    public Date getTimestamp() { return Timestamp; }
+
+    public String getDisplayName() { return DisplayName; }
+
+    public String getBody() { return Body; }
 }

@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    buildToolsVersion "24.0.0-rc3"
+    buildToolsVersion "24.0.0"
     compileSdkVersion "android-N"
 
     defaultConfig {
@@ -19,6 +19,9 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug {
+            testCoverageEnabled false
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -27,7 +30,7 @@ android {
 }
 
 ext {
-    supportLibVersion = "24.0.0-alpha1"
+    supportLibVersion = "24.0.0"
 }
 
 dependencies {
@@ -38,5 +41,5 @@ dependencies {
     compile "com.android.support:design:${supportLibVersion}"
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'org.simpleframework:simple-xml:2.7.1'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha2'
 }

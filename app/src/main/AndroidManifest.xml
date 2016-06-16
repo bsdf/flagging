@@ -20,6 +20,9 @@
         <activity android:name=".ViewBoardActivity">
             
         </activity>
+        <activity android:name=".ViewThreadActivity">
+
+        </activity>
     </application>
 
 </manifest>

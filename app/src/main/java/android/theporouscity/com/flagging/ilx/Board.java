@@ -10,7 +10,7 @@ import org.simpleframework.xml.Root;
  * Created by bergstroml on 2/29/16.
  */
 @Root(name="Board")
-public class Board implements Parcelable{
+public class Board implements Parcelable {
 
     @Element(name="Name")
     private String Name;

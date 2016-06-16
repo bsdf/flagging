@@ -10,25 +10,25 @@ import java.util.List;
  * Created by bergstroml on 3/8/16.
  */
 
-@Root
+@Root(name="RecentlyUpdatedThreads")
 public class RecentlyUpdatedThreads {
 
-    @ElementList(inline=true)
+    @ElementList(name="RecentlyUpdatedThread",inline=true,required=false)
     private List<RecentlyUpdatedThread> mRecentlyUpdatedThreads;
 
-    @Element
+    @Element(name="URI")
     private String URI;
 
-    @Element
+    @Element(name="TotalMessages")
     private int TotalMessages;
 
-    public RecentlyUpdatedThreads(@Element(name="RecentlyUpdatedThreads") List<RecentlyUpdatedThread> recentlyUpdatedThreads,
+    /*public RecentlyUpdatedThreads(@ElementList(name="RecentlyUpdatedThread") List<RecentlyUpdatedThread> recentlyUpdatedThreads,
                                   @Element(name="URI") String URI,
                                   @Element(name="TotalMessages") int totalMessages) {
         mRecentlyUpdatedThreads = recentlyUpdatedThreads;
         this.URI = URI;
         TotalMessages = totalMessages;
-    }
+    }*/
 
     public List<RecentlyUpdatedThread> getRecentlyUpdatedThreads() {
         return mRecentlyUpdatedThreads;

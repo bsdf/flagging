@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
+    android:id="@+id/constraintLayout">
+
+    <TextView
+        android:text="The Canonical List of Overheated ILM Race Relation Threads with, really, just a ton of text, way more text than you would ever expect to find here, it's got to end eventually, yeah?"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:textAlignment="gravity"
+        android:textColor="@color/colorTextPrimary"
+        android:id="@+id/list_item_message_body_text_view"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout"
+        app:layout_constraintRight_toLeftOf="@+id/list_item_message_date_text_view"/>
+
+    <TextView
+        android:text="00:00 22 Nov 14"
+        android:layout_width="110dp"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:textAlignment="gravity"
+        android:textColor="@color/colorTextSecondary"
+        android:id="@+id/list_item_message_date_text_view"
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout"/>
+
+    <TextView
+        android:text="the name of the everloving creator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/list_item_message_display_name_text_view"
+        android:gravity="left"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
+        app:layout_constraintTop_toBottomOf="@+id/list_item_message_body_text_view"
+        android:layout_marginTop="4dp"/>
+
+    <ImageButton
+        android:src="@drawable/abc_ic_arrow_drop_right_black_24dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:id="@+id/list_item_message_reply_button"
+        app:layout_constraintTop_toBottomOf="@+id/list_item_message_body_text_view"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout"
+        android:layout_marginEnd="16dp"/>
+
+</android.support.constraint.ConstraintLayout>

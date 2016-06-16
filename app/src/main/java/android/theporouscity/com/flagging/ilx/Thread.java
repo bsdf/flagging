@@ -1,6 +1,7 @@
 package android.theporouscity.com.flagging.ilx;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 import java.util.Date;
@@ -9,39 +10,51 @@ import java.util.List;
 /**
  * Created by bergstroml on 2/29/16.
  */
-@Root
+@Root(name="Thread")
 public class Thread {
-    @Element
+    @Element(name="URI")
+    private String URI;
+
+    @Element(name="BoardId")
     private int BoardId;
 
-    @Element
+    @Element(name="ThreadId")
     private int ThreadId;
 
-    @Element
+    @Element(name="MessageCount")
+    private int MessageCount;
+
+    @Element(name="Title",data=true)
     private String Title;
 
-    @Element
+    @Element(name="CreatorId",data=true)
+    private String CreatorId;
+
+    @Element(name="CreatedOn")
     private Date CreatedOn;
 
-    @Element
+    @Element(name="Key")
+    private String Key;
+
+    @Element(name="LastUpdated")
     private Date LastUpdated;
 
-    @Element
+    @Element(name="Deleted")
     private Boolean Deleted;
 
-    @Element
+    @Element(name="Worksafe")
     private Boolean Worksafe;
 
-    @Element
+    @Element(name="Locked")
     private Boolean Locked;
 
-    @Element
+    @Element(name="Poll")
     private Boolean Poll;
 
-    @Element
-    private Messages Messages;
+    @ElementList(name="Messages")
+    private List<Message> Messages;
 
-    public Thread(int boardId, int threadId, String title, Date createdOn, Date lastUpdated, Boolean deleted, Boolean worksafe, Boolean locked, Boolean poll, Messages messages) {
+    /*public Thread(int boardId, int threadId, String title, Date createdOn, Date lastUpdated, Boolean deleted, Boolean worksafe, Boolean locked, Boolean poll, List<Message> messages) {
         BoardId = boardId;
         ThreadId = threadId;
         Title = title;
@@ -52,23 +65,29 @@ public class Thread {
         Locked = locked;
         Poll = poll;
         Messages = messages;
-    }
+    }*/
 
-    public int getBoardId() {
-        return BoardId;
-    }
+    public String getURI() { return URI; }
+
+    public int getBoardId() { return BoardId; }
 
     public int getThreadId() {
         return ThreadId;
     }
 
+    public int getMessageCount() { return MessageCount; }
+
     public String getTitle() {
         return Title;
     }
 
+    public String getCreatorId() { return CreatorId; }
+
     public Date getCreatedOn() {
         return CreatedOn;
     }
+
+    public String getKey() { return Key; }
 
     public Date getLastUpdated() {
         return LastUpdated;
@@ -90,5 +109,5 @@ public class Thread {
         return Poll;
     }
 
-    public Messages getMessages() { return Messages; }
+    public List<Message> getMessages() { return Messages; }
 }

@@ -32,7 +32,7 @@ public class GetItemsTask extends AsyncTask<String, Void, String> {
             Response response = mHttpClient.newCall(request).execute();
             return response.body().string();
         } catch (IOException e) {
-            Log.e("get boards", e.getMessage());
+            Log.e("get items", e.getMessage());
             return null;
         }
     }
