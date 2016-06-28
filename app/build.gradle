@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 
 android {
     buildToolsVersion "24.0.0"
-    compileSdkVersion "android-N"
+    compileSdkVersion 24
 
     defaultConfig {
         applicationId "android.theporouscity.com.flagging"
-        minSdkVersion "N"
-        targetSdkVersion "N"
+        minSdkVersion 21
+        targetSdkVersion 24
         versionCode 1
         versionName "1.0"
         jackOptions {
@@ -41,5 +41,5 @@ dependencies {
     compile "com.android.support:design:${supportLibVersion}"
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'org.simpleframework:simple-xml:2.7.1'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha2'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3'
 }

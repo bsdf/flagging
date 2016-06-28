@@ -6,14 +6,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.List;
@@ -75,8 +73,21 @@ public class ViewThreadFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_thread, container, false);
+
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(
+                getActivity(), LinearLayoutManager.VERTICAL, false) {
+
+            @Override
+            public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+                Log.d("ViewThreadFragment", "laying out children");
+                super.onLayoutChildren(recycler, state);
+                scrollToPosition(mRecyclerView.getAdapter().getItemCount()-1);
+            }
+
+        };
+
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_thread_recyclerview);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.setLayoutManager(layoutManager);
         updateUI();
         return view;
     }
@@ -98,7 +109,6 @@ public class ViewThreadFragment extends Fragment {
         private TextView mBodyTextView;
         private TextView mDateTextView;
         private TextView mDisplayNameTextView;
-        private ImageButton mReplyButton;
 
         public MessageHolder(View itemView) {
             super(itemView);
@@ -109,21 +119,19 @@ public class ViewThreadFragment extends Fragment {
                     .findViewById(R.id.list_item_message_date_text_view);
             mDisplayNameTextView = (TextView) itemView
                     .findViewById(R.id.list_item_message_display_name_text_view);
-            mReplyButton = (ImageButton) itemView
-                    .findViewById(R.id.list_item_message_reply_button);
         }
 
         public void bindMessage(Message message) {
             mMessage = message;
-            mBodyTextView.setText(Html.fromHtml(mMessage.getBody()));
-            //mBodyTextView.setText(mMessage.getBody());
+            mBodyTextView.setText(mMessage.getBodyForDisplayShort(getActivity()));
             mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(mMessage.getTimestamp()));
             mDisplayNameTextView.setText(mMessage.getDisplayName());
         }
 
         @Override
         public void onClick(View view) {
-
+            mRecyclerView.getLayoutManager().scrollToPosition(
+                    mRecyclerView.getAdapter().getItemCount()-1);
         }
     }
 
@@ -133,6 +141,9 @@ public class ViewThreadFragment extends Fragment {
         public void onBindViewHolder(MessageHolder holder, int position) {
             holder.bindMessage(
                     (Message) mThread.getMessages().get(position));
+            if (position == mThread.getMessages().size() - 1) {
+                mRecyclerView.getLayoutManager().scrollToPosition(position);
+            }
         }
 
         @Override

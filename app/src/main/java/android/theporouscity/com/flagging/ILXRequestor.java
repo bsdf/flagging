@@ -1,9 +1,15 @@
 package android.theporouscity.com.flagging;
 
+import android.app.Activity;
+import android.graphics.drawable.Drawable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
 import android.util.Log;
+import android.widget.TextView;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -13,6 +19,7 @@ import org.simpleframework.xml.transform.Transform;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 
