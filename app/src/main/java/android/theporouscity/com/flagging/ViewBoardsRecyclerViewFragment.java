@@ -8,7 +8,9 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -23,7 +25,10 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
     private BoardAdapter mBoardAdapter;
     private Boards mBoards;
     private ProgressBar mProgressBar;
+    private TextView mLoadErrorTextView;
     private boolean mFetching;
+    private boolean mScrolling;
+    private String TAG = "ViewBoardsFragment";
 
     public static ViewBoardsRecyclerViewFragment newInstance() {
 
@@ -54,6 +59,7 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
         mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
 
         mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_items_progressbar);
+        mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
 
         updateUI();
         return view;
@@ -77,6 +83,9 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
                 mProgressBar.setVisibility(ProgressBar.VISIBLE);
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                if (mBoards == null) {
+                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+                }
             }
         }
 
@@ -91,6 +100,7 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
 
         private Board mBoard;
         private TextView mTitleTextView;
+
         //private TextView mDescriptionTextView;
 
         public BoardHolder(View itemView) {

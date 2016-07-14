@@ -32,6 +32,7 @@ public class ViewBoardFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private ThreadAdapter mThreadAdapter;
     private ProgressBar mProgressBar;
+    private TextView mLoadErrorTextView;
     private boolean mFetching;
 
     public ViewBoardFragment() {
@@ -78,6 +79,9 @@ public class ViewBoardFragment extends Fragment {
                 mProgressBar.setVisibility(ProgressBar.VISIBLE);
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                if (mThreads == null) {
+                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+                }
             }
         }
 
@@ -105,6 +109,7 @@ public class ViewBoardFragment extends Fragment {
         mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
 
         mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_board_progressbar);
+        mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
 
         updateUI();
         return view;
