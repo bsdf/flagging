@@ -19,11 +19,12 @@ public class GetItemsTask extends AsyncTask<String, Void, String> {
 
     private OkHttpClient mHttpClient;
     private Callback mCallback;
+    private final String TAG = "GetItemsTask";
 
     @Override
     protected String doInBackground(String... strings) {
         String url = strings[0];
-        Log.d("GetItemsTask", "asked for url " + url);
+        Log.d(TAG, "asked for url " + url);
         try {
             Request request = new Request.Builder()
                     .url(url)
@@ -32,7 +33,7 @@ public class GetItemsTask extends AsyncTask<String, Void, String> {
             Response response = mHttpClient.newCall(request).execute();
             return response.body().string();
         } catch (IOException e) {
-            Log.e("get items", e.getMessage());
+            Log.e(TAG, e.getMessage());
             return null;
         }
     }
@@ -41,9 +42,9 @@ public class GetItemsTask extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
         if (result != null) {
-            Log.d("GetItemsTask", "got some stuff back");
+            Log.d(TAG, "got some stuff back");
         } else {
-            Log.d("GetItemsTask", "got nothing back");
+            Log.d(TAG, "got nothing back");
         }
 
         try {

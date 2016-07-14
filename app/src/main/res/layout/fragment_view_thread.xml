@@ -7,6 +7,26 @@
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
                                             android:id="@+id/fragment_view_thread_recyclerview"
                                             android:layout_width="match_parent"
-                                            android:layout_height="match_parent" />
+                                            android:layout_height="match_parent"
+                                            android:background="@color/background"
+                                            android:paddingBottom="4dp" />
+
+    <ProgressBar
+        android:id="@+id/fragment_view_thread_progressbar"
+        android:visibility="invisible"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:visibility="invisible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:text="Sorry, couldn't load the thread."
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/colorTextPrimary"
+        android:id="@+id/fragment_view_thread_loaderrortext"/>
 
 </android.support.design.widget.CoordinatorLayout>

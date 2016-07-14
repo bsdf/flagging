@@ -1,15 +1,10 @@
 package android.theporouscity.com.flagging;
 
-import android.app.Activity;
-import android.graphics.drawable.Drawable;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
 import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
+import android.theporouscity.com.flagging.PollClosingDate;
 import android.util.Log;
-import android.widget.TextView;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -19,7 +14,6 @@ import org.simpleframework.xml.transform.Transform;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 
@@ -99,20 +93,27 @@ public class ILXRequestor {
         }
         Log.d("ILXRequestor", "getting a thread");
         new GetItemsTask(mHttpClient, (String result) -> {
+            Thread thread = null;
             if (result != null) {
                 Log.d("get messages", result);
-                Thread thread = mSerializer.read(Thread.class, result, false);
-                threadCallback.onComplete(thread);
+                thread = mSerializer.read(Thread.class, result, false);
             }
+            threadCallback.onComplete(thread);
         }).execute(url);
     }
 
     private static Persister newPersister() {
-        ILXDateTransform transform = new ILXDateTransform();
+        ILXDateTransform transform1 = new ILXDateTransform();
+        ILXPollDateTransform transform2 = new ILXPollDateTransform();
+
         return new Persister(new Matcher() {
             @Override
             public Transform match(Class cls) throws Exception {
-                if (cls == Date.class) return transform;
+                if (cls == Date.class) {
+                    return transform1;
+                } else if (cls == PollClosingDate.class) {
+                    return transform2;
+                }
                 return null;
             }
         });
@@ -138,4 +139,24 @@ public class ILXRequestor {
         }
     }
 
+    private static final class ILXPollDateTransform implements Transform<PollClosingDate> {
+        ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat> () {
+            protected SimpleDateFormat initialValue ()
+            {
+                SimpleDateFormat r = new SimpleDateFormat ("yyyy-MM-dd");
+                r.setTimeZone (TimeZone.getTimeZone ("GMT"));
+                return r;
+            }
+        };
+
+        public PollClosingDate read (String source) throws Exception
+        {
+            Date date = sdf.get ().parse (source);
+            return new PollClosingDate(date);
+        }
+        public String write (PollClosingDate source) throws Exception
+        {
+            return  sdf.get ().format (source);
+        }
+    }
 }

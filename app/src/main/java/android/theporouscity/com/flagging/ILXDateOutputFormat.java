@@ -45,10 +45,16 @@ public class ILXDateOutputFormat {
             return Long.toString(d / (1000 * 60 * 60 * 24)) + " days";
         } else if (d < 1000 * 60 * 60 * 24 * 14) {
             return "1 week";
-        } else if (d < 1000 * 60 * 60 * 24 * 30) {
+        } else if (d < 2592000000L) { // 1000 * 60 * 60 * 24 * 30
             return Long.toString(d / (1000 * 60 * 60 * 24 * 7)) + " weeks";
+        } else if (d < 5184000000L) { // 1000 * 60 * 60 * 24 * 30 * 2
+            return "1 month";
+        } else if (d < 31536000000L) { // 1000 * 60 * 60 * 24 * 365
+            return Long.toString(d / 2592000000L) + " months"; // 1000 * 60 * 60 * 24 * 30
+        } else if (d < 63072000000L) { // 1000 * 60 * 60 * 24 * 365 * 2
+            return "1 year";
         } else {
-            return "a while back";
+            return Long.toString(d / 31536000000L) + " years"; // 1000 * 60 * 60 * 24 * 365
         }
     }
 }

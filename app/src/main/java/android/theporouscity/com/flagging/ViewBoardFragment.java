@@ -16,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.app.Fragment;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -30,6 +31,8 @@ public class ViewBoardFragment extends Fragment {
     private RecentlyUpdatedThreads mThreads;
     private RecyclerView mRecyclerView;
     private ThreadAdapter mThreadAdapter;
+    private ProgressBar mProgressBar;
+    private boolean mFetching;
 
     public ViewBoardFragment() {
         // Required empty public constructor
@@ -56,15 +59,28 @@ public class ViewBoardFragment extends Fragment {
     }
 
     private void updateThreads() {
+        mFetching = true;
         ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getBoardId(),
                 (RecentlyUpdatedThreads threads) -> {
-            mThreads = threads;
-                    Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
+                    mFetching = false;
+                    mThreads = threads;
+                    if (mThreads != null) {
+                        Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
+                    }
                     updateUI();
         });
     }
 
     private void updateUI() {
+
+        if (mProgressBar != null) {
+            if (mFetching) {
+                mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            } else {
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+            }
+        }
+
         if (mRecyclerView != null && mThreads != null) {
             mThreadAdapter = new ThreadAdapter();
             mRecyclerView.setAdapter(mThreadAdapter);
@@ -86,6 +102,9 @@ public class ViewBoardFragment extends Fragment {
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_threads_recyclerview);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
+
+        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_board_progressbar);
 
         updateUI();
         return view;

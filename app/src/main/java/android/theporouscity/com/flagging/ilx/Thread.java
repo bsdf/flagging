@@ -1,5 +1,8 @@
 package android.theporouscity.com.flagging.ilx;
 
+import android.theporouscity.com.flagging.ILXRequestor;
+import android.theporouscity.com.flagging.PollClosingDate;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -50,6 +53,15 @@ public class Thread {
 
     @Element(name="Poll")
     private Boolean Poll;
+
+    @Element(name="PollClosingDate",required=false)
+    private PollClosingDate PollClosingDate;
+
+    @ElementList(name="PollResults",required=false)
+    private List<Result> PollResults;
+
+    @Element(name="PollOptions",required=false)
+    private PollOptions PollOptions;
 
     @ElementList(name="Messages")
     private List<Message> Messages;
@@ -109,5 +121,15 @@ public class Thread {
         return Poll;
     }
 
+    public Boolean pollClosed() { return false; } // TODO: do stuff
+
     public List<Message> getMessages() { return Messages; }
+
+    public List<Result> getPollResults() { return PollResults; }
+
+    public PollOptions getPollOptions() { return PollOptions; }
+
+    public void addMessage(Message message) {
+        Messages.add(message);
+    }
 }

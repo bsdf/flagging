@@ -7,6 +7,14 @@
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
                                             android:id="@+id/fragment_view_threads_recyclerview"
                                             android:layout_width="match_parent"
-                                            android:layout_height="match_parent" />
+                                            android:layout_height="match_parent"
+                                            android:background="@color/background"/>
+
+    <ProgressBar
+        android:id="@+id/fragment_view_board_progressbar"
+        android:visibility="invisible"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 </android.support.design.widget.CoordinatorLayout>

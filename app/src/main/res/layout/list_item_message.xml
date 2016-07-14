@@ -7,23 +7,24 @@
     android:layout_height="wrap_content"
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
-    android:layout_marginTop="20dp"
-    android:layout_marginBottom="4dp"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="8dp"
     android:id="@+id/constraintLayout">
 
     <TextView
         android:text="The Canonical List of Overheated ILM Race Relation Threads with, really, just a ton of text, way more text than you would ever expect to find here, it's got to end eventually, yeah?"
         android:layout_width="0dp"
-        android:maxWidth="350dp"
         android:layout_height="wrap_content"
         android:paddingBottom="4dp"
         android:gravity="left"
         android:textAlignment="gravity"
-        android:fontFamily="sans-serif-light"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
         android:textColor="@color/colorTextPrimary"
         android:id="@+id/list_item_message_body_text_view"
+        android:breakStrategy="high_quality"
+        android:autoLink="web"
         app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout" />
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout"/>
 
     <TextView
         android:text="00:00 22 Nov 14"
@@ -39,14 +40,14 @@
 
     <TextView
         android:text="the name of the everloving creator"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:id="@+id/list_item_message_display_name_text_view"
         android:gravity="left"
         android:fontFamily="sans-serif-light"
         android:textColor="@color/colorTextSecondary"
         app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
-        app:layout_constraintRight_toLeftOf="@+id/list_item_message_date_text_view"
-        app:layout_constraintTop_toBottomOf="@+id/list_item_message_body_text_view"/>
+        app:layout_constraintTop_toBottomOf="@+id/list_item_message_body_text_view"
+        app:layout_constraintRight_toLeftOf="@+id/list_item_message_date_text_view"/>
 
 </android.support.constraint.ConstraintLayout>

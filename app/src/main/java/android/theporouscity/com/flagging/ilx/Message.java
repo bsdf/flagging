@@ -49,11 +49,35 @@ public class Message {
 
     public String getDisplayName() { return DisplayName; }
 
+    public Spanned getDisplayNameForDisplay() {
+        return Html.fromHtml(DisplayName, null, null);
+    }
+
     public String getBody() { return Body; }
 
     public Spanned getBodyForDisplayShort(Activity activity) {
         Spanned newString = Html.fromHtml(Body, null, new ILXTagHandler(activity));
         return trimSpannable(new SpannableStringBuilder(newString));
+    }
+
+    public void setMessageId(int messageId) {
+        MessageId = messageId;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        Deleted = deleted;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        Timestamp = timestamp;
+    }
+
+    public void setDisplayName(String displayName) {
+        DisplayName = displayName;
+    }
+
+    public void setBody(String body) {
+        Body = body;
     }
 
     private SpannableStringBuilder trimSpannable(SpannableStringBuilder spannable) {

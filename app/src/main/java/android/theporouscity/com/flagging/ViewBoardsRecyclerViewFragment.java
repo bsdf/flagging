@@ -11,9 +11,8 @@ import android.theporouscity.com.flagging.ilx.Boards;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import java.util.List;
 
 /**
  * Created by bergstroml on 4/1/16.
@@ -23,6 +22,8 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private BoardAdapter mBoardAdapter;
     private Boards mBoards;
+    private ProgressBar mProgressBar;
+    private boolean mFetching;
 
     public static ViewBoardsRecyclerViewFragment newInstance() {
 
@@ -46,20 +47,39 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_view_items_recyclerview, container, false);
+        View view = inflater.inflate(R.layout.fragment_view_boards, container, false);
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_items_recyclerview);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
+
+        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_items_progressbar);
 
         updateUI();
         return view;
     }
 
     private void updateBoards() {
-        ILXRequestor.getILXRequestor().getBoards((Boards boards) -> { mBoards = boards; updateUI(); });
+
+        mFetching = true;
+        ILXRequestor.getILXRequestor().getBoards((Boards boards) -> {
+            mFetching = false;
+            mBoards = boards;
+            updateUI();
+        });
+
     }
 
     private void updateUI() {
+
+        if (mProgressBar != null) {
+            if (mFetching) {
+                mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            } else {
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+            }
+        }
+
         if (mRecyclerView != null && mBoards != null) {
             mBoardAdapter = new BoardAdapter();
             mRecyclerView.setAdapter(mBoardAdapter);
