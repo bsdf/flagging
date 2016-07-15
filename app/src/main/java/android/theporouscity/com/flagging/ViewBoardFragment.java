@@ -81,6 +81,9 @@ public class ViewBoardFragment extends Fragment {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (mThreads == null) {
                     mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+                } else if (mThreads.getRecentlyUpdatedThreads().size() == 0) {
+                    mLoadErrorTextView.setText("No recent threads");
+                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
                 }
             }
         }

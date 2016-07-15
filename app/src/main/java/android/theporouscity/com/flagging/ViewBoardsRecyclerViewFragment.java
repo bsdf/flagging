@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Created by bergstroml on 4/1/16.
@@ -96,15 +97,17 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
     }
 
     private class BoardHolder extends RecyclerView.ViewHolder
-    implements View.OnClickListener {
+    implements View.OnLongClickListener, View.OnClickListener {
 
         private Board mBoard;
         private TextView mTitleTextView;
+        private String mBoardDescription;
 
         //private TextView mDescriptionTextView;
 
         public BoardHolder(View itemView) {
             super(itemView);
+            itemView.setOnLongClickListener(this);
             itemView.setOnClickListener(this);
             mTitleTextView = (TextView) itemView
                     .findViewById(R.id.list_item_board_title_text_view);
@@ -115,13 +118,52 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
         public void bindBoard(Board board) {
             mBoard = board;
             mTitleTextView.setText(board.getName());
+            mBoardDescription = board.getDescription();
             //mDescriptionTextView.setText(board.getDescription());
         }
 
+        /*
         @Override
-        public void onClick(View v) {
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            switch (motionEvent.getActionMasked()) {
+
+                case MotionEvent.ACTION_DOWN:
+                    view.setPressed(true);
+                    return true;
+
+                case MotionEvent.ACTION_MOVE:
+                    if (motionEvent.getDownTime() > 5000) {
+                        Toast.makeText(getActivity(), mBoardDescription,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    view.setPressed(false);
+                    return false;
+
+                case MotionEvent.ACTION_UP:
+                    view.setPressed(false);
+                    Intent intent = ViewBoardActivity.newIntent(getActivity(), mBoard);
+                    startActivity(intent);
+                    return false;
+
+                case MotionEvent.ACTION_CANCEL:
+                    view.setPressed(false);
+                    return false;
+            }
+
+            return false;
+        }
+        */
+
+        @Override
+        public void onClick(View view) {
             Intent intent = ViewBoardActivity.newIntent(getActivity(), mBoard);
             startActivity(intent);
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            Toast.makeText(getActivity(), mBoardDescription, Toast.LENGTH_SHORT).show();
+            return true;
         }
     }
 

@@ -62,7 +62,6 @@ public class ILXRequestor {
             Log.d("ILXRequestor", "passing on request for boards xml");
             new GetItemsTask(mHttpClient, (String result) -> {
                 if (result != null) {
-                    Log.d("get boards", result);
                     mBoards = mSerializer.read(Boards.class, result, false);
                 }
                 boardsCallback.onComplete(mBoards);
@@ -78,7 +77,6 @@ public class ILXRequestor {
         Log.d("ILXRequestor", "passing on request for recent threads");
         new GetItemsTask(mHttpClient, (String result) -> {
             if (result != null) {
-                Log.d("get threads", result);
                 RecentlyUpdatedThreads threads =
                         mSerializer.read(RecentlyUpdatedThreads.class, result, false);
                 threadsCallback.onComplete(threads);
@@ -90,12 +88,12 @@ public class ILXRequestor {
         String url = threadUrl + boardId + "&threadid=" + threadId;
         if (count > 0) {
             url = url + "&showlastmessages=" + count;
+            Log.d("ILXRequestor", "requesting " + String.valueOf(count) + " items");
         }
         Log.d("ILXRequestor", "getting a thread");
         new GetItemsTask(mHttpClient, (String result) -> {
             Thread thread = null;
             if (result != null) {
-                Log.d("get messages", result);
                 thread = mSerializer.read(Thread.class, result, false);
             }
             threadCallback.onComplete(thread);

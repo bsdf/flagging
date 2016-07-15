@@ -87,7 +87,9 @@ public class Thread {
         return ThreadId;
     }
 
-    public int getMessageCount() { return MessageCount; }
+    public int getServerMessageCount() { return MessageCount; }
+
+    public int getLocalMessageCount() { return Messages.size(); }
 
     public String getTitle() {
         return Title;
@@ -117,11 +119,11 @@ public class Thread {
         return Locked;
     }
 
-    public Boolean getPoll() {
+    public Boolean isPoll() {
         return Poll;
     }
 
-    public Boolean pollClosed() { return false; } // TODO: do stuff
+    public Boolean isPollClosed() { return false; } // TODO: do stuff
 
     public List<Message> getMessages() { return Messages; }
 
