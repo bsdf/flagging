@@ -20,7 +20,8 @@
         app:layout_constraintTop_toTopOf="@+id/constraintLayout2"
         app:layout_constraintRight_toRightOf="@+id/constraintLayout2"
         app:layout_constraintBottom_toBottomOf="@+id/constraintLayout2"
-        android:textAppearance="@android:style/TextAppearance.Material.Medium"/>
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        android:textColor="@color/colorTextPrimary"/>
 <!--
     <TextView
         android:layout_width="match_parent"

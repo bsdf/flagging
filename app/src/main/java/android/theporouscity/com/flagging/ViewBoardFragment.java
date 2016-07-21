@@ -146,9 +146,9 @@ public class ViewBoardFragment extends Fragment {
 
         public void bindThread(RecentlyUpdatedThread thread) {
             mThread = thread;
-            mTitleTextView.setText(mThread.getTitle());
+            mTitleTextView.setText(mThread.getTitleForDisplay());
             Date lastUpdated = mThread.getLastUpdated();
-            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(lastUpdated));
+            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(lastUpdated, false));
         }
 
         @Override

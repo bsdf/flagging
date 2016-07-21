@@ -6,5 +6,7 @@
     <color name="colorTextPrimary">#333333</color>
     <color name="colorTextSecondary">#777777</color>
     <color name="colorLoaderBackground">#777777</color>
+    <color name="colorPollClosedBackground">#EEEEEE</color>
+    <color name="colorPollOpenBackground">#DDDDDD</color>
     <color name="background">@android:color/white</color>
 </resources>

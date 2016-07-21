@@ -6,15 +6,22 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.method.LinkMovementMethod;
 import android.theporouscity.com.flagging.ilx.Message;
+import android.theporouscity.com.flagging.ilx.PollOptions;
+import android.theporouscity.com.flagging.ilx.PollWrapper;
+import android.theporouscity.com.flagging.ilx.Result;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -29,6 +36,7 @@ public class ViewThreadFragment extends Fragment {
     private static final String ARG_THREAD_ID = "thread_id";
     private static final int mDefaultMessagesChunk = 100;
     private Thread mThread;
+    private PollWrapper mPollWrapper;
     private RecyclerView mRecyclerView;
     private ThreadAdapter mThreadAdapter;
     private ProgressBar mProgressBar;
@@ -51,7 +59,6 @@ public class ViewThreadFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
         if (getArguments() != null) {
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
@@ -65,6 +72,7 @@ public class ViewThreadFragment extends Fragment {
                 (Thread thread) -> {
                     mFetching = false;
                     mThread = thread;
+                    mPollWrapper = new PollWrapper(mThread);
                     updateUI();
                 });
     }
@@ -80,16 +88,16 @@ public class ViewThreadFragment extends Fragment {
                     mThread.getMessages().addAll(0,
                             thread.getMessages().subList(0, numEarlierMessagesToPrepend));
 
-                    if (mThread.getLocalMessageCount() < mThread.getServerMessageCount()) {
+                    if (mThread.numUnloadedMessages() > 0) {
                         numHeaderRows = numHeaderRows + 1;
                     }
                     if (mThread.isPoll()) {
-                        numHeaderRows = numHeaderRows + 1;
+                        numHeaderRows = numHeaderRows + mPollWrapper.getSize();
                     }
 
                     mThreadAdapter.notifyItemRangeInserted(numHeaderRows, numEarlierMessagesToPrepend);
                     mThreadAdapter.updateLoader();
-                    mRecyclerView.scrollToPosition(numEarlierMessagesToPrepend + 1);
+                    mRecyclerView.scrollToPosition(numHeaderRows + numEarlierMessagesToPrepend);
 
         });
     }
@@ -108,7 +116,18 @@ public class ViewThreadFragment extends Fragment {
         }
 
         if (mRecyclerView != null && mThread != null) {
-            mRecyclerView.scrollToPosition(mThread.getMessages().size() - 1); // TODO bookmarks
+
+            int scrollPosition = mThread.getMessages().size() - 1;
+
+            if (mThread.isPoll()) {
+                scrollPosition = scrollPosition + mPollWrapper.getSize();
+            }
+
+            if (mThread.numUnloadedMessages() > 0) {
+                scrollPosition++;
+            }
+
+            mRecyclerView.scrollToPosition(scrollPosition); // TODO bookmarks
             mThreadAdapter = new ThreadAdapter();
             mRecyclerView.setAdapter(mThreadAdapter);
             getActivity().setTitle(mThread.getTitle());
@@ -164,25 +183,64 @@ public class ViewThreadFragment extends Fragment {
                     .findViewById(R.id.list_item_message_date_text_view);
             mDisplayNameTextView = (TextView) itemView
                     .findViewById(R.id.list_item_message_display_name_text_view);
+
+            mBodyTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (mBodyTextView.getSelectionStart() == -1 &&
+                            mBodyTextView.getSelectionEnd() == -1) {
+                        openMessage();
+                    }
+                }
+            });
+            mBodyTextView.setMovementMethod(LinkMovementMethod.getInstance());
         }
 
         public void bindMessage(Message message) {
             mMessage = message;
+
             mBodyTextView.setText(mMessage.getBodyForDisplayShort(getActivity()));
-            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(mMessage.getTimestamp()));
+            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(mMessage.getTimestamp(), false));
             mDisplayNameTextView.setText(mMessage.getDisplayNameForDisplay());
         }
 
         @Override
         public void onClick(View view) {
+            openMessage();
+        }
+
+        private void openMessage() {
             Toast.makeText(getActivity(), "open sesame", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private class PollHolder extends RecyclerView.ViewHolder {
+    private class PollItemHolder extends RecyclerView.ViewHolder {
 
-        public PollHolder(View itemView) {
+        private TextView mPollItemTextTextView;
+        private TextView mPollItemVotesTextView;
+
+        public PollItemHolder(View itemView) {
             super(itemView);
+
+            if (mThread.isPollClosed()) {
+                mPollItemTextTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_poll_option_closed_text);
+                mPollItemVotesTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_poll_option_closed_vote_count);
+            } else {
+                mPollItemTextTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_poll_option_open_text);
+            }
+
+        }
+
+        public void bindPollItem(int position) {
+            if (mPollWrapper.isClosed()) {
+                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position));
+                mPollItemVotesTextView.setText(mPollWrapper.getVoteCountForDisplay(position));
+            } else {
+                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position));
+            }
         }
     }
 
@@ -200,7 +258,7 @@ public class ViewThreadFragment extends Fragment {
         }
 
         public void bindLoader() {
-            mNumToLoad = Math.min(mThread.getServerMessageCount() - mThread.getLocalMessageCount(), 50);
+            mNumToLoad = Math.min(mThread.numUnloadedMessages(), mDefaultMessagesChunk);
             mLoadMoreTextView.setText("Load " + String.valueOf(mNumToLoad) + " earlier messages");
         }
 
@@ -210,32 +268,76 @@ public class ViewThreadFragment extends Fragment {
         }
     }
 
+    private class HeaderHolder extends RecyclerView.ViewHolder {
+        private TextView mHeaderTextView;
+
+        public HeaderHolder(View itemView) {
+            super(itemView);
+            mHeaderTextView = (TextView) itemView
+                    .findViewById(R.id.list_item_thread_header_text_view);
+        }
+
+        public void bindHeader() {
+            mHeaderTextView.setText(mThread.getTitle());
+        }
+    }
+
+    private class PollHeaderHolder extends RecyclerView.ViewHolder {
+        private TextView mPollHeaderTextView;
+
+        public PollHeaderHolder(View itemView) {
+            super(itemView);
+            mPollHeaderTextView = (TextView) itemView
+                    .findViewById(R.id.list_item_poll_header_text_view);
+        }
+
+        public void bindPollHeader() {
+            if (mPollWrapper.isClosed()) {
+                mPollHeaderTextView.setText("Poll results");
+            } else {
+                String closing = ILXDateOutputFormat.formatRelativeDateShort(mThread.getPollClosingDate().getDate(), true);
+                mPollHeaderTextView.setText("Poll closes in " + closing);
+            }
+        }
+    }
+
+
     private class ThreadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-        private static final int TYPE_POLL_OPEN = 0;
-        private static final int TYPE_POLL_CLOSED = 1;
-        private static final int TYPE_LOADMORE = 2;
-        private static final int TYPE_MESSAGE = 3;
+        private static final int TYPE_HEADER = 0;
+        private static final int TYPE_POLL_HEADER = 1;
+        private static final int TYPE_POLL_OPEN = 2;
+        private static final int TYPE_POLL_CLOSED = 3;
+        private static final int TYPE_LOADMORE = 4;
+        private static final int TYPE_MESSAGE = 5;
+        private int mHeaderPosition;
+        private int mPollHeaderPosition;
         private int mLoaderPosition;
-        private int mPollPosition;
+        private int mPollStartPosition;
+        private int mPollEndPosition;
 
         public ThreadAdapter() {
             super();
 
-            if (mThread.getServerMessageCount() > mThread.getLocalMessageCount()) {
-                mLoaderPosition = 0;
+            mHeaderPosition = 0;
+
+            if (mThread.isPoll()) {
+                mPollHeaderPosition = 1;
+                mPollStartPosition = 2;
+                mPollEndPosition = mPollStartPosition + mPollWrapper.getSize() - 1;
+            } else {
+                mPollHeaderPosition = mPollStartPosition = mPollEndPosition = -1;
+            }
+
+            if (mThread.numUnloadedMessages() > 0) {
+                mLoaderPosition = 1;
                 if (mThread.isPoll()) {
-                    mPollPosition = 1;
-                } else {
-                    mPollPosition = -1;
+                    mPollHeaderPosition++;
+                    mPollStartPosition++;
+                    mPollEndPosition++;
                 }
             } else {
                 mLoaderPosition = -1;
-                if (mThread.isPoll()) {
-                    mPollPosition = 0;
-                } else {
-                    mPollPosition = -1;
-                }
             }
         }
 
@@ -253,8 +355,18 @@ public class ViewThreadFragment extends Fragment {
             } else if (holder instanceof LoaderHolder) {
                 LoaderHolder loaderHolder = (LoaderHolder) holder;
                 loaderHolder.bindLoader();
-            } else if (holder instanceof PollHolder) {
-                // don't need to do anything
+            } else if (holder instanceof PollItemHolder) {
+                int realPosition = position - 2;
+                if (mLoaderPosition != -1) {
+                    realPosition--;
+                }
+                ((PollItemHolder) holder).bindPollItem(realPosition);
+            } else if (holder instanceof HeaderHolder) {
+                HeaderHolder headerHolder = (HeaderHolder) holder;
+                headerHolder.bindHeader();
+            } else if (holder instanceof PollHeaderHolder) {
+                PollHeaderHolder pollHeaderHolder = (PollHeaderHolder) holder;
+                pollHeaderHolder.bindPollHeader();
             }
         }
 
@@ -268,15 +380,23 @@ public class ViewThreadFragment extends Fragment {
                 case TYPE_POLL_OPEN:
                 case TYPE_POLL_CLOSED:
                     if (mThread.isPollClosed()) {
-                        view = layoutInflater.inflate(R.layout.list_item_poll_closed, parent, false);
+                        view = layoutInflater.inflate(R.layout.list_item_poll_option_closed, parent, false);
                     } else {
-                        view = layoutInflater.inflate(R.layout.list_item_poll_open, parent, false);
+                        view = layoutInflater.inflate(R.layout.list_item_poll_option_open, parent, false);
                     }
-                    return new PollHolder(view);
+                    return new PollItemHolder(view);
 
                 case TYPE_LOADMORE:
                     view = layoutInflater.inflate(R.layout.list_item_loadmore, parent, false);
                     return new LoaderHolder(view);
+
+                case TYPE_HEADER:
+                    view = layoutInflater.inflate(R.layout.list_item_thread_header, parent, false);
+                    return new HeaderHolder(view);
+
+                case TYPE_POLL_HEADER:
+                    view = layoutInflater.inflate(R.layout.list_item_poll_header, parent, false);
+                    return new PollHeaderHolder(view);
             }
 
             view = layoutInflater.inflate(R.layout.list_item_message, parent, false);
@@ -299,12 +419,16 @@ public class ViewThreadFragment extends Fragment {
 
             if (position == mLoaderPosition) {
                 return TYPE_LOADMORE;
-            } else if (position == mPollPosition) {
+            } else if (position >= mPollStartPosition && position <= mPollEndPosition) {
                 if (mThread.isPollClosed()) {
                     return TYPE_POLL_CLOSED;
                 } else {
                     return TYPE_POLL_OPEN;
                 }
+            } else if (position == mHeaderPosition) {
+                return TYPE_HEADER;
+            } else if (position == mPollHeaderPosition) {
+                return TYPE_POLL_HEADER;
             }
             return TYPE_MESSAGE;
         }
@@ -313,23 +437,27 @@ public class ViewThreadFragment extends Fragment {
             // assume that we'll never have fewer messages than we had before ...
 
             if (mLoaderPosition != -1) {
-                if (mThread.getLocalMessageCount() < mThread.getServerMessageCount()) {
+                if (mThread.numUnloadedMessages() > 0) {
                     notifyItemChanged(mLoaderPosition);
                 } else {
                     int oldPosition = mLoaderPosition;
                     mLoaderPosition = -1;
+                    if (mPollStartPosition != -1) {
+                        mPollStartPosition--;
+                        mPollEndPosition--;
+                    }
                     notifyItemRemoved(oldPosition);
                 }
             }
         }
 
         public int getNumHeaderRows() {
-            int count = 0;
+            int count = 1;
             if (mLoaderPosition != -1) {
-                count = count + 1;
+                count++;
             }
-            if (mPollPosition != -1) {
-                count = count + 1;
+            if (mPollStartPosition != -1) {
+                count = count + mPollWrapper.getSize() + 1;
             }
             return count;
         }

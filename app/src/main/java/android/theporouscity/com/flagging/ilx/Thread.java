@@ -1,5 +1,7 @@
 package android.theporouscity.com.flagging.ilx;
 
+import android.text.Html;
+import android.text.Spanned;
 import android.theporouscity.com.flagging.ILXRequestor;
 import android.theporouscity.com.flagging.PollClosingDate;
 
@@ -95,6 +97,8 @@ public class Thread {
         return Title;
     }
 
+    public Spanned getTitleForDisplay() { return Html.fromHtml(Title.trim()); }
+
     public String getCreatorId() { return CreatorId; }
 
     public Date getCreatedOn() {
@@ -123,7 +127,13 @@ public class Thread {
         return Poll;
     }
 
-    public Boolean isPollClosed() { return false; } // TODO: do stuff
+    public Boolean isPollClosed() {
+        if (PollOptions == null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     public List<Message> getMessages() { return Messages; }
 
@@ -131,7 +141,13 @@ public class Thread {
 
     public PollOptions getPollOptions() { return PollOptions; }
 
+    public PollClosingDate getPollClosingDate() { return PollClosingDate; }
+
     public void addMessage(Message message) {
         Messages.add(message);
+    }
+
+    public int numUnloadedMessages() {
+        return getServerMessageCount() - getLocalMessageCount();
     }
 }

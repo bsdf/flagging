@@ -1,5 +1,8 @@
 package android.theporouscity.com.flagging.ilx;
 
+import android.text.Html;
+import android.text.Spanned;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
@@ -63,6 +66,8 @@ public class RecentlyUpdatedThread {
     public String getTitle() {
         return Title;
     }
+
+    public Spanned getTitleForDisplay() { return Html.fromHtml(Title.trim()); }
 
     public Date getCreatedOn() { return CreatedOn; }
 

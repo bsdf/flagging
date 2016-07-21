@@ -26,9 +26,16 @@ public class ILXDateOutputFormat {
         return sdf.format(date);
     }
 
-    public static String formatRelativeDateShort(Date date) {
+    public static String formatRelativeDateShort(Date date, boolean timeUntil) {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        long d = cal.getTime().getTime() - date.getTime();
+        Long d;
+
+        if (timeUntil) {
+            d = date.getTime() - cal.getTime().getTime();
+        } else {
+            d = cal.getTime().getTime() - date.getTime();
+        }
+
         if (d < 1000 * 60) {
             return "0 min";
         } else if (d < 1000 * 60 * 2) {
