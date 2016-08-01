@@ -11,7 +11,7 @@ import java.util.TimeZone;
  * Created by bergstroml on 6/14/16.
  */
 
-public class ILXDateOutputFormat {
+public class ILXDateOutputFormatter {
 
     public static String formatAbsoluteDateShort(Date date) {
         int year = Calendar.getInstance().get(Calendar.YEAR);
@@ -23,6 +23,15 @@ public class ILXDateOutputFormat {
             sdf = new SimpleDateFormat("h:mm d MMM yy");
         }
 
+        TimeZone tz = TimeZone.getDefault();
+        sdf.setTimeZone(tz);
+        return sdf.format(date);
+    }
+
+    public static String formatAbsoluteDateLong(Date date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("h:mm d MMM yy");
+        TimeZone tz = TimeZone.getDefault();
+        sdf.setTimeZone(tz);
         return sdf.format(date);
     }
 

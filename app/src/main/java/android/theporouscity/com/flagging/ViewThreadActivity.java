@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
-import android.theporouscity.com.flagging.ilx.Board;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by bergstroml on 6/15/16.
@@ -40,5 +42,19 @@ public class ViewThreadActivity extends AppCompatActivity {
         intent.putExtra(EXTRA_BOARD_ID, boardId);
         intent.putExtra(EXTRA_THREAD_ID, threadId);
         return intent;
+    }
+
+    public static Intent newIntent(Context packageContent, String threadUrl) {
+        Intent intent = new Intent(packageContent, ViewThreadActivity.class);
+
+        ILXUrlParser.ThreadIds ids = ILXUrlParser.getThreadIds(threadUrl);
+
+        if (ids != null) {
+            intent.putExtra(EXTRA_BOARD_ID, ids.boardId);
+            intent.putExtra(EXTRA_THREAD_ID, ids.threadId);
+            return intent;
+        } else {
+            return null;
+        }
     }
 }

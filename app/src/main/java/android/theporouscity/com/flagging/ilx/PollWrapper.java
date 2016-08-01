@@ -1,7 +1,9 @@
 package android.theporouscity.com.flagging.ilx;
 
+import android.app.Activity;
 import android.text.Html;
 import android.text.Spanned;
+import android.theporouscity.com.flagging.ILXTextOutputFormatter;
 
 /**
  * Created by bergstroml on 7/20/16.
@@ -27,11 +29,13 @@ public class PollWrapper {
         }
     }
 
-    public Spanned getItemTextForDisplay(int position) {
+    public Spanned getItemTextForDisplay(int position, Activity activity) {
         if (mThread.isPollClosed()) {
-            return Html.fromHtml(mThread.getPollResults().get(position).getOption().trim());
+            return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
+                    mThread.getPollResults().get(position).getOption(), activity);
         } else {
-            return Html.fromHtml(mThread.getPollOptions().getPollOptions().get(position).getOptionText().trim());
+            return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
+                    mThread.getPollOptions().getPollOptions().get(position).getOptionText(), activity);
         }
     }
 

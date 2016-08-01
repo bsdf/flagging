@@ -1,16 +1,13 @@
 package android.theporouscity.com.flagging;
 
-import android.nfc.cardemulation.OffHostApduService;
 import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 /**
  * Created by bergstroml on 2/26/16.

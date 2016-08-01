@@ -1,6 +1,7 @@
 package android.theporouscity.com.flagging;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -8,20 +9,15 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.method.LinkMovementMethod;
 import android.theporouscity.com.flagging.ilx.Message;
-import android.theporouscity.com.flagging.ilx.PollOptions;
 import android.theporouscity.com.flagging.ilx.PollWrapper;
-import android.theporouscity.com.flagging.ilx.Result;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -130,7 +126,7 @@ public class ViewThreadFragment extends Fragment {
             mRecyclerView.scrollToPosition(scrollPosition); // TODO bookmarks
             mThreadAdapter = new ThreadAdapter();
             mRecyclerView.setAdapter(mThreadAdapter);
-            getActivity().setTitle(mThread.getTitle());
+            getActivity().setTitle(mThread.getTitleForDisplay());
 
             Log.d(TAG, "Updated UI");
         }
@@ -200,7 +196,7 @@ public class ViewThreadFragment extends Fragment {
             mMessage = message;
 
             mBodyTextView.setText(mMessage.getBodyForDisplayShort(getActivity()));
-            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(mMessage.getTimestamp(), false));
+            mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(mMessage.getTimestamp(), false));
             mDisplayNameTextView.setText(mMessage.getDisplayNameForDisplay());
         }
 
@@ -210,7 +206,8 @@ public class ViewThreadFragment extends Fragment {
         }
 
         private void openMessage() {
-            Toast.makeText(getActivity(), "open sesame", Toast.LENGTH_SHORT).show();
+            Intent intent = ViewMessageActivity.newIntent(getActivity(), mMessage, mBoardId, mThreadId, mThread.getTitle());
+            startActivity(intent);
         }
     }
 
@@ -236,10 +233,10 @@ public class ViewThreadFragment extends Fragment {
 
         public void bindPollItem(int position) {
             if (mPollWrapper.isClosed()) {
-                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position));
+                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, getActivity()));
                 mPollItemVotesTextView.setText(mPollWrapper.getVoteCountForDisplay(position));
             } else {
-                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position));
+                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, getActivity()));
             }
         }
     }
@@ -278,7 +275,7 @@ public class ViewThreadFragment extends Fragment {
         }
 
         public void bindHeader() {
-            mHeaderTextView.setText(mThread.getTitle());
+            mHeaderTextView.setText(mThread.getTitleForDisplay());
         }
     }
 
@@ -295,7 +292,7 @@ public class ViewThreadFragment extends Fragment {
             if (mPollWrapper.isClosed()) {
                 mPollHeaderTextView.setText("Poll results");
             } else {
-                String closing = ILXDateOutputFormat.formatRelativeDateShort(mThread.getPollClosingDate().getDate(), true);
+                String closing = ILXDateOutputFormatter.formatRelativeDateShort(mThread.getPollClosingDate().getDate(), true);
                 mPollHeaderTextView.setText("Poll closes in " + closing);
             }
         }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                                              xmlns:app="http://schemas.android.com/apk/res-auto"
                                              xmlns:tools="http://schemas.android.com/tools"
                                              android:layout_width="match_parent"
@@ -16,10 +16,10 @@
         android:layout_height="wrap_content"
         android:text="something"
         android:id="@+id/list_item_board_title_text_view"
-        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout2"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout2"
-        app:layout_constraintRight_toRightOf="@+id/constraintLayout2"
-        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout2"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
         android:textAppearance="@android:style/TextAppearance.Material.Medium"
         android:textColor="@color/colorTextPrimary"/>
 <!--
@@ -35,4 +35,4 @@
         android:layout_below="@id/list_item_board_title_text_view"
         android:id="@+id/list_item_board_description_text_view"/>
 -->
-</android.support.constraint.ConstraintLayout>
+</RelativeLayout>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.design.widget.CoordinatorLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:id="@+id/fragment_view_message_nonvideo_relativelayout"
+              android:background="@color/background">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:orientation="horizontal"
+                  android:layout_alignParentBottom="true"
+                  android:layout_width="match_parent"
+                  android:layout_height="48dp"
+                  android:background="@color/background"
+                  android:id="@+id/fragment_view_message_button_bar"
+                  android:gravity="right">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="SEND"
+            style="@style/FlatButton"
+            android:id="@+id/fragment_view_message_send_textview"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="BROWSER"
+            style="@style/FlatButton"
+            android:id="@+id/fragment_view_message_view_textview"/>
+
+    </LinearLayout>
+
+    <android.theporouscity.com.flagging.VideoEnabledWebView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_above="@id/fragment_view_message_button_bar"
+        android:id="@+id/fragment_view_message_webview"></android.theporouscity.com.flagging.VideoEnabledWebView>
+
+</RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/fragment_view_message_video_relativelayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ProgressBar
+            android:id="@+id/fragment_view_message_video_progressbar"
+            android:visibility="invisible"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
+</android.support.design.widget.CoordinatorLayout>

@@ -2,7 +2,6 @@ package android.theporouscity.com.flagging;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,7 +18,6 @@ import android.support.v4.app.Fragment;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -148,7 +146,7 @@ public class ViewBoardFragment extends Fragment {
             mThread = thread;
             mTitleTextView.setText(mThread.getTitleForDisplay());
             Date lastUpdated = mThread.getLastUpdated();
-            mDateTextView.setText(ILXDateOutputFormat.formatRelativeDateShort(lastUpdated, false));
+            mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(lastUpdated, false));
         }
 
         @Override

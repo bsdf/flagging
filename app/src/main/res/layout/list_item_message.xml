@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -14,7 +14,7 @@
 
     <TextView
         android:text="The Canonical List of Overheated ILM Race Relation Threads with, really, just a ton of text, way more text than you would ever expect to find here, it's got to end eventually, yeah?"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="4dp"
         android:gravity="left"
@@ -25,31 +25,30 @@
         android:breakStrategy="high_quality"
         android:autoLink="web"
         android:background="?android:attr/selectableItemBackground"
-        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout"/>
+        android:layout_alignParentTop="true"/>
 
     <TextView
-        android:text="00:00 22 Nov 14"
-        android:layout_width="110dp"
+        android:text="the name of the everloving creator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/list_item_message_display_name_text_view"
+        android:gravity="left"
+        android:fontFamily="sans-serif-light"
+        android:textColor="@color/colorTextSecondary"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/list_item_message_body_text_view"
+        android:layout_toLeftOf="@+id/list_item_message_date_text_view"/>
+
+    <TextView
+        android:text="14 years"
+        android:layout_width="90dp"
         android:layout_height="wrap_content"
         android:gravity="right"
         android:textAlignment="gravity"
         android:fontFamily="sans-serif-light"
         android:textColor="@color/colorTextSecondary"
         android:id="@+id/list_item_message_date_text_view"
-        app:layout_constraintTop_toBottomOf="@+id/list_item_message_body_text_view"
-        app:layout_constraintRight_toRightOf="@+id/constraintLayout"/>
+        android:layout_below="@id/list_item_message_body_text_view"
+        android:layout_alignParentRight="true"/>
 
-    <TextView
-        android:text="the name of the everloving creator"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/list_item_message_display_name_text_view"
-        android:gravity="left"
-        android:fontFamily="sans-serif-light"
-        android:textColor="@color/colorTextSecondary"
-        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@+id/list_item_message_body_text_view"
-        app:layout_constraintRight_toLeftOf="@+id/list_item_message_date_text_view"/>
-
-</android.support.constraint.ConstraintLayout>
+</RelativeLayout>
