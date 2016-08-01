@@ -8,6 +8,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.theporouscity.com.flagging.ilx.Message;
+import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
+import android.view.Window;
+import android.view.WindowManager;
 
 import java.util.List;
 
@@ -21,9 +26,11 @@ public class ViewMessageActivity extends AppCompatActivity {
     public static final String EXTRA_BOARD_ID = "com.theporouscity.android.flagging.board_id";
     public static final String EXTRA_THREAD_ID = "com.theporouscity.android.flagging.thread_id";
     public static final String EXTRA_THREAD_NAME = "com.theporouscity.android.flagging.thread_name";
+    public static final String TAG = "ViewMessageActivity";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fragment);
 
@@ -51,22 +58,11 @@ public class ViewMessageActivity extends AppCompatActivity {
         return intent;
     }
 
-    @Override
-    public void onBackPressed() {
-        boolean handled = false;
-        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
-        if (fragmentList != null) {
-            //TODO: Perform your logic to pass back press here
-            for(Fragment fragment : fragmentList){
-                if(fragment instanceof OnBackPressedListener){
-                    if(((OnBackPressedListener)fragment).onBackPressed()){
-                        handled = true;
-                    }
-                }
-            }
+    public boolean deviceIsRotated() {
+        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        if (display.getRotation() == Surface.ROTATION_90 || display.getRotation() == Surface.ROTATION_270) {
+            return true;
         }
-        if (!handled) {
-            super.onBackPressed();
-        }
+        return false;
     }
 }
