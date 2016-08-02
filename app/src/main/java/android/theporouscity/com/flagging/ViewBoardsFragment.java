@@ -8,9 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -20,7 +18,7 @@ import android.widget.Toast;
 /**
  * Created by bergstroml on 4/1/16.
  */
-public class ViewBoardsRecyclerViewFragment extends Fragment {
+public class ViewBoardsFragment extends Fragment {
 
     private RecyclerView mRecyclerView;
     private BoardAdapter mBoardAdapter;
@@ -31,11 +29,11 @@ public class ViewBoardsRecyclerViewFragment extends Fragment {
     private boolean mScrolling;
     private String TAG = "ViewBoardsFragment";
 
-    public static ViewBoardsRecyclerViewFragment newInstance() {
+    public static ViewBoardsFragment newInstance() {
 
         Bundle args = new Bundle();
 
-        ViewBoardsRecyclerViewFragment fragment = new ViewBoardsRecyclerViewFragment();
+        ViewBoardsFragment fragment = new ViewBoardsFragment();
         fragment.setArguments(args);
         return fragment;
     }

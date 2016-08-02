@@ -135,6 +135,12 @@ public class Thread {
         }
     }
 
+    public void updateMetadata(int serverMessageCount, Date lastUpdated) {
+        // should be called every time we make a new request for a thread we already have
+        MessageCount = serverMessageCount;
+        LastUpdated = lastUpdated;
+    }
+
     public List<Message> getMessages() { return Messages; }
 
     public List<Result> getPollResults() { return PollResults; }

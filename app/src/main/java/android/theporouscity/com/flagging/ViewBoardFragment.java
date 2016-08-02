@@ -3,6 +3,7 @@ package android.theporouscity.com.flagging;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.theporouscity.com.flagging.ilx.Board;
@@ -31,6 +32,7 @@ public class ViewBoardFragment extends Fragment {
     private ThreadAdapter mThreadAdapter;
     private ProgressBar mProgressBar;
     private TextView mLoadErrorTextView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private boolean mFetching;
 
     public ViewBoardFragment() {
@@ -63,6 +65,9 @@ public class ViewBoardFragment extends Fragment {
                 (RecentlyUpdatedThreads threads) -> {
                     mFetching = false;
                     mThreads = threads;
+                    if (mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
                     if (mThreads != null) {
                         Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
                     }
@@ -111,6 +116,11 @@ public class ViewBoardFragment extends Fragment {
 
         mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_board_progressbar);
         mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragment_view_board_swipeContainer);
+        mSwipeRefreshLayout.setOnRefreshListener(() -> {
+            updateThreads();
+        });
 
         updateUI();
         return view;

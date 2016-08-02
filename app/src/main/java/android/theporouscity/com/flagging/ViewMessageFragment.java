@@ -72,17 +72,14 @@ public class ViewMessageFragment extends Fragment {
         getActivity().setTitle(Html.fromHtml(mThreadName));
 
         mOpenTextView = (TextView) view.findViewById(R.id.fragment_view_message_view_textview);
-        mOpenTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(ILXUrlParser.getMessageUrl(mBoardId, mThreadId, mMessage.getMessageId())));
-                startActivity(intent);
-            }
+        mOpenTextView.setOnClickListener((View v) -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(ILXUrlParser.getMessageUrl(mBoardId, mThreadId, mMessage.getMessageId())));
+            startActivity(intent);
         });
 
         mSendTextView = (TextView) view.findViewById(R.id.fragment_view_message_send_textview);
-        mSendTextView.setOnClickListener((View view1) -> {
+        mSendTextView.setOnClickListener((View v) -> {
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_TEXT, ILXUrlParser.getMessageUrl(mBoardId, mThreadId, mMessage.getMessageId()));

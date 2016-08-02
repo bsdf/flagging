@@ -6,7 +6,7 @@ public class ViewBoardsActivity extends SingleFragmentActivity {
 
     @Override
     protected Fragment createFragment() {
-        return ViewBoardsRecyclerViewFragment.newInstance();
+        return ViewBoardsFragment.newInstance();
     }
 
 }

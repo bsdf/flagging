@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -40,6 +39,7 @@ public class ViewThreadFragment extends Fragment {
     private boolean mFetching;
     private int mBoardId;
     private int mThreadId;
+    private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
 
     public ViewThreadFragment() { }
 
@@ -73,7 +73,7 @@ public class ViewThreadFragment extends Fragment {
                 });
     }
 
-    private void loadMoreThread(int numEarlierMessagesToPrepend) {
+    private void loadEarlierMessages(int numEarlierMessagesToPrepend) {
         // TODO this is wasteful, see if there's a way to grab messages X-X'
         int numToRequest = mThread.getLocalMessageCount() + numEarlierMessagesToPrepend;
         ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId,
@@ -96,6 +96,36 @@ public class ViewThreadFragment extends Fragment {
                     mRecyclerView.scrollToPosition(numHeaderRows + numEarlierMessagesToPrepend);
 
         });
+    }
+
+    private void loadLaterMessages(int numToRequest) {
+
+        ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, numToRequest,
+                (Thread thread) -> {
+
+                    int numNewMessages = thread.getServerMessageCount() - mThread.getServerMessageCount();
+                    if (numNewMessages <= numToRequest) {
+
+                        if (mSwipeRefreshLayoutBottom != null) {
+                            mSwipeRefreshLayoutBottom.setRefreshing(false);
+                        }
+
+                        if (numNewMessages > 0) {
+
+                            int numOldMessages = mThread.getLocalMessageCount();
+                            mThread.getMessages().addAll(
+                                    thread.getMessages().subList(numToRequest - numNewMessages, numToRequest));
+                            mThread.updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
+
+                            mThreadAdapter.notifyItemRangeInserted(mThreadAdapter.getNumHeaderRows() + numOldMessages, numNewMessages);
+                            mRecyclerView.scrollToPosition(mThreadAdapter.getNumHeaderRows() + numOldMessages);
+
+                        }
+
+                    } else {
+                        loadLaterMessages(numNewMessages + 10); // try to make sure this is our last request
+                    }
+                });
     }
 
     private void updateUI() {
@@ -146,6 +176,11 @@ public class ViewThreadFragment extends Fragment {
 
         mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_thread_progressbar);
         mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
+
+        mSwipeRefreshLayoutBottom = (SwipeRefreshLayoutBottom) view.findViewById(R.id.fragment_view_thread_swipeContainer);
+        mSwipeRefreshLayoutBottom.setOnRefreshListener(() -> {
+            loadLaterMessages(25);
+        });
 
         updateUI();
 
@@ -261,7 +296,7 @@ public class ViewThreadFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            loadMoreThread(mNumToLoad);
+            loadEarlierMessages(mNumToLoad);
         }
     }
 
