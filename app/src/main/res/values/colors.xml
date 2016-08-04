@@ -9,4 +9,5 @@
     <color name="colorPollClosedBackground">#EEEEEE</color>
     <color name="colorPollOpenBackground">#DDDDDD</color>
     <color name="background">@android:color/white</color>
+    <color name="toolbarColor">#FAFAFA</color>
 </resources>

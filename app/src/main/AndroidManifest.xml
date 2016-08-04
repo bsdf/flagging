@@ -18,7 +18,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ViewBoardActivity"></activity>
-        <activity android:name=".ViewThreadActivity"></activity>
+        <activity android:name=".ViewThreadActivity" android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity android:name=".ViewMessageActivity"></activity>
     </application>
 

@@ -1,7 +1,5 @@
 package android.theporouscity.com.flagging;
 
-import android.theporouscity.com.flagging.ilx.Message;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,11 +18,20 @@ public class ILXUrlParser {
         }
     }
 
-    public static ThreadIds getThreadIds(String url) {
-        Pattern pattern = Pattern.compile("boardid=([0-9]+)&threadid=([0-9]+)");
+    public static ilxIds getIds(String url) {
+        int boardId, threadId;
+        int messageId = -1;
+
+        Pattern pattern = Pattern.compile("(bookmarkedmessageid=([0-9]+)&){0,1}boardid=([0-9]+)&threadid=([0-9]+)");
         Matcher matcher = pattern.matcher(url);
+
         if (matcher.find()) {
-            ThreadIds ids = new ILXUrlParser().new ThreadIds(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)));
+            boardId = Integer.parseInt(matcher.group(3));
+            threadId = Integer.parseInt(matcher.group(4));
+            if (matcher.group(2) != null) {
+                messageId = Integer.parseInt(matcher.group(2));
+            }
+            ilxIds ids = new ILXUrlParser().new ilxIds(boardId, threadId, messageId);
             return ids;
         } else {
             return null;
@@ -40,13 +47,15 @@ public class ILXUrlParser {
         return url;
     }
 
-    public class ThreadIds {
+    public class ilxIds {
         public int boardId;
         public int threadId;
+        public int messageId;
 
-        public ThreadIds(int boardId, int threadId) {
+        public ilxIds(int boardId, int threadId, int messageId) {
             this.boardId = boardId;
             this.threadId = threadId;
+            this.messageId = messageId;
         }
     }
 

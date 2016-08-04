@@ -36,6 +36,8 @@
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_above="@id/fragment_view_message_button_bar"
-        android:id="@+id/fragment_view_message_webview"></WebView>
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:id="@+id/fragment_view_message_webview"/>
 
 </RelativeLayout>

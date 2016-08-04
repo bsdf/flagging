@@ -162,7 +162,7 @@ public class ViewBoardFragment extends Fragment {
         @Override
         public void onClick(View view) {
             Intent intent = ViewThreadActivity
-                    .newIntent(getActivity(), mThread.getBoardId(), mThread.getThreadId());
+                    .newIntent(getActivity(), mThread.getBoardId(), mThread.getThreadId(), -1);
             startActivity(intent);
         }
     }

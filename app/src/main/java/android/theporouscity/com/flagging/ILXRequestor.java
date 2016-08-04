@@ -22,6 +22,7 @@ import okhttp3.OkHttpClient;
  */
 public class ILXRequestor {
 
+    private static final String TAG = "ILXRequestor";
     private static final String boardsListUrl = "http://ilxor.com/ILX/BoardsXmlControllerServlet";
     private static final String updatedThreadsUrl = "http://ilxor.com/ILX/NewAnswersControllerServlet?xml=true&boardid=";
     private static final String threadUrl = "http://ilxor.com/ILX/ThreadSelectedControllerServlet?xml=true&boardid=";
@@ -59,7 +60,7 @@ public class ILXRequestor {
 
     public void getBoards(BoardsCallback boardsCallback) {
         if (mBoards == null) {
-            Log.d("ILXRequestor", "passing on request for boards xml");
+            Log.d(TAG, "passing on request for boards xml");
             new GetItemsTask(mHttpClient, (String result) -> {
                 if (result != null) {
                     mBoards = mSerializer.read(Boards.class, result, false);
@@ -67,14 +68,14 @@ public class ILXRequestor {
                 boardsCallback.onComplete(mBoards);
             }).execute(boardsListUrl);
         } else {
-            Log.d("ILXRequestor", "returning cached boards");
+            Log.d(TAG, "returning cached boards");
             boardsCallback.onComplete(mBoards);
         }
     }
 
     public void getRecentlyUpdatedThreads(int boardId, RecentlyUpdatedThreadsCallback threadsCallback) {
         String url = updatedThreadsUrl + boardId;
-        Log.d("ILXRequestor", "passing on request for recent threads");
+        Log.d(TAG, "passing on request for recent threads");
         new GetItemsTask(mHttpClient, (String result) -> {
             if (result != null) {
                 RecentlyUpdatedThreads threads =
@@ -84,13 +85,17 @@ public class ILXRequestor {
         }).execute(url);
     }
 
-    public void getThread(int boardId, int threadId, int count, ThreadCallback threadCallback) {
+    public void getThread(int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback) {
         String url = threadUrl + boardId + "&threadid=" + threadId;
-        if (count > 0) {
+        if (initialMessageId != -1) {
+            url = url + "&bookmarkedmessageid=" + initialMessageId;
+            Log.d(TAG, "requesting a message in a thread");
+        } else if (count > 0) {
             url = url + "&showlastmessages=" + count;
-            Log.d("ILXRequestor", "requesting " + String.valueOf(count) + " items");
+            Log.d(TAG, "requesting " + String.valueOf(count) + " messages in a thread");
+        } else {
+            Log.d(TAG, "getting a thread");
         }
-        Log.d("ILXRequestor", "getting a thread");
         new GetItemsTask(mHttpClient, (String result) -> {
             Thread thread = null;
             if (result != null) {

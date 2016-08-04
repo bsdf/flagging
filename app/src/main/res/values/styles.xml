@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -10,11 +10,18 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
-    <style name="Theme.Flagging.ActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+    <style name="Theme.Flagging.ActionBar" parent="@style/Widget.AppCompat.Light.ActionBar">
         <!-- remove shadow below action bar -->
         <!-- <item name="android:elevation">0dp</item> -->
         <!-- Support library compatibility -->
         <item name="elevation">0dp</item>
+        <item name="android:background">@color/toolbarColor</item>
+        <item name="background">@color/toolbarColor</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <style name="PollItemRow">

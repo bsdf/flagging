@@ -6,15 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.ActionBarOverlayLayout;
 import android.text.Html;
 import android.theporouscity.com.flagging.ilx.Message;
-import android.view.Display;
 import android.view.LayoutInflater;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -93,11 +90,17 @@ public class ViewMessageFragment extends Fragment {
 
         mWebView.setWebViewClient(new WebViewClient(){
                                      public boolean shouldOverrideUrlLoading(WebView webView, String url) {
-                                         if (url != null && ILXUrlParser.isThreadUrl(url)) {
-                                             Activity activity = getActivity();
-                                             Intent intent = ViewThreadActivity.newIntent(activity, url);
-                                             if (intent != null) {
-                                                 activity.startActivity(intent);
+                                         if (url != null) {
+                                             if(ILXUrlParser.isThreadUrl(url)) {
+                                                 Activity activity = getActivity();
+                                                 Intent intent = ViewThreadActivity.newIntent(activity, url);
+                                                 if (intent != null) {
+                                                     activity.startActivity(intent);
+                                                 }
+                                             }
+                                             else {
+                                                 Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                                                 startActivity(i);
                                              }
                                              return true;
                                          } else {
@@ -115,10 +118,16 @@ public class ViewMessageFragment extends Fragment {
             LinearLayout buttonBar = (LinearLayout) view.findViewById(R.id.fragment_view_message_button_bar);
             RelativeLayout relativeLayout = (RelativeLayout) view.findViewById(R.id.fragment_view_message_relativelayout);
             relativeLayout.removeView(buttonBar);
+
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mWebView.getLayoutParams();
+            layoutParams.setMarginStart(0);
+            layoutParams.setMarginStart(0);
+            mWebView.setLayoutParams(layoutParams);
+
         }
 
         mWebView.loadData(ILXTextOutputFormatter.getILXTextOutputFormatter().fixMessageBodyForWebview(mMessage),
-                "text/html", null);
+                "text/html; charset=utf-8", null);
 
         return view;
     }

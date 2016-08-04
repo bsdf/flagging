@@ -156,4 +156,14 @@ public class Thread {
     public int numUnloadedMessages() {
         return getServerMessageCount() - getLocalMessageCount();
     }
+
+    public int getMessagePosition(int messageId) {
+        // fuck it
+        for (int i = 0; i < Messages.size(); i++) {
+            if (Messages.get(i).getMessageId() == messageId) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
