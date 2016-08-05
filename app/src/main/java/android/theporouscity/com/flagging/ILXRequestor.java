@@ -1,6 +1,7 @@
 package android.theporouscity.com.flagging;
 
 import android.theporouscity.com.flagging.ilx.Boards;
+import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
 import android.theporouscity.com.flagging.PollClosingDate;
@@ -13,6 +14,7 @@ import org.simpleframework.xml.transform.Transform;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import okhttp3.OkHttpClient;
@@ -101,8 +103,17 @@ public class ILXRequestor {
             if (result != null) {
                 thread = mSerializer.read(Thread.class, result, false);
             }
+
+            if (thread != null) {
+                processMessagesForDisplay(thread.getMessages());
+            }
+
             threadCallback.onComplete(thread);
         }).execute(url);
+    }
+
+    private void processMessagesForDisplay(List<Message> messages) {
+
     }
 
     private static Persister newPersister() {

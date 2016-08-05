@@ -74,12 +74,6 @@ public class ViewThreadActivity extends AppCompatActivity {
 
     @Override
     public void setTitle(CharSequence title) {
-
-        if (mToolbar == null) {
-            mToolbar = (Toolbar) findViewById(R.id.fragment_view_thread_toolbar);
-            setSupportActionBar(mToolbar);
-        }
-
         if (mToolbar != null) {
             mToolbar.setTitle(title);
         }

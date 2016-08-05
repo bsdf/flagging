@@ -1,6 +1,7 @@
 package android.theporouscity.com.flagging.ilx;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.text.Spanned;
 import android.theporouscity.com.flagging.ILXTextOutputFormatter;
@@ -29,13 +30,13 @@ public class PollWrapper {
         }
     }
 
-    public Spanned getItemTextForDisplay(int position, Activity activity) {
+    public Spanned getItemTextForDisplay(int position, Drawable youtubePlaceholder, int linkColor, Activity activity) {
         if (mThread.isPollClosed()) {
             return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
-                    mThread.getPollResults().get(position).getOption(), activity);
+                    mThread.getPollResults().get(position).getOption(), youtubePlaceholder, linkColor, activity);
         } else {
             return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
-                    mThread.getPollOptions().getPollOptions().get(position).getOptionText(), activity);
+                    mThread.getPollOptions().getPollOptions().get(position).getOptionText(), youtubePlaceholder, linkColor, activity);
         }
     }
 

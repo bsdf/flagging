@@ -11,6 +11,7 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
+import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.util.Log;
@@ -59,12 +60,12 @@ public class ILXTextOutputFormatter {
         return newBody;
     }
 
-    public Spanned getBodyForDisplayShort(String text, Activity activity) {
-        Spanned newString = Html.fromHtml(text, null, new ILXTagHandler(activity));
-        return fixSpannable(new SpannableStringBuilder(newString), activity);
+    public Spanned getBodyForDisplayShort(String text, Drawable youtubePlaceholderImage, int linkColor, Activity activity) {
+        Spanned newString = Html.fromHtml(text, null, new ILXTagHandler(youtubePlaceholderImage));
+        return fixSpannable(new SpannableStringBuilder(newString), linkColor, activity);
     }
 
-    private SpannableStringBuilder fixSpannable(SpannableStringBuilder spannable, Activity activity) {
+    private SpannableStringBuilder fixSpannable(SpannableStringBuilder spannable, int linkColor, Activity activity) {
 
         if (spannable == null) {
             return null;
@@ -96,7 +97,7 @@ public class ILXTextOutputFormatter {
                 int end = spannable.getSpanEnd(span);
                 String url = span.getURL();
                 spannable.removeSpan(span);
-                spannable.setSpan(new ILXURLSpan(url, activity), start, end, 0);
+                spannable.setSpan(new ILXURLSpan(url, linkColor, activity), start, end, 0);
             }
         }
 
@@ -108,13 +109,12 @@ public class ILXTextOutputFormatter {
         private String mThreadUrl;
         private Activity mActivity;
 
-        public ILXURLSpan(String url, Activity activity) {
+        public ILXURLSpan(String url, int linkColor, Activity activity) {
 
-            mActivity = activity;
             mThreadUrl = url;
+            mActivity = activity;
 
             TextPaint textPaint = new TextPaint();
-            textPaint.linkColor = ContextCompat.getColor(activity, R.color.colorAccent);
             updateDrawState(textPaint);
         }
 
@@ -132,10 +132,10 @@ public class ILXTextOutputFormatter {
 
     private class ILXTagHandler implements Html.TagHandler {
 
-        private Activity mActivity;
+        private Drawable mYoutubePlaceholderImage;
 
-        public ILXTagHandler(Activity activity) {
-            mActivity = activity;
+        public ILXTagHandler(Drawable youtubePlaceholderImage) {
+            mYoutubePlaceholderImage = youtubePlaceholderImage;
         }
 
         public void handleTag(boolean opening, String tag, Editable output,
@@ -148,9 +148,8 @@ public class ILXTextOutputFormatter {
         }
 
         private void processObject(Editable output) {
-            Drawable d = mActivity.getDrawable(android.R.drawable.ic_menu_slideshow);
-            d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-            ImageSpan span = new ImageSpan(d, ImageSpan.ALIGN_BASELINE);
+
+            ImageSpan span = new ImageSpan(mYoutubePlaceholderImage, ImageSpan.ALIGN_BASELINE);
 
             // hmmm
             if (output.toString().endsWith("\n")) {

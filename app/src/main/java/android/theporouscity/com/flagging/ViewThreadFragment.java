@@ -2,10 +2,12 @@ package android.theporouscity.com.flagging;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -20,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,6 +47,8 @@ public class ViewThreadFragment extends Fragment {
     private int mThreadId;
     private int mInitialMessageId;
     private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
+    private Drawable mYoutubePlaceholderImage;
+    private int mLinkColor;
 
     public ViewThreadFragment() { }
 
@@ -64,6 +69,9 @@ public class ViewThreadFragment extends Fragment {
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
             mInitialMessageId = getArguments().getInt(ARG_MESSAGE_ID);
+            mYoutubePlaceholderImage = getActivity().getDrawable(android.R.drawable.ic_menu_slideshow);
+            mYoutubePlaceholderImage.setBounds(0, 0, mYoutubePlaceholderImage.getIntrinsicWidth(), mYoutubePlaceholderImage.getIntrinsicHeight());
+            mLinkColor = ContextCompat.getColor(getActivity(), R.color.colorAccent);
             loadThread();
         }
     }
@@ -77,6 +85,7 @@ public class ViewThreadFragment extends Fragment {
                         mThread = thread;
                         mPollWrapper = new PollWrapper(mThread);
                         updateUI();
+                        prepMessagesForDisplay(mThread.getMessages().size() - 1);
                     });
         } else {
             ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, mInitialMessageId, -1,
@@ -85,8 +94,25 @@ public class ViewThreadFragment extends Fragment {
                         mThread = thread;
                         mPollWrapper = new PollWrapper(mThread);
                         updateUI();
+                        prepMessagesForDisplay(mThread.getMessagePosition(mInitialMessageId));
                     });
         }
+    }
+
+    private void prepMessagesForDisplay(int startPosition) {
+        ArrayList<Message> messagestoPrep = new ArrayList<Message>();
+
+        int numTotalMessages = mThread.getMessages().size();
+        if (startPosition < (numTotalMessages - 1)) {
+            messagestoPrep.addAll(mThread.getMessages().subList(startPosition + 1, numTotalMessages));
+        }
+        if (startPosition > 0) {
+            for (int i = startPosition - 1; i > 0; i--) {
+                messagestoPrep.add(mThread.getMessages().get(i));
+            }
+        }
+
+        new PrepMessagesTask(mYoutubePlaceholderImage, mLinkColor, getActivity()).execute(messagestoPrep);
     }
 
     private int numHeaderRows() {
@@ -168,21 +194,26 @@ public class ViewThreadFragment extends Fragment {
                 ((AppBarLayout) getActivity().findViewById(R.id.fragment_view_thread_appbarlayout)).setElevation(0);
             }
 
-            int scrollPosition = numHeaderRows();
-            if (mInitialMessageId == -1) {
-                scrollPosition = mThread.getMessages().size() - 1;
-                ((AppBarLayout) getActivity().findViewById(R.id.fragment_view_thread_appbarlayout)).setExpanded(false, true);
-            } else {
-                // TODO what to do about titlebar if they bookmark, like, the second to last message. oh god layout calculations ugh
-                scrollPosition = mThread.getMessagePosition(mInitialMessageId);
+            if (mInitialMessageId != -1) {
+                int scrollPosition = numHeaderRows() + mThread.getMessagePosition(mInitialMessageId);
+                mRecyclerView.scrollToPosition(scrollPosition);
             }
-            mRecyclerView.scrollToPosition(scrollPosition);
 
             mThreadAdapter = new ThreadAdapter();
             mRecyclerView.setAdapter(mThreadAdapter);
 
             Log.d(TAG, "Updated UI");
         }
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        //if (((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition() > 0) {
+            ((AppBarLayout) getActivity().findViewById(R.id.fragment_view_thread_appbarlayout)).setExpanded(false, true);
+        //}
+
     }
 
     @Nullable
@@ -195,6 +226,7 @@ public class ViewThreadFragment extends Fragment {
 
         final LinearLayoutManager layoutManager = new LinearLayoutManager(
                 getActivity(), LinearLayoutManager.VERTICAL, false);
+        layoutManager.setStackFromEnd(true);
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_thread_recyclerview);
         mRecyclerView.setLayoutManager(layoutManager);
@@ -252,7 +284,7 @@ public class ViewThreadFragment extends Fragment {
         public void bindMessage(Message message) {
             mMessage = message;
 
-            mBodyTextView.setText(mMessage.getBodyForDisplayShort(getActivity()));
+            mBodyTextView.setText(mMessage.getBodyForDisplayShort(mYoutubePlaceholderImage, mLinkColor, getActivity()));
             mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(mMessage.getTimestamp(), false));
             mDisplayNameTextView.setText(mMessage.getDisplayNameForDisplay());
         }
@@ -290,10 +322,10 @@ public class ViewThreadFragment extends Fragment {
 
         public void bindPollItem(int position) {
             if (mPollWrapper.isClosed()) {
-                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, getActivity()));
+                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, mYoutubePlaceholderImage, mLinkColor, getActivity()));
                 mPollItemVotesTextView.setText(mPollWrapper.getVoteCountForDisplay(position));
             } else {
-                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, getActivity()));
+                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, mYoutubePlaceholderImage, mLinkColor, getActivity()));
             }
         }
     }

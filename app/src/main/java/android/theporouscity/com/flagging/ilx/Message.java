@@ -57,6 +57,9 @@ public class Message implements Parcelable {
     private int BoardId;
     private int ThreadId;
 
+    private Spanned mDisplayNameForDisplay;
+    private Spanned mBodyForDisplayShort;
+
     public Message(@Element(name="MessageId") int messageId,
                    @Element(name="Deleted") Boolean deleted,
                    @Element(name="Timestamp") Date timestamp,
@@ -67,6 +70,9 @@ public class Message implements Parcelable {
         Timestamp = timestamp;
         DisplayName = displayName;
         Body = body;
+
+        mDisplayNameForDisplay = null;
+        mBodyForDisplayShort = null;
     }
 
     public int getMessageId() { return MessageId; }
@@ -78,13 +84,28 @@ public class Message implements Parcelable {
     public String getDisplayName() { return DisplayName; }
 
     public Spanned getDisplayNameForDisplay() {
-        return Html.fromHtml(DisplayName, null, null);
+        prepDisplayNameForDisplay();
+        return mDisplayNameForDisplay;
+    }
+
+    public void prepDisplayNameForDisplay() {
+        if (mDisplayNameForDisplay == null) {
+            mDisplayNameForDisplay = Html.fromHtml(DisplayName, null, null);
+        }
     }
 
     public String getBody() { return Body; }
 
-    public Spanned getBodyForDisplayShort(Activity activity) { // TODO probably shouldn't know about formatter
-        return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(Body, activity);
+    public Spanned getBodyForDisplayShort(Drawable youtubePlaceholderImage, int linkColor, Activity activity) { // TODO probably shouldn't know about formatter
+        prepBodyForDisplayShort(youtubePlaceholderImage, linkColor, activity);
+        return mBodyForDisplayShort;
+    }
+
+    public void prepBodyForDisplayShort(Drawable youtubePlaceholderImage, int linkColor, Activity activity) {
+        if (mBodyForDisplayShort == null) {
+            mBodyForDisplayShort = ILXTextOutputFormatter.getILXTextOutputFormatter()
+                    .getBodyForDisplayShort(Body, youtubePlaceholderImage, linkColor, activity);
+        }
     }
 
     public void setMessageId(int messageId) {
