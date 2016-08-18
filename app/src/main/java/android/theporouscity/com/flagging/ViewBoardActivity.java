@@ -22,11 +22,11 @@ public class ViewBoardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_fragment);
 
         FragmentManager fm = getSupportFragmentManager();
-        ViewBoardFragment fragment = (ViewBoardFragment) fm.findFragmentById(R.id.fragment_container);
+        ViewThreadsFragment fragment = (ViewThreadsFragment) fm.findFragmentById(R.id.fragment_container);
 
         if (fragment == null) {
             Board board = (Board) getIntent().getParcelableExtra(EXTRA_BOARD);
-            fragment = ViewBoardFragment.newInstance(board);
+            fragment = ViewThreadsFragment.newInstance(board);
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
                     .commit();

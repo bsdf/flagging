@@ -6,6 +6,8 @@
     android:background="@color/colorPollClosedBackground"
     android:id="@+id/constraintLayout">
 
+    <!-- TODO change to relativelayout -->
+
     <TextView
         android:text="This is a poll option"
         android:layout_width="0dp"

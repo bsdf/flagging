@@ -673,7 +673,7 @@ public class SwipeRefreshLayoutBottom extends ViewGroup {
                 return true;
             }
         } else {
-            return ViewCompat.canScrollVertically(mTarget, 1);
+            return ViewCompat.canScrollVertically(mTarget, 1); // TODO janky with collapsing toolbar etc
         }
     }
 

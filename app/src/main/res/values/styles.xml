@@ -19,6 +19,11 @@
         <item name="background">@color/toolbarColor</item>
     </style>
 
+    <style name="FlaggingToolbar">
+        <item name="android:background">@color/toolbarColor</item>
+        <item name="background">@color/toolbarColor</item>
+    </style>
+
     <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

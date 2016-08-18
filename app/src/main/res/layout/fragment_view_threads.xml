@@ -2,7 +2,7 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="android.theporouscity.com.flagging.ViewBoardFragment">
+             tools:context="android.theporouscity.com.flagging.ViewThreadsFragment">
 
     <android.support.v4.widget.SwipeRefreshLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|center_vertical"
-        android:text="Sorry, couldn't load the board."
+        android:text="Sorry, couldn't load the threads."
         android:textSize="16sp"
         android:fontFamily="sans-serif"
         android:textColor="@color/colorTextPrimary"

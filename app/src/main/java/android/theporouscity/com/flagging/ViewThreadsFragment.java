@@ -7,6 +7,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.theporouscity.com.flagging.ilx.Board;
+import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
 import android.util.Log;
@@ -23,26 +24,41 @@ import java.util.Date;
 import java.util.List;
 
 
-public class ViewBoardFragment extends Fragment {
+public class ViewThreadsFragment extends Fragment {
 
     private static final String ARG_BOARD = "board";
+    private static final String ARG_MODE = "mode";
+    private static final int MODE_BOARD = 0;
+    private static final int MODE_SNA = 1;
+    private int mMode;
     private Board mBoard;
+    private Boards mBoards;
     private RecentlyUpdatedThreads mThreads;
     private RecyclerView mRecyclerView;
     private ThreadAdapter mThreadAdapter;
     private ProgressBar mProgressBar;
     private TextView mLoadErrorTextView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private boolean mFetching;
+    private boolean mFetchingThreads;
+    private boolean mFetchingBoards;
 
-    public ViewBoardFragment() {
+    public ViewThreadsFragment() {
         // Required empty public constructor
     }
 
-    public static ViewBoardFragment newInstance(Board board) {
-        ViewBoardFragment fragment = new ViewBoardFragment();
+    public static ViewThreadsFragment newInstance(Board board) {
+        ViewThreadsFragment fragment = new ViewThreadsFragment();
         Bundle args = new Bundle();
+        args.putInt(ARG_MODE, MODE_BOARD);
         args.putParcelable(ARG_BOARD, board);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    public static ViewThreadsFragment newInstance() {
+        ViewThreadsFragment fragment = new ViewThreadsFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARG_MODE, MODE_SNA);
         fragment.setArguments(args);
         return fragment;
     }
@@ -51,49 +67,89 @@ public class ViewBoardFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        mBoard = null;
+        mFetchingBoards = false;
         if (getArguments() != null) {
-            mBoard = getArguments().getParcelable(ARG_BOARD);
+            if (getArguments().getInt(ARG_MODE) == MODE_BOARD) {
+                mMode = MODE_BOARD;
+                mBoard = getArguments().getParcelable(ARG_BOARD);
+            } else if (getArguments().getInt(ARG_MODE) == MODE_SNA) {
+                mMode = MODE_SNA;
+                getBoards();
+            }
             updateThreads();
-        } else {
-            mBoard = null;
         }
     }
 
     private void updateThreads() {
-        mFetching = true;
-        ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getBoardId(),
-                (RecentlyUpdatedThreads threads) -> {
-                    mFetching = false;
-                    mThreads = threads;
-                    if (mSwipeRefreshLayout != null) {
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                    if (mThreads != null) {
-                        Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
-                    }
-                    updateUI();
-        });
+        mFetchingThreads = true;
+        if (mMode == MODE_BOARD) {
+            ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getBoardId(),
+                    (RecentlyUpdatedThreads threads) -> {
+                        updateThreadsReady(threads);
+                    });
+        } else if (mMode == MODE_SNA) {
+            ILXRequestor.getILXRequestor().getSiteNewAnswers(
+                    (RecentlyUpdatedThreads threads) -> {
+                        updateThreadsReady(threads);
+                    });
+        }
+    }
+
+    private void getBoards() {
+        mFetchingBoards = true;
+        if (mMode == MODE_SNA) {
+            ILXRequestor.getILXRequestor().getBoards(
+                    (Boards boards) -> {
+                        getBoardsReady(boards);
+            });
+        }
+    }
+
+    private void getBoardsReady(Boards boards) {
+        mFetchingBoards = false;
+        mBoards = boards;
+        updateUI();
+    }
+
+    private void updateThreadsReady(RecentlyUpdatedThreads threads) {
+        mFetchingThreads = false;
+        mThreads = threads;
+        if (mSwipeRefreshLayout != null) {
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
+        if (mThreads != null) {
+            Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
+        }
+        updateUI();
     }
 
     private void updateUI() {
 
-        if (mProgressBar != null) {
-            if (mFetching) {
-                mProgressBar.setVisibility(ProgressBar.VISIBLE);
-            } else {
-                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                if (mThreads == null) {
-                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
-                } else if (mThreads.getRecentlyUpdatedThreads().size() == 0) {
-                    mLoadErrorTextView.setText("No recent threads");
-                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
-                }
+        updateProgressBar();
+
+        if (!mFetchingThreads && !mFetchingBoards && mLoadErrorTextView != null) {
+            if (mThreads == null) {
+                mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+            } else if (mThreads.getRecentlyUpdatedThreads().size() == 0) {
+                mLoadErrorTextView.setText("No recent threads");
+                mLoadErrorTextView.setVisibility(TextView.VISIBLE);
             }
         }
 
-        if (mRecyclerView != null && mThreads != null) {
+        if (mRecyclerView != null && mThreads != null && (mBoards != null || mMode == MODE_BOARD)) {
             mThreadAdapter = new ThreadAdapter();
             mRecyclerView.setAdapter(mThreadAdapter);
+        }
+    }
+
+    private void updateProgressBar() {
+        if (mProgressBar != null) {
+            if (mFetchingThreads || mFetchingBoards) {
+                mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            } else {
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+            }
         }
     }
 
@@ -107,8 +163,12 @@ public class ViewBoardFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        getActivity().setTitle(mBoard.getName());
-        View view = inflater.inflate(R.layout.fragment_view_board, container, false);
+
+        if (mMode == MODE_BOARD) {
+            getActivity().setTitle(mBoard.getName());
+        }
+
+        View view = inflater.inflate(R.layout.fragment_view_threads, container, false);
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_threads_recyclerview);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -142,14 +202,25 @@ public class ViewBoardFragment extends Fragment {
         private RecentlyUpdatedThread mThread;
         private TextView mTitleTextView;
         private TextView mDateTextView;
+        private TextView mBoardTitleTextView;
 
         public ThreadHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
-            mTitleTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_thread_title_text_view);
-            mDateTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_thread_date_text_view);
+
+            if (mMode == MODE_BOARD) {
+                mTitleTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_thread_title_text_view);
+                mDateTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_thread_date_text_view);
+            } else if (mMode == MODE_SNA) {
+                mTitleTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_snathread_title_text_view);
+                mDateTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_snathread_date_text_view);
+                mBoardTitleTextView = (TextView) itemView
+                        .findViewById(R.id.list_item_snathread_board_name_text_view);
+            }
         }
 
         public void bindThread(RecentlyUpdatedThread thread) {
@@ -157,6 +228,9 @@ public class ViewBoardFragment extends Fragment {
             mTitleTextView.setText(mThread.getTitleForDisplay());
             Date lastUpdated = mThread.getLastUpdated();
             mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(lastUpdated, false));
+            if (mMode == MODE_SNA) {
+                mBoardTitleTextView.setText(mBoards.getBoardById(mThread.getBoardId()).getName());
+            }
         }
 
         @Override
@@ -178,7 +252,12 @@ public class ViewBoardFragment extends Fragment {
         @Override
         public ThreadHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-            View view = layoutInflater.inflate(R.layout.list_item_thread, parent, false);
+            View view = null;
+            if (mMode == MODE_BOARD) {
+                view = layoutInflater.inflate(R.layout.list_item_thread, parent, false);
+            } else if (mMode == MODE_SNA) {
+                view = layoutInflater.inflate(R.layout.list_item_sna_thread, parent, false);
+            }
             return new ThreadHolder(view);
         }
 

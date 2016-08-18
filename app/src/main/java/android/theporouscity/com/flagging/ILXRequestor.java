@@ -28,6 +28,7 @@ public class ILXRequestor {
     private static final String boardsListUrl = "http://ilxor.com/ILX/BoardsXmlControllerServlet";
     private static final String updatedThreadsUrl = "http://ilxor.com/ILX/NewAnswersControllerServlet?xml=true&boardid=";
     private static final String threadUrl = "http://ilxor.com/ILX/ThreadSelectedControllerServlet?xml=true&boardid=";
+    private static final String snaUrl = "http://ilxor.com/ILX/SiteNewAnswersControllerServlet?xml=true";
 
     private static ILXRequestor mILXRequestor;
     private static OkHttpClient mHttpClient;
@@ -85,6 +86,17 @@ public class ILXRequestor {
                 threadsCallback.onComplete(threads);
             }
         }).execute(url);
+    }
+
+    public void getSiteNewAnswers(RecentlyUpdatedThreadsCallback threadsCallback) {
+        Log.d(TAG, "getting site new answers");
+        new GetItemsTask(mHttpClient, (String result) -> {
+            if (result != null) {
+                RecentlyUpdatedThreads threads =
+                        mSerializer.read(RecentlyUpdatedThreads.class, result, false);
+                threadsCallback.onComplete(threads);
+            }
+        }).execute(snaUrl);
     }
 
     public void getThread(int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback) {
