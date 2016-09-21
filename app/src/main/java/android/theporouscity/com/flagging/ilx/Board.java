@@ -1,7 +1,10 @@
 package android.theporouscity.com.flagging.ilx;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.theporouscity.com.flagging.ILXRequestor;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -27,9 +30,7 @@ public class Board implements Parcelable {
     @Element(name="Popular")
     private String Popular;
 
-    public int getBoardId() {
-        return BoardId;
-    }
+    private boolean mEnabled;
 
     public String isPrivate() {
 
@@ -62,6 +63,19 @@ public class Board implements Parcelable {
         return BoardId;
     }
 
+    public boolean isEnabled() {
+        return mEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        mEnabled = enabled;
+    }
+
+    public void setEnabledAndPersist(boolean enabled) {
+        mEnabled = enabled;
+        ILXRequestor.getILXRequestor().persistBoardEnabledState(this);
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -74,6 +88,7 @@ public class Board implements Parcelable {
         parcel.writeInt(BoardId);
         parcel.writeString(Private);
         parcel.writeString(Popular);
+        parcel.writeInt(mEnabled ? 1 : 0);
     }
 
     public Board(Parcel parcel) {
@@ -82,6 +97,7 @@ public class Board implements Parcelable {
         BoardId = parcel.readInt();
         Private = parcel.readString();
         Popular = parcel.readString();
+        mEnabled = parcel.readInt() == 1;
     }
 
     public static final Parcelable.Creator<Board> CREATOR = new Parcelable.Creator<Board>() {

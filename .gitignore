@@ -6,3 +6,5 @@
 .DS_Store
 /build
 /captures
+labs/.ip/*
+labs/.ipnyb_checkpoints/*

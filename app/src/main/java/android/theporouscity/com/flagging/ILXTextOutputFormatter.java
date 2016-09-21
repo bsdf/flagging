@@ -57,6 +57,12 @@ public class ILXTextOutputFormatter {
         iframeSrc = iframeSrc + "src=\"http://www.youtube.com/embed/$1?html5=1&fs=1&controls=2&modestbranding=1\" frameborder=0 allowfullscreen></iframe></div>";
         newBody = matcher.replaceAll(iframeSrc);
 
+        // theoretically I guess I could look at the posting date to decide which youtube code to look for, eh
+
+        pattern = Pattern.compile("<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/([0-9a-zA-Z_-]+)\" frameborder=\"0\" allowfullscreen></iframe>");
+        matcher = pattern.matcher(newBody);
+        newBody = matcher.replaceAll(iframeSrc);
+
         return newBody;
     }
 
@@ -140,7 +146,7 @@ public class ILXTextOutputFormatter {
 
         public void handleTag(boolean opening, String tag, Editable output,
                               XMLReader xmlReader) {
-            if (tag.equalsIgnoreCase("object")) {
+            if (tag.equalsIgnoreCase("object") || tag.equalsIgnoreCase("iframe")) {
                 if (opening) {
                     processObject(output);
                 }

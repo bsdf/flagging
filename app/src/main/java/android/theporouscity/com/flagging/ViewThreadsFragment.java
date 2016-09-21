@@ -84,7 +84,7 @@ public class ViewThreadsFragment extends Fragment {
     private void updateThreads() {
         mFetchingThreads = true;
         if (mMode == MODE_BOARD) {
-            ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getBoardId(),
+            ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getId(),
                     (RecentlyUpdatedThreads threads) -> {
                         updateThreadsReady(threads);
                     });
@@ -102,7 +102,7 @@ public class ViewThreadsFragment extends Fragment {
             ILXRequestor.getILXRequestor().getBoards(
                     (Boards boards) -> {
                         getBoardsReady(boards);
-            });
+            }, getContext());
         }
     }
 

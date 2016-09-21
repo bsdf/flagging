@@ -9,7 +9,7 @@ android {
             storePassword 'Bv$9d3lt0'
         }
     }
-    buildToolsVersion "24.0.0"
+    buildToolsVersion "24.0.2"
     compileSdkVersion 24
     defaultConfig {
         applicationId "android.theporouscity.com.flagging"
@@ -19,6 +19,7 @@ android {
         versionName "1.0"
         jackOptions {
             enabled true
+            additionalParameters("jack.import.type.policy" : "keep-first")
         }
         signingConfig signingConfigs.config
     }
@@ -41,10 +42,10 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.android.support:recyclerview-v7:24.1.1'
-    compile 'com.android.support:design:24.1.1'
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:recyclerview-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'org.simpleframework:simple-xml:2.7.1'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha8'
 }
