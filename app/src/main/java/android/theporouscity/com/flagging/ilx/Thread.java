@@ -10,7 +10,9 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by bergstroml on 2/29/16.
@@ -165,5 +167,20 @@ public class Thread {
             }
         }
         return -1;
+    }
+
+    public boolean noDuplicates() {
+
+        Set<Integer> set = new HashSet<Integer>();
+
+        for (Message message : Messages) {
+            set.add(message.getMessageId());
+        }
+
+        if (set.size() < Messages.size()) {
+            return false;
+        }
+
+        return true;
     }
 }

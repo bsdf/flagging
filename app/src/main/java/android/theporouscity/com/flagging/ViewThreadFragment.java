@@ -37,6 +37,12 @@ public class ViewThreadFragment extends Fragment {
     private static final String ARG_MESSAGE_ID = "message_id";
     private static final int mDefaultMessagesChunk = 100;
     private Thread mThread;
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
     private PollWrapper mPollWrapper;
     private RecyclerView mRecyclerView;
     private ThreadAdapter mThreadAdapter;
@@ -46,6 +52,7 @@ public class ViewThreadFragment extends Fragment {
     private int mBoardId;
     private int mThreadId;
     private int mInitialMessageId;
+    private int mMessagesLoaded;
     private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
     private Drawable mYoutubePlaceholderImage;
     private int mLinkColor;
@@ -69,11 +76,24 @@ public class ViewThreadFragment extends Fragment {
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
             mInitialMessageId = getArguments().getInt(ARG_MESSAGE_ID);
-            mYoutubePlaceholderImage = getActivity().getDrawable(android.R.drawable.ic_menu_slideshow);
-            mYoutubePlaceholderImage.setBounds(0, 0, mYoutubePlaceholderImage.getIntrinsicWidth(), mYoutubePlaceholderImage.getIntrinsicHeight());
-            mLinkColor = ContextCompat.getColor(getActivity(), R.color.colorAccent);
+            getDrawingResources();
             loadThread();
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState");
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("BoardId", mBoardId);
+        outState.putSerializable("ThreadId", mThreadId);
+        outState.putSerializable("InitialMessageId", mInitialMessageId);
+    }
+
+    private void getDrawingResources() {
+        mYoutubePlaceholderImage = getActivity().getDrawable(android.R.drawable.ic_menu_slideshow);
+        mYoutubePlaceholderImage.setBounds(0, 0, mYoutubePlaceholderImage.getIntrinsicWidth(), mYoutubePlaceholderImage.getIntrinsicHeight());
+        mLinkColor = ContextCompat.getColor(getActivity(), R.color.colorAccent);
     }
 
     private void loadThread() {
@@ -162,6 +182,8 @@ public class ViewThreadFragment extends Fragment {
                             mThread.getMessages().addAll(
                                     thread.getMessages().subList(numToRequest - numNewMessages, numToRequest));
                             mThread.updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
+
+                            assert (mThread.noDuplicates());
 
                             mThreadAdapter.notifyItemRangeInserted(numHeaderRows() + numOldMessages, numNewMessages);
                             mRecyclerView.scrollToPosition(numHeaderRows() + numOldMessages);
@@ -335,6 +357,7 @@ public class ViewThreadFragment extends Fragment {
 
         private TextView mLoadMoreTextView;
         private int mNumToLoad;
+        private boolean mLoading;
 
         public LoaderHolder(View itemView) {
             super(itemView);
@@ -344,13 +367,17 @@ public class ViewThreadFragment extends Fragment {
         }
 
         public void bindLoader() {
+            mLoading = false;
             mNumToLoad = Math.min(mThread.numUnloadedMessages(), mDefaultMessagesChunk);
             mLoadMoreTextView.setText("Load " + String.valueOf(mNumToLoad) + " earlier messages");
         }
 
         @Override
         public void onClick(View view) {
-            loadEarlierMessages(mNumToLoad);
+            if (!mLoading) {
+                mLoading = true;
+                loadEarlierMessages(mNumToLoad);
+            }
         }
     }
 

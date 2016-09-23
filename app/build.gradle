@@ -19,7 +19,6 @@ android {
         versionName "1.0"
         jackOptions {
             enabled true
-            additionalParameters("jack.import.type.policy" : "keep-first")
         }
         signingConfig signingConfigs.config
     }
