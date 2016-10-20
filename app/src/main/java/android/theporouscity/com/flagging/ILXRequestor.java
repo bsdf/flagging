@@ -7,7 +7,6 @@ import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
-import android.theporouscity.com.flagging.PollClosingDate;
 import android.util.Log;
 
 import org.simpleframework.xml.Serializer;
@@ -67,6 +66,63 @@ public class ILXRequestor {
         return mILXRequestor;
     }
 
+    public UserAppSettings getUserAppSettings(Context context) {
+
+        UserAppSettings settings = new UserAppSettings();
+
+        if (mPreferences == null) {
+            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+        }
+
+        int loadPrettyPictures = mPreferences.getInt(UserAppSettings.LoadPrettyPicturesSettingKey, -1);
+        if (loadPrettyPictures == -1 || loadPrettyPictures == 0) {
+            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.NEVER);
+        } else if (loadPrettyPictures == 1) {
+            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.ALWAYS);
+        } else if (loadPrettyPictures == 2) {
+            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.WIFI);
+        }
+
+        int pretendToBeLoggedIn = mPreferences.getInt(UserAppSettings.PretendToBeLoggedInKey, -1);
+        if (pretendToBeLoggedIn == 1) {
+            settings.setPretendToBeLoggedInSetting(true);
+        } else {
+            settings.setPretendToBeLoggedInSetting(false);
+        }
+
+        return settings;
+    }
+
+    public void persistUserAppSettings(UserAppSettings settings, Context context) {
+
+        if (mPreferences == null) {
+            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+        }
+
+        SharedPreferences.Editor editor = mPreferences.edit();
+
+        int newLoadPrettyPicturesSetting;
+        if (settings.getLoadPrettyPicturesSetting() == UserAppSettings.LoadPrettyPicturesSetting.ALWAYS) {
+            newLoadPrettyPicturesSetting = 1;
+        } else if (settings.getLoadPrettyPicturesSetting() == UserAppSettings.LoadPrettyPicturesSetting.WIFI) {
+            newLoadPrettyPicturesSetting = 2;
+        } else {
+            newLoadPrettyPicturesSetting = 0;
+        }
+        editor.putInt(UserAppSettings.LoadPrettyPicturesSettingKey, newLoadPrettyPicturesSetting);
+
+        int newPretendToBeLoggedInSetting;
+        if (settings.getPretendToBeLoggedInSetting()) {
+            newPretendToBeLoggedInSetting = 1;
+        } else {
+            newPretendToBeLoggedInSetting = 0;
+        }
+        editor.putInt(UserAppSettings.PretendToBeLoggedInKey, newPretendToBeLoggedInSetting);
+
+        editor.apply();
+
+    }
+
     public void getBoards(BoardsCallback boardsCallback, Context context) {
         if (mBoards == null) {
             Log.d(TAG, "passing on request for boards xml");
@@ -115,7 +171,7 @@ public class ILXRequestor {
 
             SharedPreferences.Editor editor = mPreferences.edit();
             editor.putInt(getBoardEnabledKey(board), enabled);
-            editor.commit();
+            editor.apply();
         }
     }
 

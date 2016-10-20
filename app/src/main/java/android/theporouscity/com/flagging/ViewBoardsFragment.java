@@ -192,7 +192,7 @@ public class ViewBoardsFragment extends Fragment {
             mBoard = board;
             mTitleTextView.setText(board.getName());
             mBoardDescription = board.getDescription();
-            mEnabledSwitch.setOnCheckedChangeListener(null);
+            mEnabledSwitch.setOnCheckedChangeListener(null); //TODO there's got to be a better way
             mEnabledSwitch.setChecked(board.isEnabled());
             if (mEditing) {
                 mEnabledSwitch.setOnCheckedChangeListener((CompoundButton button, boolean isChecked) -> {

@@ -3,6 +3,7 @@ package android.theporouscity.com.flagging;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.support.v4.app.Fragment;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Date;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.List;
 
 public class ViewThreadsFragment extends Fragment {
 
+    private static final String TAG = "ViewThreadsFragment";
     private static final String ARG_BOARD = "board";
     private static final String ARG_MODE = "mode";
     private static final int MODE_BOARD = 0;
@@ -181,6 +184,17 @@ public class ViewThreadsFragment extends Fragment {
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             updateThreads();
         });
+
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fragment_view_threads_fab);
+        if (ILXRequestor.getILXRequestor()
+                .getUserAppSettings(getActivity()).getPretendToBeLoggedInSetting()
+                && mMode == MODE_BOARD) {
+            fab.setVisibility(FloatingActionButton.VISIBLE);
+            fab.setOnClickListener((View v) -> {
+                Log.d(TAG, "asking a new question");
+                Toast.makeText(getContext(), "yup", Toast.LENGTH_LONG).show();
+            });
+        }
 
         updateUI();
         return view;

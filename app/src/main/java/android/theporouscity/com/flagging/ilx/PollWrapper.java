@@ -12,36 +12,47 @@ import android.theporouscity.com.flagging.ILXTextOutputFormatter;
 
 public class PollWrapper {
 
-    private Thread mThread;
+    private RichThreadHolder mThreadHolder;
 
-    public PollWrapper(Thread thread) {
-        mThread = thread;
+    public PollWrapper(RichThreadHolder threadHolder) {
+        mThreadHolder = threadHolder;
     }
 
     public boolean isClosed() {
-        return mThread.isPollClosed();
+        return mThreadHolder.getThread().isPollClosed();
     }
 
     public int getSize() {
-        if (mThread.isPollClosed()) {
-            return mThread.getPollResults().size();
+        if (mThreadHolder.getThread().isPollClosed()) {
+            return mThreadHolder.getThread().getPollResults().size();
         } else {
-            return mThread.getPollOptions().getPollOptions().size();
+            return mThreadHolder.getThread().getPollOptions().getPollOptions().size();
         }
     }
 
-    public Spanned getItemTextForDisplay(int position, Drawable youtubePlaceholder, int linkColor, Activity activity) {
-        if (mThread.isPollClosed()) {
+    public Spanned getItemTextForDisplay(int position, Activity activity,
+                                         ILXTextOutputFormatter.MessageReadyCallback callback) {
+        if (mThreadHolder.getThread().isPollClosed()) {
             return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
-                    mThread.getPollResults().get(position).getOption(), youtubePlaceholder, linkColor, activity);
+                    mThreadHolder.getThread().getPollResults().get(position).getOption(),
+                    mThreadHolder.getYoutubePlaceholderImage(),
+                    mThreadHolder.getEmptyPlaceholderImage(),
+                    mThreadHolder.getLinkColor(),
+                    activity,
+                    callback);
         } else {
             return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
-                    mThread.getPollOptions().getPollOptions().get(position).getOptionText(), youtubePlaceholder, linkColor, activity);
+                    mThreadHolder.getThread().getPollOptions().getPollOptions().get(position).getOptionText(),
+                    mThreadHolder.getYoutubePlaceholderImage(),
+                    mThreadHolder.getEmptyPlaceholderImage(),
+                    mThreadHolder.getLinkColor(),
+                    activity,
+                    callback);
         }
     }
 
     public int getVoteCount(int position) {
-        return mThread.getPollResults().get(position).getVoteCount();
+        return mThreadHolder.getThread().getPollResults().get(position).getVoteCount();
     }
 
     public String getVoteCountForDisplay(int position) {

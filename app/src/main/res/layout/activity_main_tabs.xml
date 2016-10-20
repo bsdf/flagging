@@ -9,14 +9,22 @@
         android:layout_height="wrap_content"
         app:elevation="0dp">
 
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/activity_main_tabs_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            style="@style/FlaggingToolbar"
+            android:text="ilx"
+            app:layout_scrollFlags="scroll|enterAlways"/>
+
         <android.support.design.widget.TabLayout
             android:id="@+id/activity_main_tabs_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             style="@style/FlaggingToolbar"
-            app:layout_scrollFlags="scroll|enterAlways"
             app:tabMode="fixed"
             app:tabGravity="fill"/>
+
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.view.ViewPager

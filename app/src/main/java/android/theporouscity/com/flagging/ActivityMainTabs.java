@@ -1,5 +1,6 @@
 package android.theporouscity.com.flagging;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
@@ -8,7 +9,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -47,6 +50,16 @@ public class ActivityMainTabs extends AppCompatActivity {
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.activity_main_tabs_toolbar);
+        toolbar.setTitle("ILX");
+        toolbar.setOnMenuItemClickListener((MenuItem item) -> {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        });
+        toolbar.inflateMenu(R.menu.activity_main_tabs_menu);
+
     }
 
     private void setupViewPager(ViewPager viewPager, Bundle savedInstanceState) {

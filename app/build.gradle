@@ -47,4 +47,5 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'org.simpleframework:simple-xml:2.7.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha8'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }

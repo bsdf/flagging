@@ -14,6 +14,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.method.LinkMovementMethod;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.PollWrapper;
+import android.theporouscity.com.flagging.ilx.RichMessageHolder;
+import android.theporouscity.com.flagging.ilx.RichThreadHolder;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,7 +38,8 @@ public class ViewThreadFragment extends Fragment {
     private static final String ARG_THREAD_ID = "thread_id";
     private static final String ARG_MESSAGE_ID = "message_id";
     private static final int mDefaultMessagesChunk = 100;
-    private Thread mThread;
+
+    private RichThreadHolder mThreadHolder;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -54,8 +57,6 @@ public class ViewThreadFragment extends Fragment {
     private int mInitialMessageId;
     private int mMessagesLoaded;
     private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
-    private Drawable mYoutubePlaceholderImage;
-    private int mLinkColor;
 
     public ViewThreadFragment() { }
 
@@ -76,7 +77,6 @@ public class ViewThreadFragment extends Fragment {
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
             mInitialMessageId = getArguments().getInt(ARG_MESSAGE_ID);
-            getDrawingResources();
             loadThread();
         }
     }
@@ -90,57 +90,36 @@ public class ViewThreadFragment extends Fragment {
         outState.putSerializable("InitialMessageId", mInitialMessageId);
     }
 
-    private void getDrawingResources() {
-        mYoutubePlaceholderImage = getActivity().getDrawable(android.R.drawable.ic_menu_slideshow);
-        mYoutubePlaceholderImage.setBounds(0, 0, mYoutubePlaceholderImage.getIntrinsicWidth(), mYoutubePlaceholderImage.getIntrinsicHeight());
-        mLinkColor = ContextCompat.getColor(getActivity(), R.color.colorAccent);
-    }
-
     private void loadThread() {
         mFetching = true;
         if (mInitialMessageId == -1) {
             ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1, mDefaultMessagesChunk,
                     (Thread thread) -> {
                         mFetching = false;
-                        mThread = thread;
-                        mPollWrapper = new PollWrapper(mThread);
+                        mThreadHolder = new RichThreadHolder(thread, getContext());
+                        mPollWrapper = new PollWrapper(mThreadHolder);
                         updateUI();
-                        prepMessagesForDisplay(mThread.getMessages().size() - 1);
+                        mThreadHolder.prepMessagesForDisplay(mThreadHolder.getRichMessageHolders().size() - 1, getActivity());
                     });
         } else {
             ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, mInitialMessageId, -1,
                     (Thread thread) -> {
                         mFetching = false;
-                        mThread = thread;
-                        mPollWrapper = new PollWrapper(mThread);
+                        mThreadHolder = new RichThreadHolder(thread, getContext());
+                        mThreadHolder.getDrawingResources(getContext());
+                        mPollWrapper = new PollWrapper(mThreadHolder);
                         updateUI();
-                        prepMessagesForDisplay(mThread.getMessagePosition(mInitialMessageId));
+                        mThreadHolder.prepMessagesForDisplay(mThreadHolder.getThread().getMessagePosition(mInitialMessageId), getActivity());
                     });
         }
     }
 
-    private void prepMessagesForDisplay(int startPosition) {
-        ArrayList<Message> messagestoPrep = new ArrayList<Message>();
-
-        int numTotalMessages = mThread.getMessages().size();
-        if (startPosition < (numTotalMessages - 1)) {
-            messagestoPrep.addAll(mThread.getMessages().subList(startPosition + 1, numTotalMessages));
-        }
-        if (startPosition > 0) {
-            for (int i = startPosition - 1; i > 0; i--) {
-                messagestoPrep.add(mThread.getMessages().get(i));
-            }
-        }
-
-        new PrepMessagesTask(mYoutubePlaceholderImage, mLinkColor, getActivity()).execute(messagestoPrep);
-    }
-
     private int numHeaderRows() {
         int numRows = 1;
-        if (mThread.numUnloadedMessages() > 0) {
+        if (mThreadHolder.getThread().numUnloadedMessages() > 0) {
             numRows = numRows + 1;
         }
-        if (mThread.isPoll()) {
+        if (mThreadHolder.getThread().isPoll()) {
             numRows = numRows + mPollWrapper.getSize();
         }
         return numRows;
@@ -148,15 +127,15 @@ public class ViewThreadFragment extends Fragment {
 
     private void loadEarlierMessages(int numEarlierMessagesToPrepend) {
         // TODO see if there's a way to grab messages X-X'
-        int numToRequest = mThread.getLocalMessageCount() + numEarlierMessagesToPrepend;
+        int numToRequest = mThreadHolder.getThread().getLocalMessageCount() + numEarlierMessagesToPrepend;
         ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1,
                 numToRequest, (Thread thread) -> {
 
-                    int numHeaderRows = numHeaderRows();
-
-                    mThread.getMessages().addAll(0,
+                    mThreadHolder.addMessages(0,
                             thread.getMessages().subList(0, numEarlierMessagesToPrepend));
+                    mThreadHolder.getThread().updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
 
+                    int numHeaderRows = numHeaderRows();
                     mThreadAdapter.notifyItemRangeInserted(numHeaderRows, numEarlierMessagesToPrepend);
                     mThreadAdapter.updateLoader();
                     mRecyclerView.scrollToPosition(numHeaderRows + numEarlierMessagesToPrepend);
@@ -169,7 +148,7 @@ public class ViewThreadFragment extends Fragment {
         ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1, numToRequest,
                 (Thread thread) -> {
 
-                    int numNewMessages = thread.getServerMessageCount() - mThread.getServerMessageCount();
+                    int numNewMessages = thread.getServerMessageCount() - mThreadHolder.getThread().getServerMessageCount();
                     if (numNewMessages <= numToRequest) {
 
                         if (mSwipeRefreshLayoutBottom != null) {
@@ -178,12 +157,14 @@ public class ViewThreadFragment extends Fragment {
 
                         if (numNewMessages > 0) {
 
-                            int numOldMessages = mThread.getLocalMessageCount();
-                            mThread.getMessages().addAll(
+                            int numOldMessages = mThreadHolder.getThread().getLocalMessageCount();
+                            mThreadHolder.addMessages(
                                     thread.getMessages().subList(numToRequest - numNewMessages, numToRequest));
-                            mThread.updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
+                            mThreadHolder.getThread().updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
 
-                            assert (mThread.noDuplicates());
+                            if (!mThreadHolder.getThread().noDuplicates()) {
+                                Log.d(TAG, "******OMG DUPLICATE MESSAGES*******");
+                            }
 
                             mThreadAdapter.notifyItemRangeInserted(numHeaderRows() + numOldMessages, numNewMessages);
                             mRecyclerView.scrollToPosition(numHeaderRows() + numOldMessages);
@@ -203,21 +184,21 @@ public class ViewThreadFragment extends Fragment {
                 mProgressBar.setVisibility(ProgressBar.VISIBLE);
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                if (mThread == null) {
+                if (mThreadHolder.getThread() == null) {
                     mLoadErrorTextView.setVisibility(TextView.VISIBLE);
                 }
             }
         }
 
-        if (mRecyclerView != null && mThread != null) {
+        if (mRecyclerView != null && mThreadHolder!= null && mThreadHolder.getThread() != null) {
 
-            getActivity().setTitle(mThread.getTitleForDisplay());
+            getActivity().setTitle(mThreadHolder.getThread().getTitleForDisplay());
             if (android.os.Build.VERSION.SDK_INT > 21) {
                 ((AppBarLayout) getActivity().findViewById(R.id.fragment_view_thread_appbarlayout)).setElevation(0);
             }
 
             if (mInitialMessageId != -1) {
-                int scrollPosition = numHeaderRows() + mThread.getMessagePosition(mInitialMessageId);
+                int scrollPosition = numHeaderRows() + mThreadHolder.getThread().getMessagePosition(mInitialMessageId);
                 mRecyclerView.scrollToPosition(scrollPosition);
             }
 
@@ -267,6 +248,24 @@ public class ViewThreadFragment extends Fragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, "pausing thread fragment");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, "stopping thread fragment");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "destroying thread fragment");
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
     }
@@ -279,7 +278,7 @@ public class ViewThreadFragment extends Fragment {
     private class MessageHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
-        private Message mMessage;
+        private RichMessageHolder mRichMessageHolder;
         private TextView mBodyTextView;
         private TextView mDateTextView;
         private TextView mDisplayNameTextView;
@@ -303,12 +302,19 @@ public class ViewThreadFragment extends Fragment {
             mBodyTextView.setMovementMethod(LinkMovementMethod.getInstance());
         }
 
-        public void bindMessage(Message message) {
-            mMessage = message;
+        public void bindMessage(RichMessageHolder richMessageHolder) {
+            mRichMessageHolder = richMessageHolder;
+            ILXTextOutputFormatter.MessageReadyCallback callback = () -> {
+                Log.d(TAG, "requesting message re-layout");
+                mThreadAdapter.notifyItemChanged(getAdapterPosition());
+            };
 
-            mBodyTextView.setText(mMessage.getBodyForDisplayShort(mYoutubePlaceholderImage, mLinkColor, getActivity()));
-            mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(mMessage.getTimestamp(), false));
-            mDisplayNameTextView.setText(mMessage.getDisplayNameForDisplay());
+            mBodyTextView.setText(
+                    mRichMessageHolder.getBodyForDisplayShort(getActivity(), callback));
+
+            mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(
+                    mRichMessageHolder.getMessage().getTimestamp(), false));
+            mDisplayNameTextView.setText(mRichMessageHolder.getDisplayNameForDisplay());
         }
 
         @Override
@@ -317,7 +323,9 @@ public class ViewThreadFragment extends Fragment {
         }
 
         private void openMessage() {
-            Intent intent = ViewMessageActivity.newIntent(getActivity(), mMessage, mBoardId, mThreadId, mThread.getTitle());
+            Intent intent = ViewMessageActivity.newIntent(getActivity(),
+                    mRichMessageHolder.getMessage(), mBoardId, mThreadId,
+                    mThreadHolder.getThread().getTitle());
             startActivity(intent);
         }
     }
@@ -330,7 +338,7 @@ public class ViewThreadFragment extends Fragment {
         public PollItemHolder(View itemView) {
             super(itemView);
 
-            if (mThread.isPollClosed()) {
+            if (mThreadHolder.getThread().isPollClosed()) {
                 mPollItemTextTextView = (TextView) itemView
                         .findViewById(R.id.list_item_poll_option_closed_text);
                 mPollItemVotesTextView = (TextView) itemView
@@ -343,11 +351,11 @@ public class ViewThreadFragment extends Fragment {
         }
 
         public void bindPollItem(int position) {
+            mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(
+                    position, getActivity(),
+                    () -> { mThreadAdapter.notifyItemChanged(getAdapterPosition()); }));
             if (mPollWrapper.isClosed()) {
-                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, mYoutubePlaceholderImage, mLinkColor, getActivity()));
                 mPollItemVotesTextView.setText(mPollWrapper.getVoteCountForDisplay(position));
-            } else {
-                mPollItemTextTextView.setText(mPollWrapper.getItemTextForDisplay(position, mYoutubePlaceholderImage, mLinkColor, getActivity()));
             }
         }
     }
@@ -368,7 +376,7 @@ public class ViewThreadFragment extends Fragment {
 
         public void bindLoader() {
             mLoading = false;
-            mNumToLoad = Math.min(mThread.numUnloadedMessages(), mDefaultMessagesChunk);
+            mNumToLoad = Math.min(mThreadHolder.getThread().numUnloadedMessages(), mDefaultMessagesChunk);
             mLoadMoreTextView.setText("Load " + String.valueOf(mNumToLoad) + " earlier messages");
         }
 
@@ -391,7 +399,7 @@ public class ViewThreadFragment extends Fragment {
         }
 
         public void bindHeader() {
-            mHeaderTextView.setText(mThread.getTitleForDisplay());
+            mHeaderTextView.setText(mThreadHolder.getThread().getTitleForDisplay());
         }
     }
 
@@ -408,7 +416,8 @@ public class ViewThreadFragment extends Fragment {
             if (mPollWrapper.isClosed()) {
                 mPollHeaderTextView.setText("Poll results");
             } else {
-                String closing = ILXDateOutputFormatter.formatRelativeDateShort(mThread.getPollClosingDate().getDate(), true);
+                String closing = ILXDateOutputFormatter.formatRelativeDateShort(
+                        mThreadHolder.getThread().getPollClosingDate().getDate(), true);
                 mPollHeaderTextView.setText("Poll closes in " + closing);
             }
         }
@@ -434,7 +443,7 @@ public class ViewThreadFragment extends Fragment {
 
             mHeaderPosition = 0;
 
-            if (mThread.isPoll()) {
+            if (mThreadHolder.getThread().isPoll()) {
                 mPollHeaderPosition = 1;
                 mPollStartPosition = 2;
                 mPollEndPosition = mPollStartPosition + mPollWrapper.getSize() - 1;
@@ -442,9 +451,9 @@ public class ViewThreadFragment extends Fragment {
                 mPollHeaderPosition = mPollStartPosition = mPollEndPosition = -1;
             }
 
-            if (mThread.numUnloadedMessages() > 0) {
+            if (mThreadHolder.getThread().numUnloadedMessages() > 0) {
                 mLoaderPosition = 1;
-                if (mThread.isPoll()) {
+                if (mThreadHolder.getThread().isPoll()) {
                     mPollHeaderPosition++;
                     mPollStartPosition++;
                     mPollEndPosition++;
@@ -463,8 +472,7 @@ public class ViewThreadFragment extends Fragment {
                     Log.d(TAG, "zero-indexed message with a header row YO WTFUUUUUUUUUUUCK");
                     realPosition = 0;
                 }
-                messageHolder.bindMessage(
-                    (Message) mThread.getMessages().get(realPosition));
+                messageHolder.bindMessage(mThreadHolder.getRichMessageHolders().get(realPosition));
             } else if (holder instanceof LoaderHolder) {
                 LoaderHolder loaderHolder = (LoaderHolder) holder;
                 loaderHolder.bindLoader();
@@ -481,6 +489,7 @@ public class ViewThreadFragment extends Fragment {
                 PollHeaderHolder pollHeaderHolder = (PollHeaderHolder) holder;
                 pollHeaderHolder.bindPollHeader();
             }
+
         }
 
         @Override
@@ -492,7 +501,7 @@ public class ViewThreadFragment extends Fragment {
 
                 case TYPE_POLL_OPEN:
                 case TYPE_POLL_CLOSED:
-                    if (mThread.isPollClosed()) {
+                    if (mThreadHolder.getThread().isPollClosed()) {
                         view = layoutInflater.inflate(R.layout.list_item_poll_option_closed, parent, false);
                     } else {
                         view = layoutInflater.inflate(R.layout.list_item_poll_option_open, parent, false);
@@ -518,11 +527,10 @@ public class ViewThreadFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            List<Message> messages = mThread.getMessages();
+            List<Message> messages = mThreadHolder.getThread().getMessages();
             if (messages != null) {
                 return messages.size() + numHeaderRows();
             } else {
-                Log.d("ThreadAdapter", "no messages");
                 return 0;
             }
         }
@@ -533,7 +541,7 @@ public class ViewThreadFragment extends Fragment {
             if (position == mLoaderPosition) {
                 return TYPE_LOADMORE;
             } else if (position >= mPollStartPosition && position <= mPollEndPosition) {
-                if (mThread.isPollClosed()) {
+                if (mThreadHolder.getThread().isPollClosed()) {
                     return TYPE_POLL_CLOSED;
                 } else {
                     return TYPE_POLL_OPEN;
@@ -551,7 +559,7 @@ public class ViewThreadFragment extends Fragment {
             // assume that we'll never have fewer messages than we had before ...
 
             if (mLoaderPosition != -1) {
-                if (mThread.numUnloadedMessages() > 0) {
+                if (mThreadHolder.getThread().numUnloadedMessages() > 0) {
                     notifyItemChanged(mLoaderPosition);
                 } else {
                     int oldPosition = mLoaderPosition;

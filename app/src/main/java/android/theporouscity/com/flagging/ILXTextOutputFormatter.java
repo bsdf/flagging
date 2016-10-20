@@ -2,8 +2,12 @@ package android.theporouscity.com.flagging;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
+import android.graphics.drawable.LevelListDrawable;
+import android.os.AsyncTask;
 import android.text.Editable;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
@@ -11,14 +15,21 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
-import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.theporouscity.com.flagging.ilx.Message;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
+import org.w3c.dom.Text;
 import org.xml.sax.XMLReader;
 
+import java.lang.ref.WeakReference;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,9 +77,22 @@ public class ILXTextOutputFormatter {
         return newBody;
     }
 
-    public Spanned getBodyForDisplayShort(String text, Drawable youtubePlaceholderImage, int linkColor, Activity activity) {
-        Spanned newString = Html.fromHtml(text, null, new ILXTagHandler(youtubePlaceholderImage));
+    public Spanned getBodyForDisplayShort(String text, Drawable youtubePlaceholderImage,
+                                          Drawable emptyPlaceholderImage, int linkColor,
+                                          Activity activity, MessageReadyCallback callback) {
+
+        // TODO maybe refactor things so we're not checking the network status all the time
+
+        ILXImgHandler imgHandler = null;
+        ILXTagHandler tagHandler = new ILXTagHandler(youtubePlaceholderImage);
+
+        if (ILXRequestor.getILXRequestor().getUserAppSettings(activity).shouldLoadPictures(activity)) {
+            imgHandler = new ILXImgHandler(emptyPlaceholderImage, activity, callback);
+        }
+
+        Spanned newString = Html.fromHtml(text, imgHandler, tagHandler);
         return fixSpannable(new SpannableStringBuilder(newString), linkColor, activity);
+
     }
 
     private SpannableStringBuilder fixSpannable(SpannableStringBuilder spannable, int linkColor, Activity activity) {
@@ -148,12 +172,12 @@ public class ILXTextOutputFormatter {
                               XMLReader xmlReader) {
             if (tag.equalsIgnoreCase("object") || tag.equalsIgnoreCase("iframe")) {
                 if (opening) {
-                    processObject(output);
+                    processYoutubeEmbed(output);
                 }
             }
         }
 
-        private void processObject(Editable output) {
+        private void processYoutubeEmbed(Editable output) {
 
             ImageSpan span = new ImageSpan(mYoutubePlaceholderImage, ImageSpan.ALIGN_BASELINE);
 
@@ -168,6 +192,114 @@ public class ILXTextOutputFormatter {
             output.setSpan(span, len-1, len, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
         }
 
+    }
+
+    private class ILXImgHandler implements Html.ImageGetter {
+
+        private Drawable mEmptyImagePlaceholder;
+        private Activity mActivity;
+        private MessageReadyCallback mCallback;
+
+        public ILXImgHandler(Drawable emptyImagePlaceholder, Activity activity, MessageReadyCallback callback) {
+            mEmptyImagePlaceholder = emptyImagePlaceholder;
+            mActivity = activity;
+            mCallback = callback;
+        }
+
+        @Override
+        public Drawable getDrawable(String source) {
+            LevelListDrawable d = new LevelListDrawable();
+            d.addLevel(0, 0, mEmptyImagePlaceholder);
+            d.setBounds(0, 0, mEmptyImagePlaceholder.getIntrinsicWidth(), mEmptyImagePlaceholder.getIntrinsicHeight());
+            new ImageGetterAsyncTask(mActivity, d, mCallback).execute(source);
+
+            return d;
+        }
+
+    }
+
+    private class ImageGetterAsyncTask extends AsyncTask<String, Void, Bitmap> {
+
+
+        public static final String TAG = "ImageGetterAsyncTask";
+        private LevelListDrawable levelListDrawable;
+        private final WeakReference<Activity> mActivity;
+        private String mSource;
+        private MessageReadyCallback mCallback;
+
+        public ImageGetterAsyncTask(Activity activity, LevelListDrawable levelListDrawable,
+                                    MessageReadyCallback callback) {
+            mActivity = new WeakReference<Activity>(activity);
+            this.levelListDrawable = levelListDrawable;
+            mCallback = callback;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            mSource = params[0];
+            try {
+                Log.d(TAG, "Downloading the image from: " + mSource);
+                try {
+
+                    // TODO hopefully we get an onStop or something and we can stop loading images when we navigate away
+
+                    final Activity activity = mActivity.get();
+
+                    /*DisplayMetrics metrics = new DisplayMetrics();
+                    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                    int resizeWidth, resizeHeight;
+                    resizeWidth = resizeHeight = 0;
+                    if (metrics.widthPixels < metrics.heightPixels) {
+                        resizeWidth = metrics.widthPixels;
+                    } else {
+                        resizeHeight = metrics.heightPixels;
+                    }*/
+
+                    // TODO bring this back when we can re-resize to original size if original is smaller
+
+                    return Picasso
+                            .with(activity)
+                            .load(mSource)
+                            //.resize(resizeWidth, resizeHeight)
+                            //.centerInside()
+                            .get();
+
+                } catch (OutOfMemoryError outOfMemoryError) {
+                    return null;
+                }
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Bitmap bitmap) {
+            final Activity activity = mActivity.get();
+            if (activity != null && bitmap != null) {
+                try {
+                    Drawable d = new BitmapDrawable(activity.getResources(), bitmap);
+                    Point size = new Point();
+                    activity.getWindowManager().getDefaultDisplay().getSize(size);
+                    // Lets calculate the ratio according to the screen width in px
+                    int multiplier = size.x / bitmap.getWidth();
+                    Log.d(TAG, "multiplier: " + multiplier);
+                    levelListDrawable.addLevel(1, 1, d);
+                    // Set bounds width  and height according to the bitmap resized size
+                    levelListDrawable.setBounds(0, 0, bitmap.getWidth() * multiplier, bitmap.getHeight() * multiplier);
+                    levelListDrawable.setLevel(1);
+                    if (mCallback != null) {
+                        Log.d(TAG, "got image, calling back");
+                        mCallback.onComplete();
+                    } else {
+                        Log.d(TAG, "got image BUT callback was null");
+                    }
+                } catch (Exception e) { /* Like a null bitmap, etc. */ }
+            }
+        }
+    }
+
+    public interface MessageReadyCallback {
+        public void onComplete();
     }
 
 }
