@@ -2,6 +2,7 @@ package android.theporouscity.com.flagging;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
@@ -150,7 +151,6 @@ public class ILXTextOutputFormatter {
 
         @Override
         public void onClick(View widget) {
-            Log.d("ILXURLSpan", "ilx link clicked");
             if (mThreadUrl != null) {
                 Intent intent = ViewThreadActivity.newIntent(mActivity, mThreadUrl);
                 if (intent != null) {
@@ -238,7 +238,6 @@ public class ILXTextOutputFormatter {
         protected Bitmap doInBackground(String... params) {
             mSource = params[0];
             try {
-                Log.d(TAG, "Downloading the image from: " + mSource);
                 try {
 
                     // TODO hopefully we get an onStop or something and we can stop loading images when we navigate away
@@ -277,21 +276,26 @@ public class ILXTextOutputFormatter {
             final Activity activity = mActivity.get();
             if (activity != null && bitmap != null) {
                 try {
-                    Drawable d = new BitmapDrawable(activity.getResources(), bitmap);
-                    Point size = new Point();
-                    activity.getWindowManager().getDefaultDisplay().getSize(size);
-                    // Lets calculate the ratio according to the screen width in px
-                    int multiplier = size.x / bitmap.getWidth();
-                    Log.d(TAG, "multiplier: " + multiplier);
+                    DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+
+                    float multiplier = Math.min(
+                            metrics.density,
+                            Math.min(metrics.widthPixels / bitmap.getWidth(),
+                                    metrics.heightPixels / bitmap.getHeight()));
+
+                    int width = Math.round(bitmap.getWidth() * multiplier);
+                    int height = Math.round(bitmap.getHeight() * multiplier);
+
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+
+                    Drawable d = new BitmapDrawable(activity.getResources(), scaledBitmap);
+
                     levelListDrawable.addLevel(1, 1, d);
-                    // Set bounds width  and height according to the bitmap resized size
-                    levelListDrawable.setBounds(0, 0, bitmap.getWidth() * multiplier, bitmap.getHeight() * multiplier);
+                    levelListDrawable.setBounds(0, 0, width, height);
                     levelListDrawable.setLevel(1);
+
                     if (mCallback != null) {
-                        Log.d(TAG, "got image, calling back");
                         mCallback.onComplete();
-                    } else {
-                        Log.d(TAG, "got image BUT callback was null");
                     }
                 } catch (Exception e) { /* Like a null bitmap, etc. */ }
             }

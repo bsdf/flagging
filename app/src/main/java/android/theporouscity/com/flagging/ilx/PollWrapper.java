@@ -5,6 +5,9 @@ import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.text.Spanned;
 import android.theporouscity.com.flagging.ILXTextOutputFormatter;
+import android.util.Log;
+
+import java.util.ArrayList;
 
 /**
  * Created by bergstroml on 7/20/16.
@@ -13,6 +16,7 @@ import android.theporouscity.com.flagging.ILXTextOutputFormatter;
 public class PollWrapper {
 
     private RichThreadHolder mThreadHolder;
+    private ArrayList<RichPollItem> mRichPollItems;
 
     public PollWrapper(RichThreadHolder threadHolder) {
         mThreadHolder = threadHolder;
@@ -30,25 +34,33 @@ public class PollWrapper {
         }
     }
 
+    public void prepPollItems(Activity activity) {
+        mRichPollItems = new ArrayList<RichPollItem>();
+        RichPollItem item = null;
+        if (mThreadHolder != null && mThreadHolder.getThread() != null) {
+            if (mThreadHolder.getThread().isPollClosed() && mThreadHolder.getThread().getPollResults() != null) {
+                for (Result result : mThreadHolder.getThread().getPollResults()) {
+                    item = new RichPollItem(true, result, null);
+                    item.prepItemTextForDisplay(activity, null);
+                    mRichPollItems.add(item);
+                }
+            } else if (mThreadHolder.getThread().getPollOptions() != null && mThreadHolder.getThread().getPollOptions().getPollOptions() != null) {
+                for (PollOptions.PollOption option : mThreadHolder.getThread().getPollOptions().getPollOptions()) {
+                    item = new RichPollItem(false, null, option);
+                    item.prepItemTextForDisplay(activity, null);
+                    mRichPollItems.add(item);
+                }
+            }
+        }
+    }
+
     public Spanned getItemTextForDisplay(int position, Activity activity,
                                          ILXTextOutputFormatter.MessageReadyCallback callback) {
-        if (mThreadHolder.getThread().isPollClosed()) {
-            return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
-                    mThreadHolder.getThread().getPollResults().get(position).getOption(),
-                    mThreadHolder.getYoutubePlaceholderImage(),
-                    mThreadHolder.getEmptyPlaceholderImage(),
-                    mThreadHolder.getLinkColor(),
-                    activity,
-                    callback);
-        } else {
-            return ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
-                    mThreadHolder.getThread().getPollOptions().getPollOptions().get(position).getOptionText(),
-                    mThreadHolder.getYoutubePlaceholderImage(),
-                    mThreadHolder.getEmptyPlaceholderImage(),
-                    mThreadHolder.getLinkColor(),
-                    activity,
-                    callback);
+        if (mRichPollItems == null) {
+            prepPollItems(activity);
         }
+
+        return mRichPollItems.get(position).getItemTextForDisplay(activity, callback);
     }
 
     public int getVoteCount(int position) {
@@ -58,4 +70,57 @@ public class PollWrapper {
     public String getVoteCountForDisplay(int position) {
         return String.valueOf(getVoteCount(position));
     }
+
+    private class RichPollItem {
+        boolean mIsResult;
+        private Result mResult;
+        private PollOptions.PollOption mOption;
+        private ILXTextOutputFormatter.MessageReadyCallback mCallback;
+        private Spanned mItemTextForDisplay;
+
+        public RichPollItem(boolean isResult, Result result, PollOptions.PollOption option) {
+            mIsResult = isResult;
+            mResult = result;
+            mOption = option;
+        }
+
+        public Spanned getItemTextForDisplay(Activity activity, ILXTextOutputFormatter.MessageReadyCallback callback) {
+            if (mCallback == null && callback != null) {
+                mCallback = callback;
+            }
+
+            if (mItemTextForDisplay == null) {
+                prepItemTextForDisplay(activity, mCallback);
+            }
+
+            return mItemTextForDisplay;
+        }
+
+        public void prepItemTextForDisplay(Activity activity, ILXTextOutputFormatter.MessageReadyCallback callback) {
+            if (mCallback == null && callback != null) {
+                mCallback = callback;
+            }
+
+            if (mItemTextForDisplay == null) {
+                if (mIsResult) {
+                    mItemTextForDisplay = ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
+                            mResult.getOption(),
+                            mThreadHolder.getYoutubePlaceholderImage(),
+                            mThreadHolder.getEmptyPlaceholderImage(),
+                            mThreadHolder.getLinkColor(),
+                            activity,
+                            () -> { if (mCallback != null) { mCallback.onComplete(); } });
+                } else {
+                    mItemTextForDisplay = ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
+                            mOption.getOptionText(),
+                            mThreadHolder.getYoutubePlaceholderImage(),
+                            mThreadHolder.getEmptyPlaceholderImage(),
+                            mThreadHolder.getLinkColor(),
+                            activity,
+                            () -> { if (mCallback != null) { mCallback.onComplete(); } });
+                }
+            }
+        }
+    }
+
 }

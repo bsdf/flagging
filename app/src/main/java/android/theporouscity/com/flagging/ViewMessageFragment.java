@@ -87,6 +87,8 @@ public class ViewMessageFragment extends Fragment {
         mWebView = (WebView) view.findViewById(R.id.fragment_view_message_webview);
         mWebView.setWebChromeClient(new WebChromeClient());
         mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setBuiltInZoomControls(true);
+        mWebView.getSettings().setDisplayZoomControls(false);
 
         mWebView.setWebViewClient(new WebViewClient(){
                                      public boolean shouldOverrideUrlLoading(WebView webView, String url) {

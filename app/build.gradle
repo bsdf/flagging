@@ -4,17 +4,17 @@ android {
     signingConfigs {
         config {
             keyAlias 'porous city temp'
-            keyPassword 'TPCTv$9d3lt0'
+            keyPassword 'xxx'
             storeFile file('/Users/bergstroml/bergstroml.jks')
-            storePassword 'Bv$9d3lt0'
+            storePassword 'xxx'
         }
     }
-    buildToolsVersion "24.0.2"
-    compileSdkVersion 24
+    buildToolsVersion "25.0.0"
+    compileSdkVersion 25
     defaultConfig {
         applicationId "android.theporouscity.com.flagging"
         minSdkVersion 18
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         jackOptions {
@@ -41,9 +41,9 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.android.support:recyclerview-v7:24.2.1'
-    compile 'com.android.support:design:24.2.1'
+    compile 'com.android.support:appcompat-v7:25.0.0'
+    compile 'com.android.support:recyclerview-v7:25.0.0'
+    compile 'com.android.support:design:25.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'org.simpleframework:simple-xml:2.7.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha8'

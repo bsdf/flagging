@@ -2,11 +2,16 @@ package android.theporouscity.com.flagging;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.StyleSpan;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
@@ -239,7 +244,18 @@ public class ViewThreadsFragment extends Fragment {
 
         public void bindThread(RecentlyUpdatedThread thread) {
             mThread = thread;
-            mTitleTextView.setText(mThread.getTitleForDisplay());
+            SpannableStringBuilder ssb = null;
+            if (mThread.getPoll()) {
+                ssb = new SpannableStringBuilder(mThread.getTitleForDisplay());
+                ssb.append(" - poll");
+                ssb.setSpan(new StyleSpan(Typeface.ITALIC),
+                        mThread.getTitleForDisplay().length()+3,
+                        mThread.getTitleForDisplay().length()+7,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } else {
+                ssb = new SpannableStringBuilder(mThread.getTitleForDisplay());
+            }
+            mTitleTextView.setText(ssb);
             Date lastUpdated = mThread.getLastUpdated();
             mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(lastUpdated, false));
             if (mMode == MODE_SNA) {

@@ -82,24 +82,39 @@ public class RichThreadHolder {
         mLinkColor = ContextCompat.getColor(context, R.color.colorAccent);
     }
 
-    public void prepMessagesForDisplay(int startPosition, Activity activity) {
+    public void prepAllMessagesForDisplay(int startPosition, Activity activity) {
+        // first prep visible messages and later, in chronological order
+        ArrayList<RichMessageHolder> messagesToPrep = getThisMessageAndLater(startPosition);
+        // then prep earlier messages, in reverse chronological order
+        messagesToPrep.addAll(getEarlierMessages(startPosition));
+        new PrepMessagesTask(activity).execute(messagesToPrep);
+    }
+
+    public void prepEarlierMessages(int startPosition, Activity activity) {
+        ArrayList<RichMessageHolder> messagesToPrep = getEarlierMessages(startPosition);
+        new PrepMessagesTask(activity).execute(messagesToPrep);
+
+    }
+
+    private ArrayList<RichMessageHolder> getThisMessageAndLater(int startPosition) {
         ArrayList<RichMessageHolder> messagesToPrep = new ArrayList<RichMessageHolder>();
 
-        // first prep visible messages and later, in chronological order
         int numTotalMessages = mRichMessageHolders.size();
         if (startPosition < (numTotalMessages - 1)) {
             messagesToPrep.addAll(mRichMessageHolders.subList(startPosition + 1, numTotalMessages));
         }
 
-        // then prep earlier messages, in reverse chronological order
+        return messagesToPrep;
+    }
+
+    private ArrayList<RichMessageHolder> getEarlierMessages(int startPosition) {
+        ArrayList<RichMessageHolder> messagesToPrep = new ArrayList<RichMessageHolder>();
         if (startPosition > 0) {
             for (int i = startPosition - 1; i > 0; i--) {
                 messagesToPrep.add(mRichMessageHolders.get(i));
             }
         }
-
-        new PrepMessagesTask(activity).execute(messagesToPrep);
-
+        return messagesToPrep;
     }
 
     class PrepMessagesTask extends AsyncTask<ArrayList<RichMessageHolder>, Void, Void>
