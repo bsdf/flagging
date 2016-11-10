@@ -21,6 +21,7 @@ import java.lang.ref.WeakReference;
 public class RichMessageHolder {
 
     private static final String TAG = "RichMessageHolder";
+    private static final String ITAG = "imglog ";
     ILXTextOutputFormatter.MessageReadyCallback mCallback;
     private Message mMessage;
     private Spanned mDisplayNameForDisplay;
@@ -58,14 +59,15 @@ public class RichMessageHolder {
     public Spanned getBodyForDisplayShort(Activity activity,
                                           ILXTextOutputFormatter.MessageReadyCallback callback) {
 
-        if (mCallback == null && callback != null) {
+        if (callback == null) {
+            Log.d(TAG, ITAG + "get msg with null callback");
+        }
+
+        if (mCallback == null) {
             mCallback = callback;
         }
 
         if (mBodyForDisplayShort == null) {
-            if (callback != null) {
-                Log.d(TAG, "should have a valid callback");
-            }
             prepBodyForDisplayShort(activity, mCallback);
         }
 
@@ -76,7 +78,7 @@ public class RichMessageHolder {
     public void prepBodyForDisplayShort(Activity activity,
                                         ILXTextOutputFormatter.MessageReadyCallback callback) {
 
-        if (mCallback == null && callback != null) {
+        if (mCallback == null) {
             mCallback = callback;
         }
 
@@ -88,7 +90,13 @@ public class RichMessageHolder {
                             mEmptyPlaceholderImage,
                             mlinkColor,
                             activity,
-                            () -> { if (mCallback != null) { mCallback.onComplete(); } });
+                            () -> {
+                                if (mCallback != null) {
+                                    mCallback.onComplete();
+                                } else {
+                                    Log.d(TAG, ITAG + "got img, null callback " + Integer.toString(mMessage.getMessageId()));
+                                }
+                            });
         }
 
     }

@@ -10,10 +10,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
+import android.theporouscity.com.flagging.ilx.ServerBookmarks;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
 import android.util.Log;
@@ -38,6 +38,7 @@ public class ViewThreadsFragment extends Fragment {
     private static final String ARG_MODE = "mode";
     private static final int MODE_BOARD = 0;
     private static final int MODE_SNA = 1;
+    private static final int MODE_MARKS = 2;
     private int mMode;
     private Board mBoard;
     private Boards mBoards;
@@ -49,6 +50,8 @@ public class ViewThreadsFragment extends Fragment {
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private boolean mFetchingThreads;
     private boolean mFetchingBoards;
+    private boolean mHasBookmarks;
+    private ServerBookmarks mBookmarks;
 
     public ViewThreadsFragment() {
         // Required empty public constructor
@@ -63,10 +66,14 @@ public class ViewThreadsFragment extends Fragment {
         return fragment;
     }
 
-    public static ViewThreadsFragment newInstance() {
+    public static ViewThreadsFragment newInstance(boolean snaMode) {
         ViewThreadsFragment fragment = new ViewThreadsFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_MODE, MODE_SNA);
+        if (snaMode) {
+            args.putInt(ARG_MODE, MODE_SNA);
+        } else {
+            args.putInt(ARG_MODE, MODE_MARKS);
+        }
         fragment.setArguments(args);
         return fragment;
     }
@@ -84,6 +91,9 @@ public class ViewThreadsFragment extends Fragment {
             } else if (getArguments().getInt(ARG_MODE) == MODE_SNA) {
                 mMode = MODE_SNA;
                 getBoards();
+            } else if (getArguments().getInt(ARG_MODE) == MODE_MARKS) {
+                mMode = MODE_MARKS;
+                getBookmarks();
             }
             updateThreads();
         }
@@ -118,6 +128,18 @@ public class ViewThreadsFragment extends Fragment {
         mFetchingBoards = false;
         mBoards = boards;
         updateUI();
+    }
+
+    private void getBookmarks() {
+        mFetchingThreads = true;
+        ILXRequestor.getILXRequestor().getBookmarks(
+                getContext(),
+                (ServerBookmarks bookmarks) ->
+                {
+                    mBookmarks = bookmarks;
+                    mFetchingThreads = false;
+                    updateUI();
+                });
     }
 
     private void updateThreadsReady(RecentlyUpdatedThreads threads) {

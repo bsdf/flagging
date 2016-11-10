@@ -10,11 +10,11 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.theporouscity.com.flagging.ilx.ServerBookmarks;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +30,7 @@ public class ActivityMainTabs extends AppCompatActivity {
     private FloatingActionButton mFloatingActionButton;
     private static final String TAG = "ActivityMainTabs";
     private int mShortAnimationDuration;
+    private boolean mFetchedBookmarks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,8 @@ public class ActivityMainTabs extends AppCompatActivity {
         Log.d(TAG, System.identityHashCode(this) + "onCreate");
 
         super.onCreate(savedInstanceState);
+
+        mFetchedBookmarks = false;
         setContentView(R.layout.activity_main_tabs);
 
         mFloatingActionButton = (FloatingActionButton) findViewById(R.id.activity_main_tabs_fab);
@@ -72,7 +75,7 @@ public class ActivityMainTabs extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int position) {
-                if (position == 1) {
+                if (position == boardsPosition()) {
                     setFabVisibility(true);
                 } else {
                     setFabVisibility(false);
@@ -96,6 +99,46 @@ public class ActivityMainTabs extends AppCompatActivity {
         }
     }
 
+    private boolean haveBookmarks() {
+
+        if (!mFetchedBookmarks) {
+            ILXRequestor.getILXRequestor().getBookmarks(this, (ServerBookmarks b) ->
+            {
+                mFetchedBookmarks = true;
+                Log.d(TAG, "tell em no bookmarks");
+                mViewPager.getAdapter().notifyDataSetChanged();
+            });
+
+            return true; // assume yes until proven otherwise
+        }
+
+        return mHaveBookmarksEnum == HaveBookmarksEnum.yes;
+    }
+
+    private int bookmarksPosition() {
+        if (haveBookmarks()) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+
+    private int snaPosition() {
+        if (haveBookmarks()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    private int boardsPosition() {
+        if (haveBookmarks()) {
+            return 2;
+        } else {
+            return 1;
+        }
+    }
+
     class ViewPagerAdapter extends FragmentPagerAdapter {
         private final List<Fragment> mFragmentList = new ArrayList<>();
         private static final String TAG = "ViewPagerAdapter";
@@ -109,9 +152,11 @@ public class ActivityMainTabs extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
 
-            if (position == 0) {
-                mFragmentList.add(ViewThreadsFragment.newInstance());
-            } else if (position == 1) {
+            if (position == bookmarksPosition()) {
+                mFragmentList.add(ViewThreadsFragment.newInstance(false));
+            } else if (position == snaPosition()) {
+                mFragmentList.add(ViewThreadsFragment.newInstance(true));
+            } else if (position == boardsPosition()) {
                 mFragmentList.add(new ViewBoardsFragment());
             }
 
@@ -120,14 +165,23 @@ public class ActivityMainTabs extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            return 2;
+            if (haveBookmarks()) {
+                Log.d(TAG, "3 tabs");
+                return 3;
+            } else {
+                Log.d(TAG, "2 tabs");
+                return 2;
+            }
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            if (position == 0) {
+
+            if (position == bookmarksPosition()) {
+                return "ServerBookmarks";
+            } else if (position == snaPosition()) {
                 return "New Answers";
-            } else  {
+            } else {
                 return "Boards";
             }
         }
@@ -136,7 +190,7 @@ public class ActivityMainTabs extends AppCompatActivity {
         public Object instantiateItem(ViewGroup container, int position) {
             Fragment fragment = (Fragment) super.instantiateItem(container, position);
 
-            if (position == 1) { // TODO yuck
+            if (position == boardsPosition()) { // TODO yuck
                 mFloatingActionButton.setOnClickListener((View v) -> {
                     ((ViewBoardsFragment) fragment).toggleEditMode();
                 });

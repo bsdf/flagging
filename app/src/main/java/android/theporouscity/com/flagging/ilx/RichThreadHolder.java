@@ -56,7 +56,6 @@ public class RichThreadHolder {
     }
 
     public void addMessages(int startPosition, List<Message> messages) {
-        Log.d(TAG, "size before " + Integer.toString(mRichMessageHolders.size()) + " messages");
 
         mThread.getMessages().addAll(0, messages);
 
@@ -68,7 +67,6 @@ public class RichThreadHolder {
                                                     mLinkColor);
             mRichMessageHolders.add(startPosition + i, messageHolder);
         }
-        Log.d(TAG, "size after " + Integer.toString(mRichMessageHolders.size()) + " messages");
     }
 
     public void addMessages(List<Message> messages) {
@@ -131,6 +129,7 @@ public class RichThreadHolder {
 
             ArrayList<RichMessageHolder> theMessages = messages[0];
 
+            //TODO why aren't we prepping as many messages as we're loading
             Log.d(TAG, "prepping " + Integer.toString(theMessages.size()) + " messages");
 
             for (RichMessageHolder m : theMessages) {

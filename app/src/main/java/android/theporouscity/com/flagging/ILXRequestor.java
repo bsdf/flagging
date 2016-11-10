@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
+import android.theporouscity.com.flagging.ilx.Bookmark;
+import android.theporouscity.com.flagging.ilx.ServerBookmarks;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
@@ -15,7 +17,9 @@ import org.simpleframework.xml.transform.Matcher;
 import org.simpleframework.xml.transform.Transform;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -32,12 +36,15 @@ public class ILXRequestor {
     private static final String threadUrl = "http://ilxor.com/ILX/ThreadSelectedControllerServlet?xml=true&boardid=";
     private static final String snaUrl = "http://ilxor.com/ILX/SiteNewAnswersControllerServlet?xml=true";
     private static final String ilxServerTag = "ILX";
+    private static final String serializedBookmarksPrefix = "serializedBookmarks";
 
     private static ILXRequestor mILXRequestor;
     private static OkHttpClient mHttpClient;
     private static Serializer mSerializer;
     private static volatile Boards mBoards;
     private static SharedPreferences mPreferences;
+    private static HashMap<String, ServerBookmarks> mServersBookmarks;
+
 
     public interface BoardsCallback {
         void onComplete(Boards boards);
@@ -51,6 +58,14 @@ public class ILXRequestor {
         void onComplete(Thread thread);
     }
 
+    public interface BookmarksCallback {
+        void onComplete(ServerBookmarks bookmarks);
+    }
+
+    public interface HaveBookmarksCallback {
+        void onComplete(boolean result);
+    }
+
     private ILXRequestor() {}
 
     public static ILXRequestor getILXRequestor() {
@@ -61,9 +76,96 @@ public class ILXRequestor {
             mSerializer = newPersister();
             mBoards = null;
             mPreferences = null;
+            mServersBookmarks = null;
         }
 
         return mILXRequestor;
+    }
+
+    private String getServerTag() {
+        return ilxServerTag;
+    }
+
+    public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
+
+        if (mServersBookmarks == null) {
+            mServersBookmarks = new HashMap<String, ServerBookmarks>();
+        } else if (mServersBookmarks.get(getServerTag()) != null) {
+            bookmarksCallback.onComplete(mServersBookmarks.get(getServerTag()));
+        }
+
+        if (mPreferences == null) {
+            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+        }
+
+        ServerBookmarks bookmarks = new ServerBookmarks();
+        mServersBookmarks.put(getServerTag(), bookmarks);
+        String serializedBookmarks = mPreferences.getString(serializedBookmarksPrefix + getServerTag(), null);
+        if (serializedBookmarks != null) {
+            String[] bookmarkValTriplets = serializedBookmarks.split("-");
+            for (String bookmarkValTriplet : bookmarkValTriplets) {
+                String[] bookmarkVals = bookmarkValTriplet.split(".");
+                bookmarks.addBookmark(Integer.valueOf(bookmarkVals[0]), Integer.valueOf(bookmarkVals[1]), Integer.valueOf(bookmarkVals[2]));
+            }
+            new GetBookmarkTitlesTask(mHttpClient, (ArrayList<Bookmark> result) -> {
+                for (Bookmark bookmarkWithTitle : result) {
+                    Bookmark bookmark = bookmarks.getBookmark(bookmarkWithTitle.getBoardId(), bookmarkWithTitle.getThreadId());
+                    if (bookmark != null && bookmarkWithTitle != null) {
+                        bookmark.setBookmarkThreadTitle(bookmarkWithTitle.getBookmarkThreadTitle());
+                    }
+                }
+            }).execute(bookmarks);
+        } else {
+            bookmarksCallback.onComplete(bookmarks);
+        }
+    }
+
+    public void haveBookmarks(Context context, HaveBookmarksCallback callback) {
+        getBookmarks(context, (ServerBookmarks bookmarks) -> {
+            if (bookmarks.getBookmarks().entrySet().isEmpty()) {
+                callback.onComplete(false);
+            } else{
+                callback.onComplete(true);
+            }
+        });
+    }
+
+    public void serializeBoardBookmarks(Context context) {
+        if (mPreferences == null) {
+            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+        }
+
+        if (mServersBookmarks == null || mServersBookmarks.get(getServerTag()) == null) {
+            return;
+        }
+
+        ServerBookmarks bookmarks = mServersBookmarks.get(getServerTag());
+        String serializedBookmarks = "";
+        for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
+            for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
+                Bookmark bookmark = bookmarkEntry.getValue();
+
+                serializedBookmarks
+                        += Integer.toString(bookmark.getBoardId())
+                        + "."
+                        + Integer.toString(bookmark.getThreadId())
+                        + "."
+                        + Integer.toString(bookmark.getBookmarkedMessageId())
+                        + "-";
+            }
+        }
+        SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putString(serializedBookmarksPrefix + getServerTag(), serializedBookmarks);
+        editor.apply();
+    }
+
+    private SharedPreferences getPreferences(Context context) {
+
+        if (mPreferences == null) {
+            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+        }
+
+        return mPreferences;
     }
 
     public UserAppSettings getUserAppSettings(Context context) {

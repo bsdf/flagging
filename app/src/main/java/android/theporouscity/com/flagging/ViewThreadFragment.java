@@ -40,11 +40,6 @@ public class ViewThreadFragment extends Fragment {
 
     private RichThreadHolder mThreadHolder;
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
     private PollWrapper mPollWrapper;
     private RecyclerView mRecyclerView;
     private ThreadAdapter mThreadAdapter;
@@ -77,7 +72,8 @@ public class ViewThreadFragment extends Fragment {
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
             mInitialMessageId = getArguments().getInt(ARG_MESSAGE_ID);
             mMessagesLoadedCount = getArguments().getInt(ARG_MESSAGES_LOADED_COUNT);
-            loadThread();
+            Log.d(TAG, "messages loaded - onCreate - " + Integer.toString(mMessagesLoadedCount));
+            //loadThread();
         }
     }
 
@@ -85,16 +81,40 @@ public class ViewThreadFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         Log.d(TAG, "onSaveInstanceState");
         super.onSaveInstanceState(outState);
-        outState.putSerializable("BoardId", mBoardId);
-        outState.putSerializable("ThreadId", mThreadId);
-        outState.putSerializable("InitialMessageId", mInitialMessageId);
-        outState.putSerializable("MessagesLoadedCount", mMessagesLoadedCount);
+        outState.putSerializable(ARG_BOARD_ID, mBoardId);
+        outState.putSerializable(ARG_THREAD_ID, mThreadId);
+        outState.putSerializable(ARG_MESSAGE_ID, mInitialMessageId);
+        Log.d(TAG, "messages loaded - onSaveInstanceState - " + Integer.toString(mMessagesLoadedCount));
+        outState.putSerializable(ARG_MESSAGES_LOADED_COUNT, mMessagesLoadedCount);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            mBoardId = savedInstanceState.getInt(ARG_BOARD_ID);
+            mThreadId = savedInstanceState.getInt(ARG_THREAD_ID);
+            mInitialMessageId = savedInstanceState.getInt(ARG_MESSAGE_ID);
+            Log.d(TAG, "messages loaded - onActivityCreated, before update - " + Integer.toString(mMessagesLoadedCount));
+            mMessagesLoadedCount = savedInstanceState.getInt(ARG_MESSAGES_LOADED_COUNT);
+            Log.d(TAG, "messages loaded - onActivityCreated, after update - " + Integer.toString(mMessagesLoadedCount));
+        }
+
+        // only here do we seem to have access to the Fragment's saved instance state
+        // it's available in onCreate too but for some reason onCreate passes in the Activity's saved instance state
+        // (which contains the Fragment's instance state, but would have to extract, so wtf)
+
+        loadThread();
+        updateUI();
     }
 
     private void loadThread() {
         mFetching = true;
 
         int numMessagesToLoad;
+
+        Log.d(TAG, "messages loaded - loadThread, before load - " + Integer.toString(mMessagesLoadedCount));
 
         if (mInitialMessageId == -1) {
 
@@ -104,7 +124,7 @@ public class ViewThreadFragment extends Fragment {
                 numMessagesToLoad = mMessagesLoadedCount;
             }
 
-            ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1, mDefaultMessagesChunk,
+            ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1, numMessagesToLoad,
                     (Thread thread) -> {
                         mFetching = false;
                         mThreadHolder = new RichThreadHolder(thread, getContext());
@@ -112,6 +132,8 @@ public class ViewThreadFragment extends Fragment {
                         updateUI();
                         mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getRichMessageHolders().size() - 1, getActivity());
                         mPollWrapper.prepPollItems(getActivity());
+                        mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
+                        Log.d(TAG, "messages loaded - loadThread, no initial, after load - " + Integer.toString(mMessagesLoadedCount));
                     });
         } else {
 
@@ -121,7 +143,7 @@ public class ViewThreadFragment extends Fragment {
                 numMessagesToLoad = mMessagesLoadedCount;
             }
 
-            ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, mInitialMessageId, -1,
+            ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, mInitialMessageId, numMessagesToLoad,
                     (Thread thread) -> {
                         mFetching = false;
                         mThreadHolder = new RichThreadHolder(thread, getContext());
@@ -130,6 +152,8 @@ public class ViewThreadFragment extends Fragment {
                         updateUI();
                         mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getThread().getMessagePosition(mInitialMessageId), getActivity());
                         mPollWrapper.prepPollItems(getActivity());
+                        mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
+                        Log.d(TAG, "messages loaded - loadThread, with initial, after load - " + Integer.toString(mMessagesLoadedCount));
                     });
         }
     }
@@ -151,7 +175,11 @@ public class ViewThreadFragment extends Fragment {
         ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1,
                 numToRequest, (Thread thread) -> {
 
+                    Log.d(TAG, "messages loaded - loadEarlierMessages callback, before update - " + Integer.toString(mMessagesLoadedCount));
+
                     mMessagesLoadedCount = numToRequest;
+
+                    Log.d(TAG, "messages loaded - loadEarlierMessages callback, after update - " + Integer.toString(mMessagesLoadedCount));
 
                     mThreadHolder.addMessages(0,
                             thread.getMessages().subList(0, numEarlierMessagesToPrepend));
@@ -180,6 +208,10 @@ public class ViewThreadFragment extends Fragment {
 
                         if (numNewMessages > 0) {
 
+                            Log.d(TAG, "messages loaded - load later callback, before update - " + Integer.toString(mMessagesLoadedCount));
+                            mMessagesLoadedCount += numNewMessages;
+                            Log.d(TAG, "messages loaded - load later callback, after update - " + Integer.toString(mMessagesLoadedCount));
+
                             int numOldMessages = mThreadHolder.getThread().getLocalMessageCount();
                             mThreadHolder.addMessages(
                                     thread.getMessages().subList(numAdditionalToRequest - numNewMessages, numAdditionalToRequest));
@@ -205,15 +237,18 @@ public class ViewThreadFragment extends Fragment {
         if (mProgressBar != null) {
             if (mFetching) {
                 mProgressBar.setVisibility(ProgressBar.VISIBLE);
+                mLoadErrorTextView.setVisibility(TextView.INVISIBLE);
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                if (mThreadHolder.getThread() == null) {
-                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+                if (mThreadHolder == null || mThreadHolder.getThread() == null) {
+                    //mLoadErrorTextView.setVisibility(TextView.VISIBLE); // TODO better way to handle failed thread load
+                } else {
+                    mLoadErrorTextView.setVisibility(TextView.INVISIBLE);
                 }
             }
         }
 
-        if (mRecyclerView != null && mThreadHolder!= null && mThreadHolder.getThread() != null) {
+        if (mRecyclerView != null && mThreadHolder != null && mThreadHolder.getThread() != null) {
 
             getActivity().setTitle(mThreadHolder.getThread().getTitleForDisplay());
             if (android.os.Build.VERSION.SDK_INT > 21) {

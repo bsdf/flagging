@@ -222,6 +222,7 @@ public class ILXTextOutputFormatter {
 
 
         public static final String TAG = "ImageGetterAsyncTask";
+        private static final String ITAG = "img ";
         private LevelListDrawable levelListDrawable;
         private final WeakReference<Activity> mActivity;
         private String mSource;
@@ -237,6 +238,7 @@ public class ILXTextOutputFormatter {
         @Override
         protected Bitmap doInBackground(String... params) {
             mSource = params[0];
+            //Log.d(TAG, ITAG + "getting image " + mSource);
             try {
                 try {
 
@@ -264,9 +266,11 @@ public class ILXTextOutputFormatter {
                             .get();
 
                 } catch (OutOfMemoryError outOfMemoryError) {
+                    Log.d(TAG, ITAG + "OOM trying to get img " + mSource);
                     return null;
                 }
             } catch (Exception e) {
+                Log.d(TAG, ITAG + "Exception trying to get img " + mSource + " " + e.toString());
                 return null;
             }
         }
@@ -274,17 +278,31 @@ public class ILXTextOutputFormatter {
         @Override
         protected void onPostExecute(final Bitmap bitmap) {
             final Activity activity = mActivity.get();
+            Log.d(TAG, ITAG + "got image " + mSource);
             if (activity != null && bitmap != null) {
                 try {
                     DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
 
+                    // TODO 32 is a magic number, sum of margin/padding in layout ... fix this
+
                     float multiplier = Math.min(
                             metrics.density,
-                            Math.min(metrics.widthPixels / bitmap.getWidth(),
-                                    metrics.heightPixels / bitmap.getHeight()));
+                            Math.min((float) (metrics.widthPixels - 32) / bitmap.getWidth(),
+                                    (float) (metrics.heightPixels - 32) / bitmap.getHeight()));
 
                     int width = Math.round(bitmap.getWidth() * multiplier);
                     int height = Math.round(bitmap.getHeight() * multiplier);
+
+                    /*
+                    Log.d(TAG, ITAG + "img metrics " + mSource + " " +
+                            Float.toString(metrics.density) + " " +
+                            Integer.toString(metrics.widthPixels) + " " +
+                            Integer.toString(metrics.heightPixels) + " " +
+                            Integer.toString(bitmap.getWidth()) + " " +
+                            " " + Integer.toString(bitmap.getHeight()) +
+                            " " + Float.toString(multiplier) +
+                            " " + Integer.toString(width) +
+                                    " " + Integer.toString(height));*/
 
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
 
@@ -295,9 +313,18 @@ public class ILXTextOutputFormatter {
                     levelListDrawable.setLevel(1);
 
                     if (mCallback != null) {
+                        //Log.d(TAG, ITAG + "calling back for " + mSource);
                         mCallback.onComplete();
+                    } else {
+                        //Log.d(TAG, ITAG + "no callback for " + mSource);
                     }
-                } catch (Exception e) { /* Like a null bitmap, etc. */ }
+                } catch (Exception e) {
+                    Log.d(TAG, ITAG + "exception trying to handle image " + mSource + " " + e.toString());
+                }
+            } else {
+                if (bitmap == null) {
+                    //Log.d(TAG, ITAG + "null image " + mSource);
+                }
             }
         }
     }
