@@ -1,15 +1,19 @@
 package android.theporouscity.com.flagging.ilx;
 
+import android.util.Log;
+
 /**
  * Created by bergstroml on 11/4/16.
  */
 
 public class Bookmark {
 
+    private final static String TAG = "Bookmark";
     private int boardId;
     private int threadId;
     private int bookmarkedMessageId;
     private String bookmarkThreadTitle;
+    private Thread mCachedThread;
 
     public Bookmark(int boardId, int threadId, int bookmarkedMessageId) {
         this.boardId = boardId;
@@ -41,11 +45,21 @@ public class Bookmark {
         this.bookmarkedMessageId = bookmarkedMessageId;
     }
 
-    public String getBookmarkThreadTitle() {
-        return bookmarkThreadTitle;
+    public void setCachedThread(Thread thread) {
+        mCachedThread = thread;
+        if (mCachedThread == null) {
+            Log.d(TAG, System.identityHashCode(this) + "set cached thread but it was null");
+        } else {
+            Log.d(TAG, System.identityHashCode(this) + "set non-null cached thread");
+        }
     }
 
-    public void setBookmarkThreadTitle(String bookmarkThreadTitle) {
-        this.bookmarkThreadTitle = bookmarkThreadTitle;
+    public Thread getCachedThread() {
+        if (mCachedThread == null) {
+            Log.d(TAG, System.identityHashCode(this) + "returning null cached thread");
+        } else {
+            Log.d(TAG, System.identityHashCode(this) + "returning non-null cached thread");
+        }
+        return mCachedThread;
     }
 }

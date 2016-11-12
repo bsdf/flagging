@@ -39,13 +39,20 @@ public class ActivityMainTabs extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-        mFetchedBookmarks = false;
         setContentView(R.layout.activity_main_tabs);
 
         mFloatingActionButton = (FloatingActionButton) findViewById(R.id.activity_main_tabs_fab);
 
         mViewPager = (ViewPager) findViewById(R.id.activity_main_tabs_viewpager);
-        setupViewPager(mViewPager, savedInstanceState);
+
+        mFetchedBookmarks = false;
+        ILXRequestor.getILXRequestor().getBookmarks(this, (ServerBookmarks b) ->
+        {
+            mFetchedBookmarks = true;
+            // can only modify the # of tabs on the main thread :(
+            // although we can do a one-time setup of the adapter in this callback
+            setupViewPager(mViewPager, savedInstanceState);
+        });
 
         mTabLayout = (TabLayout) findViewById(R.id.activity_main_tabs_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
@@ -65,7 +72,16 @@ public class ActivityMainTabs extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        Log.d(TAG, System.identityHashCode(this) + " resuming");
+        //TODO check to see if we need to get rid of the bookmarks tab
+        super.onResume();
+    }
+
     private void setupViewPager(ViewPager viewPager, Bundle savedInstanceState) {
+
+        Log.d(TAG, System.identityHashCode(this) + "setupViewPager");
 
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), mFloatingActionButton);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -102,33 +118,27 @@ public class ActivityMainTabs extends AppCompatActivity {
     private boolean haveBookmarks() {
 
         if (!mFetchedBookmarks) {
-            ILXRequestor.getILXRequestor().getBookmarks(this, (ServerBookmarks b) ->
-            {
-                mFetchedBookmarks = true;
-                Log.d(TAG, "tell em no bookmarks");
-                mViewPager.getAdapter().notifyDataSetChanged();
-            });
-
-            return true; // assume yes until proven otherwise
+            Log.d(TAG, "should never call haveBookmarks before finished fetching");
+            return false;
         }
 
-        return mHaveBookmarksEnum == HaveBookmarksEnum.yes;
+        if (ILXRequestor.getILXRequestor().getCachedBookmarks() != null) {
+            return !ILXRequestor.getILXRequestor().getCachedBookmarks().getBookmarks().isEmpty();
+        } else {
+            return false;
+        }
     }
 
     private int bookmarksPosition() {
         if (haveBookmarks()) {
-            return 0;
+            return 1;
         } else {
             return -1;
         }
     }
 
     private int snaPosition() {
-        if (haveBookmarks()) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return 0;
     }
 
     private int boardsPosition() {
@@ -166,10 +176,8 @@ public class ActivityMainTabs extends AppCompatActivity {
         @Override
         public int getCount() {
             if (haveBookmarks()) {
-                Log.d(TAG, "3 tabs");
                 return 3;
             } else {
-                Log.d(TAG, "2 tabs");
                 return 2;
             }
         }
@@ -178,7 +186,7 @@ public class ActivityMainTabs extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
 
             if (position == bookmarksPosition()) {
-                return "ServerBookmarks";
+                return "Bookmarks";
             } else if (position == snaPosition()) {
                 return "New Answers";
             } else {

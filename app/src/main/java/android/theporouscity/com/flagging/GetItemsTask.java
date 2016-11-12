@@ -12,47 +12,51 @@ import okhttp3.Response;
 /**
  * Created by bergstroml on 2/26/16.
  */
-public class GetItemsTask extends AsyncTask<String, Void, String> {
+public class GetItemsTask extends AsyncTask<String, Void, String[]> {
 
     private OkHttpClient mHttpClient;
     private Callback mCallback;
     private final String TAG = "GetItemsTask";
 
     @Override
-    protected String doInBackground(String... strings) {
-        String url = strings[0];
-        Log.d(TAG, "asked for url " + url);
-        try {
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
+    protected String[] doInBackground(String... urls) {
+        String[] results = new String[urls.length];
+        for (int i=0; i<urls.length; i++){
+            String url = urls[i];
+            Log.d(TAG, "asked for url " + url);
+            try {
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
 
-            Response response = mHttpClient.newCall(request).execute();
-            return response.body().string();
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-            return null;
+                Response response = mHttpClient.newCall(request).execute();
+                results[i] = response.body().string();
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+                return null;
+            }
         }
+        return results;
     }
 
     @Override
-    protected void onPostExecute(String result) {
-        super.onPostExecute(result);
-        if (result != null) {
+    protected void onPostExecute(String[] results) {
+        super.onPostExecute(results);
+        if (results != null) {
             Log.d(TAG, "got some stuff back");
         } else {
             Log.d(TAG, "got nothing back");
         }
 
         try {
-            mCallback.onComplete(result);
+            mCallback.onComplete(results);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public interface Callback {
-        void onComplete(String result) throws Exception;
+        void onComplete(String[] results) throws Exception;
     }
 
     GetItemsTask(OkHttpClient httpClient, Callback callback) {

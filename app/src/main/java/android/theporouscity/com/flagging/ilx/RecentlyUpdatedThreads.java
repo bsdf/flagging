@@ -41,4 +41,8 @@ public class RecentlyUpdatedThreads {
     public int getTotalMessages() {
         return TotalMessages;
     }
+
+    public void setRecentlyUpdatedThreads(List<RecentlyUpdatedThread> recentlyUpdatedThreads) {
+        mRecentlyUpdatedThreads = recentlyUpdatedThreads;
+    }
 }

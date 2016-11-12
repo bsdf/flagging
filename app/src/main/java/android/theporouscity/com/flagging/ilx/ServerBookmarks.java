@@ -50,9 +50,4 @@ public class ServerBookmarks {
         return null;
     }
 
-    public RecentlyUpdatedThreads getRecentlyUpdatedBookmarks(Context context, ILXRequestor.RecentlyUpdatedThreadsCallback callback) {
-        //TODO
-        return null;
-    }
-
 }

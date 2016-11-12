@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.Bookmark;
+import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
 import android.theporouscity.com.flagging.ilx.ServerBookmarks;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.Thread;
@@ -20,7 +21,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Queue;
 import java.util.TimeZone;
 
 import okhttp3.OkHttpClient;
@@ -44,6 +48,7 @@ public class ILXRequestor {
     private static volatile Boards mBoards;
     private static SharedPreferences mPreferences;
     private static HashMap<String, ServerBookmarks> mServersBookmarks;
+    private static ArrayList<BookmarksCallback> mBookmarksCallbacks;
 
 
     public interface BoardsCallback {
@@ -77,6 +82,7 @@ public class ILXRequestor {
             mBoards = null;
             mPreferences = null;
             mServersBookmarks = null;
+            mBookmarksCallbacks = new ArrayList<>();
         }
 
         return mILXRequestor;
@@ -88,46 +94,94 @@ public class ILXRequestor {
 
     public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
 
+        mBookmarksCallbacks.add(bookmarksCallback);
+        if (mBookmarksCallbacks.size() > 1) {
+            return;
+        }
+
         if (mServersBookmarks == null) {
             mServersBookmarks = new HashMap<String, ServerBookmarks>();
-        } else if (mServersBookmarks.get(getServerTag()) != null) {
-            bookmarksCallback.onComplete(mServersBookmarks.get(getServerTag()));
         }
 
         if (mPreferences == null) {
             mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
         }
 
-        ServerBookmarks bookmarks = new ServerBookmarks();
-        mServersBookmarks.put(getServerTag(), bookmarks);
-        String serializedBookmarks = mPreferences.getString(serializedBookmarksPrefix + getServerTag(), null);
-        if (serializedBookmarks != null) {
-            String[] bookmarkValTriplets = serializedBookmarks.split("-");
-            for (String bookmarkValTriplet : bookmarkValTriplets) {
-                String[] bookmarkVals = bookmarkValTriplet.split(".");
-                bookmarks.addBookmark(Integer.valueOf(bookmarkVals[0]), Integer.valueOf(bookmarkVals[1]), Integer.valueOf(bookmarkVals[2]));
-            }
-            new GetBookmarkTitlesTask(mHttpClient, (ArrayList<Bookmark> result) -> {
-                for (Bookmark bookmarkWithTitle : result) {
-                    Bookmark bookmark = bookmarks.getBookmark(bookmarkWithTitle.getBoardId(), bookmarkWithTitle.getThreadId());
-                    if (bookmark != null && bookmarkWithTitle != null) {
-                        bookmark.setBookmarkThreadTitle(bookmarkWithTitle.getBookmarkThreadTitle());
+        if (mServersBookmarks.get(getServerTag()) != null) {
+            ArrayList<String> bookmarkThreadUrls = new ArrayList<>();
+            ArrayList<Bookmark> bookmarksForThreads = new ArrayList<>();
+            ServerBookmarks bookmarks = mServersBookmarks.get(getServerTag());
+            boolean allBookmarksHaveThreads = true;
+            for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
+                for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
+                    Bookmark bookmark = bookmarkEntry.getValue();
+                    if (bookmark.getCachedThread() == null) {
+                        allBookmarksHaveThreads = false;
+                        bookmarksForThreads.add(bookmark);
+                        bookmarkThreadUrls.add(threadUrl + Integer.toString(bookmark.getBoardId())
+                                + "&threadid=" + Integer.toString(bookmark.getThreadId())
+                                + "&bookmarkedmessageid=" + Integer.toString(bookmark.getBookmarkedMessageId()));
                     }
                 }
-            }).execute(bookmarks);
+            }
+            if (allBookmarksHaveThreads) {
+                processBookmarkCallbacks();
+                return;
+            }
+            new GetItemsTask(mHttpClient, (String[] results) -> {
+                for (int i=0; i<results.length; i++) {
+                    Bookmark bookmark = bookmarksForThreads.get(i);
+                    Thread bookmarkThread = mSerializer.read(Thread.class, results[i], false);
+                    bookmark.setCachedThread(bookmarkThread);
+                }
+                processBookmarkCallbacks();
+            }).execute(bookmarkThreadUrls.toArray(new String[0]));
         } else {
-            bookmarksCallback.onComplete(bookmarks);
+            ServerBookmarks bookmarks = new ServerBookmarks();
+            mServersBookmarks.put(getServerTag(), bookmarks);
+            String serializedBookmarks = mPreferences.getString(serializedBookmarksPrefix + getServerTag(), null);
+            if (serializedBookmarks != null) {
+                String[] bookmarkValTriplets = serializedBookmarks.split("-");
+                String[] bookmarkThreadUrls = new String[bookmarkValTriplets.length];
+                for (int i=0; i<bookmarkValTriplets.length; i++) {
+                    String bookmarkValTriplet = bookmarkValTriplets[i];
+                    String[] bookmarkVals = bookmarkValTriplet.split("\\.");
+                    bookmarks.addBookmark(Integer.valueOf(bookmarkVals[0]),
+                            Integer.valueOf(bookmarkVals[1]), Integer.valueOf(bookmarkVals[2]));
+                    bookmarkThreadUrls[i] = threadUrl + bookmarkVals[0] +
+                            "&threadid=" + bookmarkVals[1] +
+                            "&bookmarkedmessageid=" + bookmarkVals[2];
+                }
+                new GetItemsTask(mHttpClient, (String[] results) -> {
+                    for (int i=0; i<results.length; i++) {
+                        String bookmarkValTriplet = bookmarkValTriplets[i];
+                        String[] bookmarkVals = bookmarkValTriplet.split("\\.");
+                        Bookmark bookmark = bookmarks.getBookmark(
+                                Integer.valueOf(bookmarkVals[0]), Integer.valueOf(bookmarkVals[1]));
+                        Thread bookmarkThread = mSerializer.read(Thread.class, results[i], false);
+                        bookmark.setCachedThread(bookmarkThread);
+                    }
+                    processBookmarkCallbacks();
+                }).execute(bookmarkThreadUrls);
+            } else {
+                processBookmarkCallbacks();
+            }
         }
     }
 
-    public void haveBookmarks(Context context, HaveBookmarksCallback callback) {
-        getBookmarks(context, (ServerBookmarks bookmarks) -> {
-            if (bookmarks.getBookmarks().entrySet().isEmpty()) {
-                callback.onComplete(false);
-            } else{
-                callback.onComplete(true);
-            }
-        });
+    private void processBookmarkCallbacks() {
+        while (!mBookmarksCallbacks.isEmpty()) {
+            BookmarksCallback callback = mBookmarksCallbacks.get(0);
+            mBookmarksCallbacks.remove(callback);
+            callback.onComplete(mServersBookmarks.get(getServerTag()));
+        }
+    }
+
+    public ServerBookmarks getCachedBookmarks() {
+        if (mServersBookmarks != null && mServersBookmarks.get(getServerTag()) != null) {
+            return mServersBookmarks.get(getServerTag());
+        }
+        return null;
     }
 
     public void serializeBoardBookmarks(Context context) {
@@ -228,9 +282,9 @@ public class ILXRequestor {
     public void getBoards(BoardsCallback boardsCallback, Context context) {
         if (mBoards == null) {
             Log.d(TAG, "passing on request for boards xml");
-            new GetItemsTask(mHttpClient, (String result) -> {
-                if (result != null) {
-                    mBoards = mSerializer.read(Boards.class, result, false);
+            new GetItemsTask(mHttpClient, (String[] results) -> {
+                if (results != null && results[0] != null) {
+                    mBoards = mSerializer.read(Boards.class, results[0], false);
                 }
 
                 if (mPreferences == null) {
@@ -280,22 +334,26 @@ public class ILXRequestor {
     public void getRecentlyUpdatedThreads(int boardId, RecentlyUpdatedThreadsCallback threadsCallback) {
         String url = updatedThreadsUrl + boardId;
         Log.d(TAG, "passing on request for recent threads");
-        new GetItemsTask(mHttpClient, (String result) -> {
-            if (result != null) {
+        new GetItemsTask(mHttpClient, (String[] results) -> {
+            if (results != null && results[0] != null) {
                 RecentlyUpdatedThreads threads =
-                        mSerializer.read(RecentlyUpdatedThreads.class, result, false);
+                        mSerializer.read(RecentlyUpdatedThreads.class, results[0], false);
                 threadsCallback.onComplete(threads);
+            } else {
+                threadsCallback.onComplete(null);
             }
         }).execute(url);
     }
 
     public void getSiteNewAnswers(RecentlyUpdatedThreadsCallback threadsCallback) {
         Log.d(TAG, "getting site new answers");
-        new GetItemsTask(mHttpClient, (String result) -> {
-            if (result != null) {
+        new GetItemsTask(mHttpClient, (String[] results) -> {
+            if (results != null && results[0] != null) {
                 RecentlyUpdatedThreads threads =
-                        mSerializer.read(RecentlyUpdatedThreads.class, result, false);
+                        mSerializer.read(RecentlyUpdatedThreads.class, results[0], false);
                 threadsCallback.onComplete(threads);
+            } else {
+                threadsCallback.onComplete(null);
             }
         }).execute(snaUrl);
     }
@@ -311,10 +369,10 @@ public class ILXRequestor {
         } else {
             Log.d(TAG, "getting a thread");
         }
-        new GetItemsTask(mHttpClient, (String result) -> {
+        new GetItemsTask(mHttpClient, (String[] results) -> {
             Thread thread = null;
-            if (result != null) {
-                thread = mSerializer.read(Thread.class, result, false);
+            if (results != null && results[0] != null) {
+                thread = mSerializer.read(Thread.class, results[0], false);
             }
 
             if (thread != null) {

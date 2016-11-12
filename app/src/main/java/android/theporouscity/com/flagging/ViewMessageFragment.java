@@ -18,6 +18,7 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Created by bergstroml on 7/25/16.
@@ -36,6 +37,7 @@ public class ViewMessageFragment extends Fragment {
     private WebView mWebView;
     private TextView mOpenTextView;
     private TextView mSendTextView;
+    private TextView mBookmarkTextView;
 
     public ViewMessageFragment() { }
 
@@ -67,6 +69,14 @@ public class ViewMessageFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_view_message, container, false);
 
         getActivity().setTitle(Html.fromHtml(mThreadName));
+
+        mBookmarkTextView = (TextView) view.findViewById(R.id.fragment_view_message_bookmark_textview);
+        mBookmarkTextView.setOnClickListener((View v) -> {
+            ILXRequestor.getILXRequestor().getCachedBookmarks()
+                    .addBookmark(mBoardId, mThreadId, mMessage.getMessageId());
+            ILXRequestor.getILXRequestor().serializeBoardBookmarks(getContext());
+            Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+        });
 
         mOpenTextView = (TextView) view.findViewById(R.id.fragment_view_message_view_textview);
         mOpenTextView.setOnClickListener((View v) -> {

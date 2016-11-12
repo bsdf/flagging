@@ -13,6 +13,7 @@ import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
+import android.theporouscity.com.flagging.ilx.Bookmark;
 import android.theporouscity.com.flagging.ilx.ServerBookmarks;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
 import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
@@ -27,7 +28,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -88,15 +91,23 @@ public class ViewThreadsFragment extends Fragment {
             if (getArguments().getInt(ARG_MODE) == MODE_BOARD) {
                 mMode = MODE_BOARD;
                 mBoard = getArguments().getParcelable(ARG_BOARD);
-            } else if (getArguments().getInt(ARG_MODE) == MODE_SNA) {
-                mMode = MODE_SNA;
+            } else {
+                if (getArguments().getInt(ARG_MODE) == MODE_SNA) {
+                    mMode = MODE_SNA;
+                } else if (getArguments().getInt(ARG_MODE) == MODE_MARKS) {
+                    mMode = MODE_MARKS;
+                    getBookmarks();
+                }
                 getBoards();
-            } else if (getArguments().getInt(ARG_MODE) == MODE_MARKS) {
-                mMode = MODE_MARKS;
-                getBookmarks();
             }
             updateThreads();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateThreads();
     }
 
     private void updateThreads() {
@@ -111,12 +122,25 @@ public class ViewThreadsFragment extends Fragment {
                     (RecentlyUpdatedThreads threads) -> {
                         updateThreadsReady(threads);
                     });
+        } else if (mMode == MODE_MARKS) {
+            ILXRequestor.getILXRequestor().getBookmarks(getContext(), (ServerBookmarks bookmarks) -> {
+                RecentlyUpdatedThreads threads = new RecentlyUpdatedThreads();
+                ArrayList<RecentlyUpdatedThread> bookmarksThreads = new ArrayList<>();
+                for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
+                    for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
+                        Bookmark bookmark = bookmarkEntry.getValue();
+                        bookmarksThreads.add(new RecentlyUpdatedThread(bookmark.getCachedThread()));
+                    }
+                }
+                threads.setRecentlyUpdatedThreads(bookmarksThreads);
+                updateThreadsReady(threads);
+            });
         }
     }
 
     private void getBoards() {
         mFetchingBoards = true;
-        if (mMode == MODE_SNA) {
+        if (mMode == MODE_SNA || mMode == MODE_MARKS) {
             ILXRequestor.getILXRequestor().getBoards(
                     (Boards boards) -> {
                         getBoardsReady(boards);
@@ -254,7 +278,7 @@ public class ViewThreadsFragment extends Fragment {
                         .findViewById(R.id.list_item_thread_title_text_view);
                 mDateTextView = (TextView) itemView
                         .findViewById(R.id.list_item_thread_date_text_view);
-            } else if (mMode == MODE_SNA) {
+            } else if (mMode == MODE_SNA || mMode == MODE_MARKS) {
                 mTitleTextView = (TextView) itemView
                         .findViewById(R.id.list_item_snathread_title_text_view);
                 mDateTextView = (TextView) itemView
@@ -280,15 +304,23 @@ public class ViewThreadsFragment extends Fragment {
             mTitleTextView.setText(ssb);
             Date lastUpdated = mThread.getLastUpdated();
             mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(lastUpdated, false));
-            if (mMode == MODE_SNA) {
+            if (mMode == MODE_SNA || mMode == MODE_MARKS) {
                 mBoardTitleTextView.setText(mBoards.getBoardById(mThread.getBoardId()).getName());
             }
         }
 
         @Override
         public void onClick(View view) {
+            int bookmarkedMessageId = -1;
+
+            if (mMode == MODE_MARKS) {
+                bookmarkedMessageId = ILXRequestor.getILXRequestor()
+                        .getCachedBookmarks().getBookmark(mThread.getBoardId(), mThread.getThreadId())
+                        .getBookmarkedMessageId();
+            }
+
             Intent intent = ViewThreadActivity
-                    .newIntent(getActivity(), mThread.getBoardId(), mThread.getThreadId(), -1);
+                    .newIntent(getActivity(), mThread.getBoardId(), mThread.getThreadId(), bookmarkedMessageId);
             startActivity(intent);
         }
     }
@@ -307,7 +339,7 @@ public class ViewThreadsFragment extends Fragment {
             View view = null;
             if (mMode == MODE_BOARD) {
                 view = layoutInflater.inflate(R.layout.list_item_thread, parent, false);
-            } else if (mMode == MODE_SNA) {
+            } else if (mMode == MODE_SNA || mMode == MODE_MARKS) {
                 view = layoutInflater.inflate(R.layout.list_item_sna_thread, parent, false);
             }
             return new ThreadHolder(view);

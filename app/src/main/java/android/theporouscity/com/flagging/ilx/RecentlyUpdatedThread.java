@@ -42,8 +42,15 @@ public class RecentlyUpdatedThread {
     @Element(name="Poll")
     private Boolean Poll;
 
-    /*public RecentlyUpdatedThread(int BoardId, int ThreadId, String Title, Date CreatedOn, Date LastUpdated,
-                                 Boolean Deleted, Boolean Worksafe, Boolean Locked, Boolean Poll) {
+    public RecentlyUpdatedThread(@Element(name="BoardId") int BoardId,
+                                 @Element(name="ThreadId") int ThreadId,
+                                 @Element(name="Title") String Title,
+                                 @Element(name="CreatedOn") Date CreatedOn,
+                                 @Element(name="LastUpdated") Date LastUpdated,
+                                 @Element(name="Deleted") Boolean Deleted,
+                                 @Element(name="Worksafe") Boolean Worksafe,
+                                 @Element(name="Locked") Boolean Locked,
+                                 @Element(name="Poll") Boolean Poll) {
         this.BoardId = BoardId;
         this.ThreadId = ThreadId;
         this.Title = Title;
@@ -53,7 +60,7 @@ public class RecentlyUpdatedThread {
         this.Worksafe = Worksafe;
         this.Locked = Locked;
         this.Poll = Poll;
-    }*/
+    }
 
     public int getBoardId() {
         return BoardId;
@@ -89,5 +96,17 @@ public class RecentlyUpdatedThread {
 
     public Boolean getPoll() {
         return Poll;
+    }
+
+    public RecentlyUpdatedThread(Thread thread) {
+        BoardId = thread.getBoardId();
+        ThreadId = thread.getThreadId();
+        Title = thread.getTitle();
+        CreatedOn = thread.getCreatedOn();
+        LastUpdated = thread.getLastUpdated();
+        Deleted = thread.getDeleted();
+        Worksafe = thread.getWorksafe();
+        Locked = thread.getLocked();
+        Poll = thread.isPoll();
     }
 }
