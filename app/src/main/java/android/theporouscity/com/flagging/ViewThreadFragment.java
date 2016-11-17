@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,12 +19,17 @@ import android.theporouscity.com.flagging.ilx.RichThreadHolder;
 import android.theporouscity.com.flagging.ilx.Thread;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
+
+import io.github.yavski.fabspeeddial.FabSpeedDial;
+import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 
 /**
  * Created by bergstroml on 6/15/16.
@@ -298,6 +304,26 @@ public class ViewThreadFragment extends Fragment {
         mSwipeRefreshLayoutBottom = (SwipeRefreshLayoutBottom) view.findViewById(R.id.fragment_view_thread_swipeContainer);
         mSwipeRefreshLayoutBottom.setOnRefreshListener(() -> {
             loadLaterMessages(25);
+        });
+
+        FabSpeedDial fabSpeedDial = (FabSpeedDial) view.findViewById(R.id.fragment_view_thread_fab_speed_dial);
+        fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
+            @Override
+            public boolean onMenuItemSelected(MenuItem menuItem) {
+                Log.d(TAG, "onMenuItemSelected");
+                if (menuItem.getItemId() == R.id.thread_actions_menu_bookmark) {
+                    Log.d(TAG, "bookmark selected");
+                    List<Message> messages = mThreadHolder.getThread().getMessages();
+                    Message lastMessage = messages.get(messages.size() - 1);
+
+                    ILXRequestor.getILXRequestor().getCachedBookmarks()
+                            .addBookmark(mBoardId, mThreadId, lastMessage.getMessageId());
+                    ILXRequestor.getILXRequestor().serializeBoardBookmarks(getContext());
+                    Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+                }
+
+                return false;
+            }
         });
 
         updateUI();
