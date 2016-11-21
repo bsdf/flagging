@@ -92,11 +92,11 @@ public class ILXRequestor {
         return ilxServerTag;
     }
 
-    public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
+    public boolean getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
 
         mBookmarksCallbacks.add(bookmarksCallback);
         if (mBookmarksCallbacks.size() > 1) {
-            return;
+            return true;
         }
 
         if (mServersBookmarks == null) {
@@ -126,16 +126,16 @@ public class ILXRequestor {
             }
             if (allBookmarksHaveThreads) {
                 processBookmarkCallbacks();
-                return;
+            } else {
+                new GetItemsTask(mHttpClient, (String[] results) -> {
+                    for (int i = 0; i < results.length; i++) {
+                        Bookmark bookmark = bookmarksForThreads.get(i);
+                        Thread bookmarkThread = mSerializer.read(Thread.class, results[i], false);
+                        bookmark.setCachedThread(bookmarkThread);
+                    }
+                    processBookmarkCallbacks();
+                }).execute(bookmarkThreadUrls.toArray(new String[0]));
             }
-            new GetItemsTask(mHttpClient, (String[] results) -> {
-                for (int i=0; i<results.length; i++) {
-                    Bookmark bookmark = bookmarksForThreads.get(i);
-                    Thread bookmarkThread = mSerializer.read(Thread.class, results[i], false);
-                    bookmark.setCachedThread(bookmarkThread);
-                }
-                processBookmarkCallbacks();
-            }).execute(bookmarkThreadUrls.toArray(new String[0]));
         } else {
             ServerBookmarks bookmarks = new ServerBookmarks();
             mServersBookmarks.put(getServerTag(), bookmarks);
@@ -165,8 +165,10 @@ public class ILXRequestor {
                 }).execute(bookmarkThreadUrls);
             } else {
                 processBookmarkCallbacks();
+                return false;
             }
         }
+        return true;
     }
 
     private void processBookmarkCallbacks() {

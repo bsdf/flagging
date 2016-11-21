@@ -7,6 +7,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -31,6 +32,7 @@ public class ActivityMainTabs extends AppCompatActivity {
     private static final String TAG = "ActivityMainTabs";
     private int mShortAnimationDuration;
     private boolean mFetchedBookmarks;
+    private boolean mHadBookmarksLastWeChecked;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,13 +48,17 @@ public class ActivityMainTabs extends AppCompatActivity {
         mViewPager = (ViewPager) findViewById(R.id.activity_main_tabs_viewpager);
 
         mFetchedBookmarks = false;
-        ILXRequestor.getILXRequestor().getBookmarks(this, (ServerBookmarks b) ->
+        if (ILXRequestor.getILXRequestor().getBookmarks(this, (ServerBookmarks b) ->
         {
             mFetchedBookmarks = true;
             // can only modify the # of tabs on the main thread :(
             // although we can do a one-time setup of the adapter in this callback
-            setupViewPager(mViewPager, savedInstanceState);
-        });
+        })) {
+            mHadBookmarksLastWeChecked = true;
+        } else {
+            mHadBookmarksLastWeChecked = false;
+        }
+        setupViewPager(mViewPager, savedInstanceState);
 
         mTabLayout = (TabLayout) findViewById(R.id.activity_main_tabs_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
@@ -77,6 +83,10 @@ public class ActivityMainTabs extends AppCompatActivity {
         Log.d(TAG, System.identityHashCode(this) + " resuming");
         //TODO check to see if we need to get rid of the bookmarks tab
         super.onResume();
+        boolean hadBookmarks = mHadBookmarksLastWeChecked;
+        if (hadBookmarks != haveBookmarks()) {
+            mViewPager.getAdapter().notifyDataSetChanged();
+        }
     }
 
     private void setupViewPager(ViewPager viewPager, Bundle savedInstanceState) {
@@ -118,15 +128,15 @@ public class ActivityMainTabs extends AppCompatActivity {
     private boolean haveBookmarks() {
 
         if (!mFetchedBookmarks) {
-            Log.d(TAG, "should never call haveBookmarks before finished fetching");
-            return false;
+            return mHadBookmarksLastWeChecked;
         }
 
         if (ILXRequestor.getILXRequestor().getCachedBookmarks() != null) {
-            return !ILXRequestor.getILXRequestor().getCachedBookmarks().getBookmarks().isEmpty();
+            mHadBookmarksLastWeChecked = !ILXRequestor.getILXRequestor().getCachedBookmarks().getBookmarks().isEmpty();
         } else {
-            return false;
+            mHadBookmarksLastWeChecked = false;
         }
+        return mHadBookmarksLastWeChecked;
     }
 
     private int bookmarksPosition() {
@@ -149,8 +159,8 @@ public class ActivityMainTabs extends AppCompatActivity {
         }
     }
 
-    class ViewPagerAdapter extends FragmentPagerAdapter {
-        private final List<Fragment> mFragmentList = new ArrayList<>();
+    class ViewPagerAdapter extends FragmentStatePagerAdapter {
+        private List<Fragment> mFragmentList = new ArrayList<>();
         private static final String TAG = "ViewPagerAdapter";
         private FloatingActionButton mFloatingActionButton;
 
@@ -162,6 +172,8 @@ public class ActivityMainTabs extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
 
+            Log.d(TAG, "fragment count " + Integer.toString(mFragmentList.size()));
+
             if (position == bookmarksPosition()) {
                 mFragmentList.add(ViewThreadsFragment.newInstance(false));
             } else if (position == snaPosition()) {
@@ -169,6 +181,7 @@ public class ActivityMainTabs extends AppCompatActivity {
             } else if (position == boardsPosition()) {
                 mFragmentList.add(new ViewBoardsFragment());
             }
+            Log.d(TAG, "fragment count again " + Integer.toString(mFragmentList.size()));
 
             return mFragmentList.get(position);
         }
@@ -205,6 +218,30 @@ public class ActivityMainTabs extends AppCompatActivity {
             }
 
             return fragment;
+        }
+
+        @Override
+        public int getItemPosition(Object object) {
+
+            // we only get here after notifyDatasetChanged so we know tabs need to change
+            // inefficient but this (having bookmarks <-> not having them) is rare
+
+            mFragmentList = new ArrayList<>();
+            return POSITION_NONE;
+            /*
+            if (object instanceof ViewThreadsFragment && ((ViewThreadsFragment) object).getMode() == ViewThreadsFragment.MODE_SNA) {
+                return FragmentStatePagerAdapter.POSITION_UNCHANGED;
+            }
+
+            if (object instanceof ViewThreadsFragment && ((ViewThreadsFragment) object).getMode() == ViewThreadsFragment.MODE_MARKS) {
+                if (!haveBookmarks()) {
+                    return FragmentStatePagerAdapter.POSITION_NONE;
+                } else {
+                    bookmarksPosition();
+                }
+            }
+
+            return boardsPosition();*/
         }
     }
 

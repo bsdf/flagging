@@ -183,4 +183,8 @@ public class Thread {
 
         return true;
     }
+
+    public int mostRecentMessageId() {
+        return Messages.get(Messages.size()-1).getMessageId();
+    }
 }
