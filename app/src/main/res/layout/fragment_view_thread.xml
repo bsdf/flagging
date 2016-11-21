@@ -21,7 +21,7 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <android.theporouscity.com.flagging.SwipeRefreshLayoutBottom
+        <com.theporouscity.flagging.SwipeRefreshLayoutBottom
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
@@ -34,7 +34,7 @@
                                             android:background="@color/background"
                                             android:paddingBottom="4dp" />
 
-    </android.theporouscity.com.flagging.SwipeRefreshLayoutBottom>
+    </com.theporouscity.flagging.SwipeRefreshLayoutBottom>
 
     <ProgressBar
         android:id="@+id/fragment_view_thread_progressbar"

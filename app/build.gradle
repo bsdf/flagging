@@ -12,7 +12,7 @@ android {
     buildToolsVersion "24.0.2"
     compileSdkVersion 25
     defaultConfig {
-        applicationId "android.theporouscity.com.flagging"
+        applicationId "com.theporouscity.flagging"
         minSdkVersion 18
         targetSdkVersion 25
         versionCode 1
