@@ -46,9 +46,9 @@ public class ViewThreadsFragment extends Fragment {
     private static final String TAG = "ViewThreadsFragment";
     private static final String ARG_BOARD = "board";
     private static final String ARG_MODE = "mode";
-    private static final int MODE_BOARD = 0;
-    private static final int MODE_SNA = 1;
-    private static final int MODE_MARKS = 2;
+    public static final int MODE_BOARD = 0;
+    public static final int MODE_SNA = 1;
+    public static final int MODE_MARKS = 2;
 
     @BindView(R.id.fragment_view_threads_recyclerview)
     RecyclerView mRecyclerView;
@@ -80,6 +80,10 @@ public class ViewThreadsFragment extends Fragment {
     private boolean mFetchingBoards;
     private boolean mHasBookmarks;
     private ServerBookmarks mBookmarks;
+
+    public int getMode() {
+        return mMode;
+    }
 
     public static ViewThreadsFragment newInstance(Board board) {
         ViewThreadsFragment fragment = new ViewThreadsFragment();
@@ -152,7 +156,9 @@ public class ViewThreadsFragment extends Fragment {
                 for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
                     for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
                         Bookmark bookmark = bookmarkEntry.getValue();
-                        bookmarksThreads.add(new RecentlyUpdatedThread(bookmark.getCachedThread()));
+                        if (bookmark.getBookmarkedMessageId() != bookmark.getCachedThread().mostRecentMessageId()) {
+                            bookmarksThreads.add(new RecentlyUpdatedThread(bookmark.getCachedThread()));
+                        }
                     }
                 }
                 threads.setRecentlyUpdatedThreads(bookmarksThreads);
