@@ -4,32 +4,30 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
-import com.theporouscity.flagging.R;
-
-import com.theporouscity.flagging.ilx.Board;
-import com.theporouscity.flagging.ilx.Boards;
-import com.theporouscity.flagging.ilx.Bookmark;
-import com.theporouscity.flagging.ilx.ServerBookmarks;
-import com.theporouscity.flagging.ilx.RecentlyUpdatedThread;
-import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.app.Fragment;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.theporouscity.flagging.ilx.Board;
+import com.theporouscity.flagging.ilx.Boards;
+import com.theporouscity.flagging.ilx.Bookmark;
+import com.theporouscity.flagging.ilx.RecentlyUpdatedThread;
+import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
+import com.theporouscity.flagging.ilx.ServerBookmarks;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,7 +38,8 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.Optional;
+
+import static butterknife.ButterKnife.findById;
 
 public class ViewThreadsFragment extends Fragment {
 
@@ -292,17 +291,12 @@ public class ViewThreadsFragment extends Fragment {
             itemView.setOnClickListener(this);
 
             if (mMode == MODE_BOARD) {
-                mTitleTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_thread_title_text_view);
-                mDateTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_thread_date_text_view);
+                mTitleTextView = findById(itemView, R.id.list_item_thread_title_text_view);
+                mDateTextView  = findById(itemView, R.id.list_item_thread_date_text_view);
             } else if (mMode == MODE_SNA || mMode == MODE_MARKS) {
-                mTitleTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_snathread_title_text_view);
-                mDateTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_snathread_date_text_view);
-                mBoardTitleTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_snathread_board_name_text_view);
+                mTitleTextView = findById(itemView, R.id.list_item_snathread_title_text_view);
+                mDateTextView  = findById(itemView, R.id.list_item_snathread_date_text_view);
+                mBoardTitleTextView = findById(itemView, R.id.list_item_snathread_board_name_text_view);
             }
         }
 
@@ -372,7 +366,6 @@ public class ViewThreadsFragment extends Fragment {
                 Log.d("ThreadAdapter", "no threads");
                 return 0;
             }
-
         }
     }
 

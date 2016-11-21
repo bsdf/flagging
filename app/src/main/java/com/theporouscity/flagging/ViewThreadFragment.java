@@ -10,13 +10,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.method.LinkMovementMethod;
-import com.theporouscity.flagging.R;
-
-import com.theporouscity.flagging.ilx.Message;
-import com.theporouscity.flagging.ilx.PollWrapper;
-import com.theporouscity.flagging.ilx.RichMessageHolder;
-import com.theporouscity.flagging.ilx.RichThreadHolder;
-import com.theporouscity.flagging.ilx.Thread;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,12 +17,20 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.theporouscity.flagging.ilx.Message;
+import com.theporouscity.flagging.ilx.PollWrapper;
+import com.theporouscity.flagging.ilx.RichMessageHolder;
+import com.theporouscity.flagging.ilx.RichThreadHolder;
+import com.theporouscity.flagging.ilx.Thread;
+
 import java.util.List;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static butterknife.ButterKnife.findById;
 
 /**
  * Created by bergstroml on 6/15/16.
@@ -420,15 +421,11 @@ public class ViewThreadFragment extends Fragment {
             super(itemView);
 
             if (mThreadHolder.getThread().isPollClosed()) {
-                mPollItemTextTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_poll_option_closed_text);
-                mPollItemVotesTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_poll_option_closed_vote_count);
+                mPollItemTextTextView  = findById(itemView, R.id.list_item_poll_option_closed_text);
+                mPollItemVotesTextView = findById(itemView, R.id.list_item_poll_option_closed_vote_count);
             } else {
-                mPollItemTextTextView = (TextView) itemView
-                        .findViewById(R.id.list_item_poll_option_open_text);
+                mPollItemTextTextView  = findById(itemView, R.id.list_item_poll_option_open_text);
             }
-
         }
 
         public void bindPollItem(int position) {
