@@ -21,6 +21,8 @@ import android.widget.Toast;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+
 /**
  * Created by bergstroml on 7/25/16.
  */
@@ -35,10 +37,24 @@ public class ViewMessageFragment extends Fragment {
     private int mBoardId;
     private int mThreadId;
     private String mThreadName;
+
+    @BindView(R.id.fragment_view_message_webview)
     private WebView mWebView;
+
+    @BindView(R.id.fragment_view_message_view_textview)
     private TextView mOpenTextView;
+
+    @BindView(R.id.fragment_view_message_send_textview)
     private TextView mSendTextView;
+
+    @BindView(R.id.fragment_view_message_bookmark_textview)
     private TextView mBookmarkTextView;
+
+    @BindView(R.id.fragment_view_message_button_bar)
+    LinearLayout mButtonBar;
+
+    @BindView(R.id.fragment_view_message_relativelayout)
+    RelativeLayout mRelativeLayout;
 
     @Inject
     ILXRequestor mILXRequestor;
@@ -77,7 +93,6 @@ public class ViewMessageFragment extends Fragment {
 
         getActivity().setTitle(Html.fromHtml(mThreadName));
 
-        mBookmarkTextView = (TextView) view.findViewById(R.id.fragment_view_message_bookmark_textview);
         mBookmarkTextView.setOnClickListener((View v) -> {
             mILXRequestor.getCachedBookmarks()
                     .addBookmark(mBoardId, mThreadId, mMessage.getMessageId());
@@ -85,14 +100,12 @@ public class ViewMessageFragment extends Fragment {
             Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
         });
 
-        mOpenTextView = (TextView) view.findViewById(R.id.fragment_view_message_view_textview);
         mOpenTextView.setOnClickListener((View v) -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(ILXUrlParser.getMessageUrl(mBoardId, mThreadId, mMessage.getMessageId())));
             startActivity(intent);
         });
 
-        mSendTextView = (TextView) view.findViewById(R.id.fragment_view_message_send_textview);
         mSendTextView.setOnClickListener((View v) -> {
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
@@ -101,7 +114,6 @@ public class ViewMessageFragment extends Fragment {
             startActivity(Intent.createChooser(sendIntent, "Send to ..."));
         });
 
-        mWebView = (WebView) view.findViewById(R.id.fragment_view_message_webview);
         mWebView.setWebChromeClient(new WebChromeClient());
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
@@ -134,9 +146,7 @@ public class ViewMessageFragment extends Fragment {
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
             ((ViewMessageActivity) getActivity()).getSupportActionBar().hide();
 
-            LinearLayout buttonBar = (LinearLayout) view.findViewById(R.id.fragment_view_message_button_bar);
-            RelativeLayout relativeLayout = (RelativeLayout) view.findViewById(R.id.fragment_view_message_relativelayout);
-            relativeLayout.removeView(buttonBar);
+            mRelativeLayout.removeView(mButtonBar);
 
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mWebView.getLayoutParams();
             layoutParams.setMarginStart(0);

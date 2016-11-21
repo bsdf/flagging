@@ -21,16 +21,28 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+
 /**
  * Created by bergstroml on 8/8/16.
  */
 
 public class ActivityMainTabs extends AppCompatActivity {
 
-    private TabLayout mTabLayout;
-    private ViewPager mViewPager;
-    private FloatingActionButton mFloatingActionButton;
     private static final String TAG = "ActivityMainTabs";
+
+    @BindView(R.id.activity_main_tabs_tabs)
+    private TabLayout mTabLayout;
+
+    @BindView(R.id.activity_main_tabs_viewpager)
+    private ViewPager mViewPager;
+
+    @BindView(R.id.activity_main_tabs_fab)
+    private FloatingActionButton mFloatingActionButton;
+
+    @BindView(R.id.activity_main_tabs_toolbar)
+    private Toolbar mToolbar;
+
     private int mShortAnimationDuration;
     private boolean mFetchedBookmarks;
 
@@ -47,10 +59,6 @@ public class ActivityMainTabs extends AppCompatActivity {
         setContentView(R.layout.activity_main_tabs);
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
 
-        mFloatingActionButton = (FloatingActionButton) findViewById(R.id.activity_main_tabs_fab);
-
-        mViewPager = (ViewPager) findViewById(R.id.activity_main_tabs_viewpager);
-
         mFetchedBookmarks = false;
         mILXRequestor.getBookmarks(this, (ServerBookmarks b) ->
         {
@@ -60,22 +68,19 @@ public class ActivityMainTabs extends AppCompatActivity {
             setupViewPager(mViewPager, savedInstanceState);
         });
 
-        mTabLayout = (TabLayout) findViewById(R.id.activity_main_tabs_tabs);
         mTabLayout.setupWithViewPager(mViewPager);
 
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.activity_main_tabs_toolbar);
-        toolbar.setTitle("ILX");
-        toolbar.setOnMenuItemClickListener((MenuItem item) -> {
+        mToolbar.setTitle("ILX");
+        mToolbar.setOnMenuItemClickListener((MenuItem item) -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
         });
-        toolbar.inflateMenu(R.menu.activity_main_tabs_menu);
-
+        mToolbar.inflateMenu(R.menu.activity_main_tabs_menu);
     }
 
     @Override

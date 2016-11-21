@@ -35,6 +35,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+
 public class ViewThreadsFragment extends Fragment {
 
     private static final String TAG = "ViewThreadsFragment";
@@ -47,11 +49,24 @@ public class ViewThreadsFragment extends Fragment {
     private Board mBoard;
     private Boards mBoards;
     private RecentlyUpdatedThreads mThreads;
+
+    @BindView(R.id.fragment_view_threads_recyclerview)
     private RecyclerView mRecyclerView;
+
     private ThreadAdapter mThreadAdapter;
+
+    @BindView(R.id.fragment_view_board_progressbar)
     private ProgressBar mProgressBar;
+
+    @BindView(R.id.fragment_view_thread_loaderrortext)
     private TextView mLoadErrorTextView;
+
+    @BindView(R.id.fragment_view_board_swipeContainer)
     private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    @BindView(R.id.fragment_view_threads_fab)
+    private FloatingActionButton mFloatingActionButton;
+
     private boolean mFetchingThreads;
     private boolean mFetchingBoards;
     private boolean mHasBookmarks;
@@ -229,23 +244,17 @@ public class ViewThreadsFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_view_threads, container, false);
 
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_threads_recyclerview);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
 
-        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_board_progressbar);
-        mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
-
-        mSwipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragment_view_board_swipeContainer);
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             updateThreads();
         });
 
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fragment_view_threads_fab);
         if (mUserAppSettings.getPretendToBeLoggedInSetting()
                 && mMode == MODE_BOARD) {
-            fab.setVisibility(FloatingActionButton.VISIBLE);
-            fab.setOnClickListener((View v) -> {
+            mFloatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
+            mFloatingActionButton.setOnClickListener((View v) -> {
                 Log.d(TAG, "asking a new question");
                 Toast.makeText(getContext(), "yup", Toast.LENGTH_LONG).show();
             });

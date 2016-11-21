@@ -11,17 +11,27 @@ import android.widget.RadioButton;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+
 /**
  * Created by bergstroml on 9/27/16.
  */
 
 public class SettingsFragment extends Fragment {
 
+    @BindView(R.id.fragment_settings_load_pics_never_button)
     private RadioButton mLoadPicsNever;
+
+    @BindView(R.id.fragment_settings_load_pics_always_button)
     private RadioButton mLoadPicsAlways;
+
+    @BindView(R.id.fragment_settings_load_pics_wifi_button)
     private RadioButton mLoadPicsWifi;
 
+    @BindView(R.id.fragment_settings_pretend_logged_in_no)
     private RadioButton mPretendLoggedInNo;
+
+    @BindView(R.id.fragment_settings_pretend_logged_in_yes)
     private RadioButton mPretendLoggedInYes;
 
     @Inject
@@ -36,16 +46,7 @@ public class SettingsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
-
-        mLoadPicsNever = (RadioButton) view.findViewById(R.id.fragment_settings_load_pics_never_button);
-        mLoadPicsAlways = (RadioButton) view.findViewById(R.id.fragment_settings_load_pics_always_button);
-        mLoadPicsWifi = (RadioButton) view.findViewById(R.id.fragment_settings_load_pics_wifi_button);
-
-        mPretendLoggedInNo = (RadioButton) view.findViewById(R.id.fragment_settings_pretend_logged_in_no);
-        mPretendLoggedInYes = (RadioButton) view.findViewById(R.id.fragment_settings_pretend_logged_in_yes);
-
         updateSettingsUI();
 
         return view;

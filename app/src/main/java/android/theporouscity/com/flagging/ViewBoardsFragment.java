@@ -23,24 +23,32 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+
 /**
  * Created by bergstroml on 4/1/16.
  */
 public class ViewBoardsFragment extends Fragment {
 
+    @BindView(R.id.fragment_view_items_recyclerview)
     private RecyclerView mRecyclerView;
+
+    @BindView(R.id.fragment_view_items_progressbar)
+    private ProgressBar mProgressBar;
+
+    @BindView(R.id.fragment_view_thread_loaderrortext)
+    private TextView mLoadErrorTextView;
+
+    @Inject
+    ILXRequestor mILXRequestor;
+
     private BoardAdapter mBoardAdapter;
     private Boards mBoards;
-    private ProgressBar mProgressBar;
-    private TextView mLoadErrorTextView;
     private boolean mFetching;
     private boolean mScrolling;
     private boolean mEditing;
     private List<Board> mBoardsForDisplay;
     private String TAG = "ViewBoardsFragment";
-
-    @Inject
-    ILXRequestor mILXRequestor;
 
     public static ViewBoardsFragment newInstance() {
 
@@ -74,12 +82,8 @@ public class ViewBoardsFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_view_boards, container, false);
 
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_items_recyclerview);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
-
-        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_items_progressbar);
-        mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
 
         updateUI();
         return view;
@@ -176,19 +180,19 @@ public class ViewBoardsFragment extends Fragment {
     private class BoardHolder extends RecyclerView.ViewHolder
     implements View.OnLongClickListener, View.OnClickListener {
 
-        private Board mBoard;
+        @BindView(R.id.list_item_board_title_text_view)
         private TextView mTitleTextView;
-        private String mBoardDescription;
+
+        @BindView(R.id.list_item_board_enabled_switch)
         private SwitchCompat mEnabledSwitch;
+
+        private Board mBoard;
+        private String mBoardDescription;
 
         public BoardHolder(View itemView) {
             super(itemView);
             itemView.setOnLongClickListener(this);
             itemView.setOnClickListener(this);
-            mTitleTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_board_title_text_view);
-            mEnabledSwitch = (SwitchCompat) itemView
-                    .findViewById(R.id.list_item_board_enabled_switch);
         }
 
         public void bindBoard(Board board) {

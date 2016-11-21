@@ -26,6 +26,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+
 /**
  * Created by bergstroml on 6/15/16.
  */
@@ -39,25 +41,39 @@ public class ViewThreadFragment extends Fragment {
     private static final String ARG_MESSAGES_LOADED_COUNT = "messages_loaded_count";
     private static final int mDefaultMessagesChunk = 100;
 
-    private RichThreadHolder mThreadHolder;
-
-    private PollWrapper mPollWrapper;
+    @BindView(R.id.fragment_view_thread_recyclerview)
     private RecyclerView mRecyclerView;
-    private ThreadAdapter mThreadAdapter;
+
+    @BindView(R.id.fragment_view_thread_progressbar)
     private ProgressBar mProgressBar;
+
+    @BindView(R.id.fragment_view_thread_loaderrortext)
     private TextView mLoadErrorTextView;
-    private boolean mFetching;
-    private int mBoardId;
-    private int mThreadId;
-    private int mInitialMessageId;
-    private int mMessagesLoadedCount;
+
+    @BindView(R.id.fragment_view_thread_swipeContainer)
     private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
+
+    @BindView(R.id.fragment_view_thread_toolbar)
+    private Toolbar mToolbar;
+
+    @BindView(R.id.fragment_view_thread_appbarlayout)
+    AppBarLayout mAppBarLayout;
 
     @Inject
     ILXRequestor mILXRequestor;
 
     @Inject
     ILXTextOutputFormatter mILXTextOutputFormatter;
+
+    private RichThreadHolder mThreadHolder;
+    private PollWrapper mPollWrapper;
+    private ThreadAdapter mThreadAdapter;
+
+    private boolean mFetching;
+    private int mBoardId;
+    private int mThreadId;
+    private int mInitialMessageId;
+    private int mMessagesLoadedCount;
 
     public static ViewThreadFragment newInstance(int boardId, int threadId, int messageId) {
         ViewThreadFragment fragment = new ViewThreadFragment();
@@ -259,7 +275,7 @@ public class ViewThreadFragment extends Fragment {
 
             getActivity().setTitle(mThreadHolder.getThread().getTitleForDisplay());
             if (android.os.Build.VERSION.SDK_INT > 21) {
-                ((AppBarLayout) getActivity().findViewById(R.id.fragment_view_thread_appbarlayout)).setElevation(0);
+                mAppBarLayout.setElevation(0);
             }
 
             if (mInitialMessageId != -1) {
@@ -279,7 +295,7 @@ public class ViewThreadFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         //if (((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition() > 0) {
-            ((AppBarLayout) getActivity().findViewById(R.id.fragment_view_thread_appbarlayout)).setExpanded(false, true);
+        mAppBarLayout.setExpanded(false, true);
         //}
 
     }
@@ -290,19 +306,14 @@ public class ViewThreadFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_thread, container, false);
 
-        ((ViewThreadActivity) getActivity()).setSupportActionBar((Toolbar) view.findViewById(R.id.fragment_view_thread_toolbar));
+        ((ViewThreadActivity) getActivity()).setSupportActionBar(mToolbar);
 
         final LinearLayoutManager layoutManager = new LinearLayoutManager(
                 getActivity(), LinearLayoutManager.VERTICAL, false);
         layoutManager.setStackFromEnd(true);
 
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_view_thread_recyclerview);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        mProgressBar = (ProgressBar) view.findViewById(R.id.fragment_view_thread_progressbar);
-        mLoadErrorTextView = (TextView) view.findViewById(R.id.fragment_view_thread_loaderrortext);
-
-        mSwipeRefreshLayoutBottom = (SwipeRefreshLayoutBottom) view.findViewById(R.id.fragment_view_thread_swipeContainer);
         mSwipeRefreshLayoutBottom.setOnRefreshListener(() -> {
             loadLaterMessages(25);
         });
@@ -343,20 +354,20 @@ public class ViewThreadFragment extends Fragment {
     private class MessageHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
-        private RichMessageHolder mRichMessageHolder;
+        @BindView(R.id.list_item_message_body_text_view)
         private TextView mBodyTextView;
+
+        @BindView(R.id.list_item_message_date_text_view)
         private TextView mDateTextView;
+
+        @BindView(R.id.list_item_message_display_name_text_view)
         private TextView mDisplayNameTextView;
+
+        private RichMessageHolder mRichMessageHolder;
 
         public MessageHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
-            mBodyTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_message_body_text_view);
-            mDateTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_message_date_text_view);
-            mDisplayNameTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_message_display_name_text_view);
 
             mBodyTextView.setOnClickListener((View view) -> {
                 if (mBodyTextView.getSelectionStart() == -1 &&
@@ -427,15 +438,15 @@ public class ViewThreadFragment extends Fragment {
     private class LoaderHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
+        @BindView(R.id.list_item_loadmore_loadtext)
         private TextView mLoadMoreTextView;
+
         private int mNumToLoad;
         private boolean mLoading;
 
         public LoaderHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
-            mLoadMoreTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_loadmore_loadtext);
         }
 
         public void bindLoader() {
@@ -454,12 +465,12 @@ public class ViewThreadFragment extends Fragment {
     }
 
     private class HeaderHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.list_item_thread_header_text_view)
         private TextView mHeaderTextView;
 
         public HeaderHolder(View itemView) {
             super(itemView);
-            mHeaderTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_thread_header_text_view);
         }
 
         public void bindHeader() {
@@ -468,12 +479,12 @@ public class ViewThreadFragment extends Fragment {
     }
 
     private class PollHeaderHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.list_item_poll_header_text_view)
         private TextView mPollHeaderTextView;
 
         public PollHeaderHolder(View itemView) {
             super(itemView);
-            mPollHeaderTextView = (TextView) itemView
-                    .findViewById(R.id.list_item_poll_header_text_view);
         }
 
         public void bindPollHeader() {
