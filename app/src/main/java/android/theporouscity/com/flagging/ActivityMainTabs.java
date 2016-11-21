@@ -22,6 +22,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by bergstroml on 8/8/16.
@@ -32,22 +33,22 @@ public class ActivityMainTabs extends AppCompatActivity {
     private static final String TAG = "ActivityMainTabs";
 
     @BindView(R.id.activity_main_tabs_tabs)
-    private TabLayout mTabLayout;
+    TabLayout mTabLayout;
 
     @BindView(R.id.activity_main_tabs_viewpager)
-    private ViewPager mViewPager;
+    ViewPager mViewPager;
 
     @BindView(R.id.activity_main_tabs_fab)
-    private FloatingActionButton mFloatingActionButton;
+    FloatingActionButton mFloatingActionButton;
 
     @BindView(R.id.activity_main_tabs_toolbar)
-    private Toolbar mToolbar;
-
-    private int mShortAnimationDuration;
-    private boolean mFetchedBookmarks;
+    Toolbar mToolbar;
 
     @Inject
     ILXRequestor mILXRequestor;
+
+    private int mShortAnimationDuration;
+    private boolean mFetchedBookmarks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +59,7 @@ public class ActivityMainTabs extends AppCompatActivity {
 
         setContentView(R.layout.activity_main_tabs);
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
+        ButterKnife.bind(this);
 
         mFetchedBookmarks = false;
         mILXRequestor.getBookmarks(this, (ServerBookmarks b) ->

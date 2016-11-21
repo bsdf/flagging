@@ -24,6 +24,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by bergstroml on 4/1/16.
@@ -31,13 +32,13 @@ import butterknife.BindView;
 public class ViewBoardsFragment extends Fragment {
 
     @BindView(R.id.fragment_view_items_recyclerview)
-    private RecyclerView mRecyclerView;
+    RecyclerView mRecyclerView;
 
     @BindView(R.id.fragment_view_items_progressbar)
-    private ProgressBar mProgressBar;
+    ProgressBar mProgressBar;
 
     @BindView(R.id.fragment_view_thread_loaderrortext)
-    private TextView mLoadErrorTextView;
+    TextView mLoadErrorTextView;
 
     @Inject
     ILXRequestor mILXRequestor;
@@ -81,6 +82,7 @@ public class ViewBoardsFragment extends Fragment {
         Log.d(TAG, System.identityHashCode(this) + "OnCreateView");
 
         View view = inflater.inflate(R.layout.fragment_view_boards, container, false);
+        ButterKnife.bind(this, view);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));
@@ -177,20 +179,21 @@ public class ViewBoardsFragment extends Fragment {
         }
     }
 
-    private class BoardHolder extends RecyclerView.ViewHolder
+    class BoardHolder extends RecyclerView.ViewHolder
     implements View.OnLongClickListener, View.OnClickListener {
 
         @BindView(R.id.list_item_board_title_text_view)
-        private TextView mTitleTextView;
+        TextView mTitleTextView;
 
         @BindView(R.id.list_item_board_enabled_switch)
-        private SwitchCompat mEnabledSwitch;
+        SwitchCompat mEnabledSwitch;
 
         private Board mBoard;
         private String mBoardDescription;
 
         public BoardHolder(View itemView) {
             super(itemView);
+            ButterKnife.bind(this, itemView);
             itemView.setOnLongClickListener(this);
             itemView.setOnClickListener(this);
         }

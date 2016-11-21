@@ -36,6 +36,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class ViewThreadsFragment extends Fragment {
 
@@ -45,38 +46,37 @@ public class ViewThreadsFragment extends Fragment {
     private static final int MODE_BOARD = 0;
     private static final int MODE_SNA = 1;
     private static final int MODE_MARKS = 2;
-    private int mMode;
-    private Board mBoard;
-    private Boards mBoards;
-    private RecentlyUpdatedThreads mThreads;
 
     @BindView(R.id.fragment_view_threads_recyclerview)
-    private RecyclerView mRecyclerView;
-
-    private ThreadAdapter mThreadAdapter;
+    RecyclerView mRecyclerView;
 
     @BindView(R.id.fragment_view_board_progressbar)
-    private ProgressBar mProgressBar;
+    ProgressBar mProgressBar;
 
     @BindView(R.id.fragment_view_thread_loaderrortext)
-    private TextView mLoadErrorTextView;
+    TextView mLoadErrorTextView;
 
     @BindView(R.id.fragment_view_board_swipeContainer)
-    private SwipeRefreshLayout mSwipeRefreshLayout;
+    SwipeRefreshLayout mSwipeRefreshLayout;
 
     @BindView(R.id.fragment_view_threads_fab)
-    private FloatingActionButton mFloatingActionButton;
-
-    private boolean mFetchingThreads;
-    private boolean mFetchingBoards;
-    private boolean mHasBookmarks;
-    private ServerBookmarks mBookmarks;
+    FloatingActionButton mFloatingActionButton;
 
     @Inject
     ILXRequestor mILXRequestor;
 
     @Inject
     UserAppSettings mUserAppSettings;
+
+    private ThreadAdapter mThreadAdapter;
+    private int mMode;
+    private Board mBoard;
+    private Boards mBoards;
+    private RecentlyUpdatedThreads mThreads;
+    private boolean mFetchingThreads;
+    private boolean mFetchingBoards;
+    private boolean mHasBookmarks;
+    private ServerBookmarks mBookmarks;
 
     public static ViewThreadsFragment newInstance(Board board) {
         ViewThreadsFragment fragment = new ViewThreadsFragment();
@@ -243,6 +243,7 @@ public class ViewThreadsFragment extends Fragment {
         }
 
         View view = inflater.inflate(R.layout.fragment_view_threads, container, false);
+        ButterKnife.bind(this, view);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.addItemDecoration(new DividerItemDecoration((getActivity())));

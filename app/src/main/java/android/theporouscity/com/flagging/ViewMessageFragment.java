@@ -22,6 +22,7 @@ import android.widget.Toast;
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by bergstroml on 7/25/16.
@@ -33,22 +34,18 @@ public class ViewMessageFragment extends Fragment {
     private static final String ARG_BOARD_ID = "board_id";
     private static final String ARG_THREAD_ID = "thread_id";
     private static final String ARG_THREAD_NAME = "thread_name";
-    private Message mMessage;
-    private int mBoardId;
-    private int mThreadId;
-    private String mThreadName;
 
     @BindView(R.id.fragment_view_message_webview)
-    private WebView mWebView;
+    WebView mWebView;
 
     @BindView(R.id.fragment_view_message_view_textview)
-    private TextView mOpenTextView;
+    TextView mOpenTextView;
 
     @BindView(R.id.fragment_view_message_send_textview)
-    private TextView mSendTextView;
+    TextView mSendTextView;
 
     @BindView(R.id.fragment_view_message_bookmark_textview)
-    private TextView mBookmarkTextView;
+    TextView mBookmarkTextView;
 
     @BindView(R.id.fragment_view_message_button_bar)
     LinearLayout mButtonBar;
@@ -61,6 +58,11 @@ public class ViewMessageFragment extends Fragment {
 
     @Inject
     ILXTextOutputFormatter mILXTextOutputFormatter;
+
+    private Message mMessage;
+    private int mBoardId;
+    private int mThreadId;
+    private String mThreadName;
 
     public static ViewMessageFragment newInstance(Message message, int boardId, int threadId, String threadName) {
         ViewMessageFragment fragment = new ViewMessageFragment();
@@ -90,6 +92,7 @@ public class ViewMessageFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_message, container, false);
+        ButterKnife.bind(this, view);
 
         getActivity().setTitle(Html.fromHtml(mThreadName));
 

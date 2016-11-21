@@ -27,6 +27,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by bergstroml on 6/15/16.
@@ -42,19 +43,19 @@ public class ViewThreadFragment extends Fragment {
     private static final int mDefaultMessagesChunk = 100;
 
     @BindView(R.id.fragment_view_thread_recyclerview)
-    private RecyclerView mRecyclerView;
+    RecyclerView mRecyclerView;
 
     @BindView(R.id.fragment_view_thread_progressbar)
-    private ProgressBar mProgressBar;
+    ProgressBar mProgressBar;
 
     @BindView(R.id.fragment_view_thread_loaderrortext)
-    private TextView mLoadErrorTextView;
+    TextView mLoadErrorTextView;
 
     @BindView(R.id.fragment_view_thread_swipeContainer)
-    private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
+    SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
 
     @BindView(R.id.fragment_view_thread_toolbar)
-    private Toolbar mToolbar;
+    Toolbar mToolbar;
 
     @BindView(R.id.fragment_view_thread_appbarlayout)
     AppBarLayout mAppBarLayout;
@@ -305,6 +306,7 @@ public class ViewThreadFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_view_thread, container, false);
+        ButterKnife.bind(this, view);
 
         ((ViewThreadActivity) getActivity()).setSupportActionBar(mToolbar);
 
@@ -351,22 +353,24 @@ public class ViewThreadFragment extends Fragment {
         super.onDetach();
     }
 
-    private class MessageHolder extends RecyclerView.ViewHolder
+    class MessageHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
         @BindView(R.id.list_item_message_body_text_view)
-        private TextView mBodyTextView;
+        TextView mBodyTextView;
 
         @BindView(R.id.list_item_message_date_text_view)
-        private TextView mDateTextView;
+        TextView mDateTextView;
 
         @BindView(R.id.list_item_message_display_name_text_view)
-        private TextView mDisplayNameTextView;
+        TextView mDisplayNameTextView;
 
         private RichMessageHolder mRichMessageHolder;
 
         public MessageHolder(View itemView) {
             super(itemView);
+            ButterKnife.bind(this, itemView);
+
             itemView.setOnClickListener(this);
 
             mBodyTextView.setOnClickListener((View view) -> {
@@ -435,17 +439,19 @@ public class ViewThreadFragment extends Fragment {
         }
     }
 
-    private class LoaderHolder extends RecyclerView.ViewHolder
+    class LoaderHolder extends RecyclerView.ViewHolder
         implements View.OnClickListener {
 
         @BindView(R.id.list_item_loadmore_loadtext)
-        private TextView mLoadMoreTextView;
+        TextView mLoadMoreTextView;
 
         private int mNumToLoad;
         private boolean mLoading;
 
         public LoaderHolder(View itemView) {
             super(itemView);
+            ButterKnife.bind(this, itemView);
+
             itemView.setOnClickListener(this);
         }
 
@@ -464,13 +470,14 @@ public class ViewThreadFragment extends Fragment {
         }
     }
 
-    private class HeaderHolder extends RecyclerView.ViewHolder {
+    class HeaderHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.list_item_thread_header_text_view)
-        private TextView mHeaderTextView;
+        TextView mHeaderTextView;
 
         public HeaderHolder(View itemView) {
             super(itemView);
+            ButterKnife.bind(this, itemView);
         }
 
         public void bindHeader() {
@@ -478,13 +485,14 @@ public class ViewThreadFragment extends Fragment {
         }
     }
 
-    private class PollHeaderHolder extends RecyclerView.ViewHolder {
+    class PollHeaderHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.list_item_poll_header_text_view)
-        private TextView mPollHeaderTextView;
+        TextView mPollHeaderTextView;
 
         public PollHeaderHolder(View itemView) {
             super(itemView);
+            ButterKnife.bind(this, itemView);
         }
 
         public void bindPollHeader() {
