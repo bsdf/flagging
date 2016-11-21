@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.RadioButton;
 
+import javax.inject.Inject;
+
 /**
  * Created by bergstroml on 9/27/16.
  */
@@ -22,10 +24,13 @@ public class SettingsFragment extends Fragment {
     private RadioButton mPretendLoggedInNo;
     private RadioButton mPretendLoggedInYes;
 
-    private UserAppSettings mSettings;
+    @Inject
+    UserAppSettings settings;
 
-    public SettingsFragment() {
-        mSettings = null;
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
     }
 
     @Nullable
@@ -47,17 +52,7 @@ public class SettingsFragment extends Fragment {
 
     }
 
-    private UserAppSettings getSettings() {
-        if (mSettings == null) {
-            mSettings = ILXRequestor.getILXRequestor().getUserAppSettings(getContext());
-        }
-        return mSettings;
-    }
-
     private void updateSettingsUI() {
-
-        UserAppSettings settings = getSettings();
-
         updateLoadPrettyPicturesButtons(mLoadPicsNever,
                 settings.getLoadPrettyPicturesSetting() == UserAppSettings.LoadPrettyPicturesSetting.NEVER);
         updateLoadPrettyPicturesButtons(mLoadPicsAlways,
@@ -80,9 +75,6 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updateLoadPicsSetting() {
-
-        UserAppSettings settings = getSettings();
-
         if (mLoadPicsNever.isChecked()) {
             settings.setLoadPrettyPicturesSettingAndPersist(UserAppSettings.LoadPrettyPicturesSetting.NEVER, getContext());
         } else if (mLoadPicsAlways.isChecked()) {
@@ -102,9 +94,6 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updatePretendLoggedInSetting() {
-
-        UserAppSettings settings = getSettings();
-
         if (mPretendLoggedInNo.isChecked()) {
             settings.setPretendToBeLoggedInSettingAndPersist(false, getContext());
         } else if (mPretendLoggedInYes.isChecked()) {

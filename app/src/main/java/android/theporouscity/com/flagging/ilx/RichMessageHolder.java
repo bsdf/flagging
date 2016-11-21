@@ -1,18 +1,11 @@
 package android.theporouscity.com.flagging.ilx;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
-import android.widget.TextView;
 import android.theporouscity.com.flagging.ILXTextOutputFormatter;
-
-import org.w3c.dom.Text;
-
-import java.lang.ref.WeakReference;
 
 /**
  * Created by bergstroml on 10/7/16.
@@ -29,11 +22,13 @@ public class RichMessageHolder {
     private Drawable mYoutubePlaceholderImage;
     private Drawable mEmptyPlaceholderImage;
     private int mlinkColor;
+    private ILXTextOutputFormatter mILXTextOutputFormatter;
     //private WeakReference<ILXTextOutputFormatter.ImageGetterAsyncTask> mImageGetterTaskWeakRef;
     //private WeakReference<Bitmap>
 
-    public RichMessageHolder(Message message, Drawable youtubePlaceholderImage,
-                             Drawable emptyPlaceholderImage, int linkColor) {
+    public RichMessageHolder(ILXTextOutputFormatter mILXTextOutputFormatter, Message message,
+                             Drawable youtubePlaceholderImage, Drawable emptyPlaceholderImage, int linkColor) {
+        this.mILXTextOutputFormatter = mILXTextOutputFormatter;
         mMessage = message;
         mYoutubePlaceholderImage = youtubePlaceholderImage;
         mEmptyPlaceholderImage = emptyPlaceholderImage;
@@ -84,7 +79,7 @@ public class RichMessageHolder {
 
         if (mBodyForDisplayShort == null) {
 
-            mBodyForDisplayShort = ILXTextOutputFormatter.getILXTextOutputFormatter()
+            mBodyForDisplayShort = mILXTextOutputFormatter
                     .getBodyForDisplayShort(mMessage.getBody(),
                             mYoutubePlaceholderImage,
                             mEmptyPlaceholderImage,

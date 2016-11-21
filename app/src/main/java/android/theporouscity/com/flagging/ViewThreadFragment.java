@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.PollWrapper;
@@ -24,6 +23,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * Created by bergstroml on 6/15/16.
@@ -52,7 +53,11 @@ public class ViewThreadFragment extends Fragment {
     private int mMessagesLoadedCount;
     private SwipeRefreshLayoutBottom mSwipeRefreshLayoutBottom;
 
-    public ViewThreadFragment() { }
+    @Inject
+    ILXRequestor mILXRequestor;
+
+    @Inject
+    ILXTextOutputFormatter mILXTextOutputFormatter;
 
     public static ViewThreadFragment newInstance(int boardId, int threadId, int messageId) {
         ViewThreadFragment fragment = new ViewThreadFragment();
@@ -67,6 +72,8 @@ public class ViewThreadFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
+
         if (getArguments() != null) {
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
@@ -124,11 +131,11 @@ public class ViewThreadFragment extends Fragment {
                 numMessagesToLoad = mMessagesLoadedCount;
             }
 
-            ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1, numMessagesToLoad,
+            mILXRequestor.getThread(mBoardId, mThreadId, -1, numMessagesToLoad,
                     (Thread thread) -> {
                         mFetching = false;
-                        mThreadHolder = new RichThreadHolder(thread, getContext());
-                        mPollWrapper = new PollWrapper(mThreadHolder);
+                        mThreadHolder = new RichThreadHolder(thread, getContext(), mILXTextOutputFormatter);
+                        mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                         updateUI();
                         mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getRichMessageHolders().size() - 1, getActivity());
                         mPollWrapper.prepPollItems(getActivity());
@@ -143,12 +150,12 @@ public class ViewThreadFragment extends Fragment {
                 numMessagesToLoad = mMessagesLoadedCount;
             }
 
-            ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, mInitialMessageId, numMessagesToLoad,
+            mILXRequestor.getThread(mBoardId, mThreadId, mInitialMessageId, numMessagesToLoad,
                     (Thread thread) -> {
                         mFetching = false;
-                        mThreadHolder = new RichThreadHolder(thread, getContext());
+                        mThreadHolder = new RichThreadHolder(thread, getContext(), mILXTextOutputFormatter);
                         mThreadHolder.getDrawingResources(getContext());
-                        mPollWrapper = new PollWrapper(mThreadHolder);
+                        mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                         updateUI();
                         mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getThread().getMessagePosition(mInitialMessageId), getActivity());
                         mPollWrapper.prepPollItems(getActivity());
@@ -172,7 +179,7 @@ public class ViewThreadFragment extends Fragment {
     private void loadEarlierMessages(int numEarlierMessagesToPrepend) {
         // TODO see if there's a way to grab messages X-X'
         int numToRequest = mThreadHolder.getThread().getLocalMessageCount() + numEarlierMessagesToPrepend;
-        ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1,
+        mILXRequestor.getThread(mBoardId, mThreadId, -1,
                 numToRequest, (Thread thread) -> {
 
                     Log.d(TAG, "messages loaded - loadEarlierMessages callback, before update - " + Integer.toString(mMessagesLoadedCount));
@@ -196,7 +203,7 @@ public class ViewThreadFragment extends Fragment {
 
     private void loadLaterMessages(int numAdditionalToRequest) {
 
-        ILXRequestor.getILXRequestor().getThread(mBoardId, mThreadId, -1, numAdditionalToRequest,
+        mILXRequestor.getThread(mBoardId, mThreadId, -1, numAdditionalToRequest,
                 (Thread thread) -> {
 
                     int numNewMessages = thread.getServerMessageCount() - mThreadHolder.getThread().getServerMessageCount();

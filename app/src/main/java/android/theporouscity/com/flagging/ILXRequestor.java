@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.theporouscity.com.flagging.ilx.Board;
 import android.theporouscity.com.flagging.ilx.Boards;
 import android.theporouscity.com.flagging.ilx.Bookmark;
-import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThread;
 import android.theporouscity.com.flagging.ilx.ServerBookmarks;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.theporouscity.com.flagging.ilx.Thread;
@@ -13,18 +12,14 @@ import android.theporouscity.com.flagging.ilx.RecentlyUpdatedThreads;
 import android.util.Log;
 
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.transform.Matcher;
 import org.simpleframework.xml.transform.Transform;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Queue;
+import java.util.Map;
 import java.util.TimeZone;
 
 import okhttp3.OkHttpClient;
@@ -34,22 +29,21 @@ import okhttp3.OkHttpClient;
  */
 public class ILXRequestor {
 
+    public static final String ILX_SERVER_TAG = "ILX";
+
     private static final String TAG = "ILXRequestor";
     private static final String boardsListUrl = "http://ilxor.com/ILX/BoardsXmlControllerServlet";
     private static final String updatedThreadsUrl = "http://ilxor.com/ILX/NewAnswersControllerServlet?xml=true&boardid=";
     private static final String threadUrl = "http://ilxor.com/ILX/ThreadSelectedControllerServlet?xml=true&boardid=";
     private static final String snaUrl = "http://ilxor.com/ILX/SiteNewAnswersControllerServlet?xml=true";
-    private static final String ilxServerTag = "ILX";
     private static final String serializedBookmarksPrefix = "serializedBookmarks";
 
-    private static ILXRequestor mILXRequestor;
-    private static OkHttpClient mHttpClient;
-    private static Serializer mSerializer;
-    private static volatile Boards mBoards;
-    private static SharedPreferences mPreferences;
-    private static HashMap<String, ServerBookmarks> mServersBookmarks;
-    private static ArrayList<BookmarksCallback> mBookmarksCallbacks;
-
+    private OkHttpClient mHttpClient;
+    private Serializer mSerializer;
+    private volatile Boards mBoards;
+    private SharedPreferences mPreferences;
+    private Map<String, ServerBookmarks> mServersBookmarks;
+    private List<BookmarksCallback> mBookmarksCallbacks = new ArrayList<>();
 
     public interface BoardsCallback {
         void onComplete(Boards boards);
@@ -71,25 +65,13 @@ public class ILXRequestor {
         void onComplete(boolean result);
     }
 
-    private ILXRequestor() {}
-
-    public static ILXRequestor getILXRequestor() {
-
-        if (mILXRequestor == null) {
-            mILXRequestor = new ILXRequestor();
-            mHttpClient = new OkHttpClient();
-            mSerializer = newPersister();
-            mBoards = null;
-            mPreferences = null;
-            mServersBookmarks = null;
-            mBookmarksCallbacks = new ArrayList<>();
-        }
-
-        return mILXRequestor;
+    public ILXRequestor(OkHttpClient mHttpClient, Serializer mSerializer) {
+        this.mHttpClient = mHttpClient;
+        this.mSerializer = mSerializer;
     }
 
     private String getServerTag() {
-        return ilxServerTag;
+        return ILX_SERVER_TAG;
     }
 
     public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
@@ -104,7 +86,7 @@ public class ILXRequestor {
         }
 
         if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
         }
 
         if (mServersBookmarks.get(getServerTag()) != null) {
@@ -186,7 +168,7 @@ public class ILXRequestor {
 
     public void serializeBoardBookmarks(Context context) {
         if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
         }
 
         if (mServersBookmarks == null || mServersBookmarks.get(getServerTag()) == null) {
@@ -216,43 +198,16 @@ public class ILXRequestor {
     private SharedPreferences getPreferences(Context context) {
 
         if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
         }
 
         return mPreferences;
     }
 
-    public UserAppSettings getUserAppSettings(Context context) {
-
-        UserAppSettings settings = new UserAppSettings();
-
-        if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
-        }
-
-        int loadPrettyPictures = mPreferences.getInt(UserAppSettings.LoadPrettyPicturesSettingKey, -1);
-        if (loadPrettyPictures == -1 || loadPrettyPictures == 0) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.NEVER);
-        } else if (loadPrettyPictures == 1) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.ALWAYS);
-        } else if (loadPrettyPictures == 2) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.WIFI);
-        }
-
-        int pretendToBeLoggedIn = mPreferences.getInt(UserAppSettings.PretendToBeLoggedInKey, -1);
-        if (pretendToBeLoggedIn == 1) {
-            settings.setPretendToBeLoggedInSetting(true);
-        } else {
-            settings.setPretendToBeLoggedInSetting(false);
-        }
-
-        return settings;
-    }
-
     public void persistUserAppSettings(UserAppSettings settings, Context context) {
 
         if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
         }
 
         SharedPreferences.Editor editor = mPreferences.edit();
@@ -288,7 +243,7 @@ public class ILXRequestor {
                 }
 
                 if (mPreferences == null) {
-                    mPreferences = context.getSharedPreferences(ilxServerTag, Context.MODE_PRIVATE);
+                    mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
                 }
 
                 for (Board board : mBoards.getBoards()) {
@@ -387,24 +342,7 @@ public class ILXRequestor {
 
     }
 
-    private static Persister newPersister() {
-        ILXDateTransform transform1 = new ILXDateTransform();
-        ILXPollDateTransform transform2 = new ILXPollDateTransform();
-
-        return new Persister(new Matcher() {
-            @Override
-            public Transform match(Class cls) throws Exception {
-                if (cls == Date.class) {
-                    return transform1;
-                } else if (cls == PollClosingDate.class) {
-                    return transform2;
-                }
-                return null;
-            }
-        });
-    }
-
-    private static final class ILXDateTransform implements Transform<Date> {
+    public static final class ILXDateTransform implements Transform<Date> {
         ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat> () {
             protected SimpleDateFormat initialValue ()
             {
@@ -424,7 +362,7 @@ public class ILXRequestor {
         }
     }
 
-    private static final class ILXPollDateTransform implements Transform<PollClosingDate> {
+    public static final class ILXPollDateTransform implements Transform<PollClosingDate> {
         ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat> () {
             protected SimpleDateFormat initialValue ()
             {

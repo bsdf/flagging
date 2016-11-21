@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.ActionBarOverlayLayout;
 import android.text.Html;
 import android.theporouscity.com.flagging.ilx.Message;
 import android.view.LayoutInflater;
@@ -19,6 +18,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import javax.inject.Inject;
 
 /**
  * Created by bergstroml on 7/25/16.
@@ -39,7 +40,11 @@ public class ViewMessageFragment extends Fragment {
     private TextView mSendTextView;
     private TextView mBookmarkTextView;
 
-    public ViewMessageFragment() { }
+    @Inject
+    ILXRequestor mILXRequestor;
+
+    @Inject
+    ILXTextOutputFormatter mILXTextOutputFormatter;
 
     public static ViewMessageFragment newInstance(Message message, int boardId, int threadId, String threadName) {
         ViewMessageFragment fragment = new ViewMessageFragment();
@@ -55,6 +60,8 @@ public class ViewMessageFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
+
         if (getArguments() != null) {
             mMessage = (Message) getArguments().getParcelable(ARG_MESSAGE);
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
@@ -72,9 +79,9 @@ public class ViewMessageFragment extends Fragment {
 
         mBookmarkTextView = (TextView) view.findViewById(R.id.fragment_view_message_bookmark_textview);
         mBookmarkTextView.setOnClickListener((View v) -> {
-            ILXRequestor.getILXRequestor().getCachedBookmarks()
+            mILXRequestor.getCachedBookmarks()
                     .addBookmark(mBoardId, mThreadId, mMessage.getMessageId());
-            ILXRequestor.getILXRequestor().serializeBoardBookmarks(getContext());
+            mILXRequestor.serializeBoardBookmarks(getContext());
             Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
         });
 
@@ -138,7 +145,7 @@ public class ViewMessageFragment extends Fragment {
 
         }
 
-        mWebView.loadData(ILXTextOutputFormatter.getILXTextOutputFormatter().fixMessageBodyForWebview(mMessage),
+        mWebView.loadData(mILXTextOutputFormatter.fixMessageBodyForWebview(mMessage),
                 "text/html; charset=utf-8", null);
 
         return view;

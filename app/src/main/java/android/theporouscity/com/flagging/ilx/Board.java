@@ -71,11 +71,6 @@ public class Board implements Parcelable {
         mEnabled = enabled;
     }
 
-    public void setEnabledAndPersist(boolean enabled) {
-        mEnabled = enabled;
-        ILXRequestor.getILXRequestor().persistBoardEnabledState(this);
-    }
-
     @Override
     public int describeContents() {
         return 0;

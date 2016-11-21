@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LevelListDrawable;
@@ -21,18 +20,16 @@ import android.theporouscity.com.flagging.ilx.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
 import org.xml.sax.XMLReader;
 
 import java.lang.ref.WeakReference;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.inject.Inject;
 
 /**
  * Created by bergstroml on 7/21/16.
@@ -40,16 +37,11 @@ import java.util.regex.Pattern;
 
 public class ILXTextOutputFormatter {
 
-    private static ILXTextOutputFormatter mILXTextOutputFormatter;
+    private UserAppSettings mUserAppSettings;
 
-    private ILXTextOutputFormatter() {}
-
-    public static ILXTextOutputFormatter getILXTextOutputFormatter() {
-
-        if (mILXTextOutputFormatter == null) {
-            mILXTextOutputFormatter = new ILXTextOutputFormatter();
-        }
-        return mILXTextOutputFormatter;
+    @Inject
+    public ILXTextOutputFormatter(UserAppSettings mUserAppSettings) {
+        this.mUserAppSettings = mUserAppSettings;
     }
 
     public String fixMessageBodyForWebview(Message message) {
@@ -87,7 +79,7 @@ public class ILXTextOutputFormatter {
         ILXImgHandler imgHandler = null;
         ILXTagHandler tagHandler = new ILXTagHandler(youtubePlaceholderImage);
 
-        if (ILXRequestor.getILXRequestor().getUserAppSettings(activity).shouldLoadPictures(activity)) {
+        if (mUserAppSettings.shouldLoadPictures(activity)) {
             imgHandler = new ILXImgHandler(emptyPlaceholderImage, activity, callback);
         }
 

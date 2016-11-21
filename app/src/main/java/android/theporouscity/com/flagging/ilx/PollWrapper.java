@@ -1,11 +1,8 @@
 package android.theporouscity.com.flagging.ilx;
 
 import android.app.Activity;
-import android.graphics.drawable.Drawable;
-import android.text.Html;
 import android.text.Spanned;
 import android.theporouscity.com.flagging.ILXTextOutputFormatter;
-import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -17,9 +14,11 @@ public class PollWrapper {
 
     private RichThreadHolder mThreadHolder;
     private ArrayList<RichPollItem> mRichPollItems;
+    private ILXTextOutputFormatter mILXTextOutputFormatter;
 
-    public PollWrapper(RichThreadHolder threadHolder) {
+    public PollWrapper(RichThreadHolder threadHolder, ILXTextOutputFormatter mILXTextOutputFormatter) {
         mThreadHolder = threadHolder;
+        this.mILXTextOutputFormatter = mILXTextOutputFormatter;
     }
 
     public boolean isClosed() {
@@ -103,7 +102,7 @@ public class PollWrapper {
 
             if (mItemTextForDisplay == null) {
                 if (mIsResult) {
-                    mItemTextForDisplay = ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
+                    mItemTextForDisplay = mILXTextOutputFormatter.getBodyForDisplayShort(
                             mResult.getOption(),
                             mThreadHolder.getYoutubePlaceholderImage(),
                             mThreadHolder.getEmptyPlaceholderImage(),
@@ -111,7 +110,7 @@ public class PollWrapper {
                             activity,
                             () -> { if (mCallback != null) { mCallback.onComplete(); } });
                 } else {
-                    mItemTextForDisplay = ILXTextOutputFormatter.getILXTextOutputFormatter().getBodyForDisplayShort(
+                    mItemTextForDisplay = mILXTextOutputFormatter.getBodyForDisplayShort(
                             mOption.getOptionText(),
                             mThreadHolder.getYoutubePlaceholderImage(),
                             mThreadHolder.getEmptyPlaceholderImage(),

@@ -1,12 +1,9 @@
 package android.theporouscity.com.flagging;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.SharedPreferencesCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
@@ -24,6 +21,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Created by bergstroml on 4/1/16.
  */
@@ -40,6 +39,9 @@ public class ViewBoardsFragment extends Fragment {
     private List<Board> mBoardsForDisplay;
     private String TAG = "ViewBoardsFragment";
 
+    @Inject
+    ILXRequestor mILXRequestor;
+
     public static ViewBoardsFragment newInstance() {
 
         Bundle args = new Bundle();
@@ -55,6 +57,7 @@ public class ViewBoardsFragment extends Fragment {
 
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
         mBoards = null;
         mBoardsForDisplay = null;
@@ -133,7 +136,7 @@ public class ViewBoardsFragment extends Fragment {
     private void updateBoards() {
 
         mFetching = true;
-        ILXRequestor.getILXRequestor().getBoards((Boards boards) -> {
+        mILXRequestor.getBoards((Boards boards) -> {
             mFetching = false;
             mBoards = boards;
             if (mBoardsForDisplay == null) {
@@ -223,7 +226,10 @@ public class ViewBoardsFragment extends Fragment {
 
         private void toggleBoardChecked() {
             boolean newEnabled = mBoard.isEnabled() ? false : true;
-            mBoard.setEnabledAndPersist(newEnabled);
+
+            mBoard.setEnabled(newEnabled);
+            mILXRequestor.persistBoardEnabledState(mBoard);
+
         }
     }
 
@@ -238,7 +244,7 @@ public class ViewBoardsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(BoardHolder holder, int position) {
-            holder.bindBoard((Board) mBoardsForDisplay.get(position));
+            holder.bindBoard(mBoardsForDisplay.get(position));
         }
 
         @Override

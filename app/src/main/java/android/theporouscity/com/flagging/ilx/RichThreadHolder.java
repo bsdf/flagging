@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
+import android.theporouscity.com.flagging.ILXTextOutputFormatter;
 import android.theporouscity.com.flagging.R;
 import android.util.Log;
 
@@ -22,16 +23,18 @@ public class RichThreadHolder {
     private Drawable mYoutubePlaceholderImage;
     private Drawable mEmptyPlaceholderImage;
     private int mLinkColor;
+    private ILXTextOutputFormatter mILXTextOutputFormatter;
     private static final String TAG = "RichThreadHolder";
 
-    public RichThreadHolder(Thread thread, Context context) {
+    public RichThreadHolder(Thread thread, Context context, ILXTextOutputFormatter mILXTextOutputFormatter) {
+        this.mILXTextOutputFormatter = mILXTextOutputFormatter;
         getDrawingResources(context);
         mThread = thread;
         mRichMessageHolders = new ArrayList<RichMessageHolder>();
-        for (Message message: mThread.getMessages()) {
+        for (Message message : mThread.getMessages()) {
             mRichMessageHolders.add(
-                    new RichMessageHolder(message, mYoutubePlaceholderImage,
-                                            mEmptyPlaceholderImage, mLinkColor));
+                    new RichMessageHolder(this.mILXTextOutputFormatter, message, mYoutubePlaceholderImage,
+                            mEmptyPlaceholderImage, mLinkColor));
         }
     }
 
@@ -61,10 +64,11 @@ public class RichThreadHolder {
 
         RichMessageHolder messageHolder;
         for (int i = 0; i < messages.size(); i++) {
-            messageHolder = new RichMessageHolder(messages.get(i),
-                                                    mYoutubePlaceholderImage,
-                                                    mEmptyPlaceholderImage,
-                                                    mLinkColor);
+            messageHolder = new RichMessageHolder(this.mILXTextOutputFormatter,
+                    messages.get(i),
+                    mYoutubePlaceholderImage,
+                    mEmptyPlaceholderImage,
+                    mLinkColor);
             mRichMessageHolders.add(startPosition + i, messageHolder);
         }
     }

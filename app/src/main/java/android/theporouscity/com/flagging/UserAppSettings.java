@@ -10,6 +10,12 @@ import android.net.NetworkInfo;
 
 public class UserAppSettings {
 
+    private ILXRequestor mILXRequestor;
+
+    public UserAppSettings(ILXRequestor mILXRequestor) {
+        this.mILXRequestor = mILXRequestor;
+    }
+
     public static final String LoadPrettyPicturesSettingKey = "load pretty pictures";
     public enum LoadPrettyPicturesSetting {
         NEVER,
@@ -21,15 +27,13 @@ public class UserAppSettings {
     public static final String PretendToBeLoggedInKey = "pretend to be logged in";
     private boolean mPretendToBeLoggedInSetting;
 
-    public UserAppSettings() { }
-
     public LoadPrettyPicturesSetting getLoadPrettyPicturesSetting() {
         return mLoadPrettyPicturesSetting;
     }
 
     public void setLoadPrettyPicturesSettingAndPersist(LoadPrettyPicturesSetting loadPrettyPicturesSetting, Context context) {
         mLoadPrettyPicturesSetting = loadPrettyPicturesSetting;
-        ILXRequestor.getILXRequestor().persistUserAppSettings(this, context);
+        mILXRequestor.persistUserAppSettings(this, context);
     }
 
     public void setLoadPrettyPicturesSetting(LoadPrettyPicturesSetting loadPrettyPicturesSetting) {
@@ -46,7 +50,7 @@ public class UserAppSettings {
 
     public void setPretendToBeLoggedInSettingAndPersist(boolean pretendToBeLoggedInSetting, Context context) {
         mPretendToBeLoggedInSetting = pretendToBeLoggedInSetting;
-        ILXRequestor.getILXRequestor().persistUserAppSettings(this, context);
+        mILXRequestor.persistUserAppSettings(this, context);
     }
 
     public boolean shouldLoadPictures(Context context) {

@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
 
 public class ViewThreadsFragment extends Fragment {
 
@@ -56,9 +57,11 @@ public class ViewThreadsFragment extends Fragment {
     private boolean mHasBookmarks;
     private ServerBookmarks mBookmarks;
 
-    public ViewThreadsFragment() {
-        // Required empty public constructor
-    }
+    @Inject
+    ILXRequestor mILXRequestor;
+
+    @Inject
+    UserAppSettings mUserAppSettings;
 
     public static ViewThreadsFragment newInstance(Board board) {
         ViewThreadsFragment fragment = new ViewThreadsFragment();
@@ -84,6 +87,8 @@ public class ViewThreadsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
+
         setRetainInstance(true);
         mBoard = null;
         mFetchingBoards = false;
@@ -113,17 +118,17 @@ public class ViewThreadsFragment extends Fragment {
     private void updateThreads() {
         mFetchingThreads = true;
         if (mMode == MODE_BOARD) {
-            ILXRequestor.getILXRequestor().getRecentlyUpdatedThreads(mBoard.getId(),
+            mILXRequestor.getRecentlyUpdatedThreads(mBoard.getId(),
                     (RecentlyUpdatedThreads threads) -> {
                         updateThreadsReady(threads);
                     });
         } else if (mMode == MODE_SNA) {
-            ILXRequestor.getILXRequestor().getSiteNewAnswers(
+            mILXRequestor.getSiteNewAnswers(
                     (RecentlyUpdatedThreads threads) -> {
                         updateThreadsReady(threads);
                     });
         } else if (mMode == MODE_MARKS) {
-            ILXRequestor.getILXRequestor().getBookmarks(getContext(), (ServerBookmarks bookmarks) -> {
+            mILXRequestor.getBookmarks(getContext(), (ServerBookmarks bookmarks) -> {
                 RecentlyUpdatedThreads threads = new RecentlyUpdatedThreads();
                 ArrayList<RecentlyUpdatedThread> bookmarksThreads = new ArrayList<>();
                 for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
@@ -141,7 +146,7 @@ public class ViewThreadsFragment extends Fragment {
     private void getBoards() {
         mFetchingBoards = true;
         if (mMode == MODE_SNA || mMode == MODE_MARKS) {
-            ILXRequestor.getILXRequestor().getBoards(
+            mILXRequestor.getBoards(
                     (Boards boards) -> {
                         getBoardsReady(boards);
             }, getContext());
@@ -156,7 +161,7 @@ public class ViewThreadsFragment extends Fragment {
 
     private void getBookmarks() {
         mFetchingThreads = true;
-        ILXRequestor.getILXRequestor().getBookmarks(
+        mILXRequestor.getBookmarks(
                 getContext(),
                 (ServerBookmarks bookmarks) ->
                 {
@@ -237,8 +242,7 @@ public class ViewThreadsFragment extends Fragment {
         });
 
         FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fragment_view_threads_fab);
-        if (ILXRequestor.getILXRequestor()
-                .getUserAppSettings(getActivity()).getPretendToBeLoggedInSetting()
+        if (mUserAppSettings.getPretendToBeLoggedInSetting()
                 && mMode == MODE_BOARD) {
             fab.setVisibility(FloatingActionButton.VISIBLE);
             fab.setOnClickListener((View v) -> {
@@ -314,7 +318,7 @@ public class ViewThreadsFragment extends Fragment {
             int bookmarkedMessageId = -1;
 
             if (mMode == MODE_MARKS) {
-                bookmarkedMessageId = ILXRequestor.getILXRequestor()
+                bookmarkedMessageId = mILXRequestor
                         .getCachedBookmarks().getBookmark(mThread.getBoardId(), mThread.getThreadId())
                         .getBookmarkedMessageId();
             }

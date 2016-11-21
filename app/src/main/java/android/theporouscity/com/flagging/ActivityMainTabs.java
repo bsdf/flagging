@@ -19,6 +19,8 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * Created by bergstroml on 8/8/16.
  */
@@ -32,6 +34,9 @@ public class ActivityMainTabs extends AppCompatActivity {
     private int mShortAnimationDuration;
     private boolean mFetchedBookmarks;
 
+    @Inject
+    ILXRequestor mILXRequestor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -40,13 +45,14 @@ public class ActivityMainTabs extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main_tabs);
+        ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
 
         mFloatingActionButton = (FloatingActionButton) findViewById(R.id.activity_main_tabs_fab);
 
         mViewPager = (ViewPager) findViewById(R.id.activity_main_tabs_viewpager);
 
         mFetchedBookmarks = false;
-        ILXRequestor.getILXRequestor().getBookmarks(this, (ServerBookmarks b) ->
+        mILXRequestor.getBookmarks(this, (ServerBookmarks b) ->
         {
             mFetchedBookmarks = true;
             // can only modify the # of tabs on the main thread :(
@@ -122,8 +128,8 @@ public class ActivityMainTabs extends AppCompatActivity {
             return false;
         }
 
-        if (ILXRequestor.getILXRequestor().getCachedBookmarks() != null) {
-            return !ILXRequestor.getILXRequestor().getCachedBookmarks().getBookmarks().isEmpty();
+        if (mILXRequestor.getCachedBookmarks() != null) {
+            return !mILXRequestor.getCachedBookmarks().getBookmarks().isEmpty();
         } else {
             return false;
         }
