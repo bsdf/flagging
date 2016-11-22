@@ -67,4 +67,11 @@ public class ILXModule {
         Context context = application.getApplicationContext();
         return ilxRequestor.getUserAppSettings(context);
     }
+
+    @Provides
+    @Singleton
+    public SharedPreferences sharedPreferences() {
+        Context context = application.getApplicationContext();
+        return context.getSharedPreferences(ILXRequestor.ILX_SERVER_TAG, Context.MODE_PRIVATE);
+    }
 }
