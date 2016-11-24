@@ -123,7 +123,6 @@ public class ViewThreadsFragment extends Fragment {
                     mMode = MODE_SNA;
                 } else if (getArguments().getInt(ARG_MODE) == MODE_MARKS) {
                     mMode = MODE_MARKS;
-                    getBookmarks();
                 }
                 getBoards();
             }
@@ -181,18 +180,6 @@ public class ViewThreadsFragment extends Fragment {
         mFetchingBoards = false;
         mBoards = boards;
         updateUI();
-    }
-
-    private void getBookmarks() {
-        mFetchingThreads = true;
-        mILXRequestor.getBookmarks(
-                getContext(),
-                (ServerBookmarks bookmarks) ->
-                {
-                    mBookmarks = bookmarks;
-                    mFetchingThreads = false;
-                    updateUI();
-                });
     }
 
     private void updateThreadsReady(RecentlyUpdatedThreads threads) {
