@@ -69,8 +69,6 @@ public class ActivityMainTabs extends AppCompatActivity {
         if (mILXRequestor.getBookmarks(this, (ServerBookmarks b) ->
         {
             mFetchedBookmarks = true;
-            // can only modify the # of tabs on the main thread :(
-            // although we can do a one-time setup of the adapter in this callback
         })) {
             mHadBookmarksLastWeChecked = true;
         } else {
@@ -104,6 +102,7 @@ public class ActivityMainTabs extends AppCompatActivity {
         }
     }
 
+    // can only modify # of tabs on UI thread
     private void setupViewPager(ViewPager viewPager, Bundle savedInstanceState) {
 
         Log.d(TAG, System.identityHashCode(this) + "setupViewPager");
@@ -187,8 +186,6 @@ public class ActivityMainTabs extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
 
-            Log.d(TAG, "fragment count " + Integer.toString(mFragmentList.size()));
-
             if (position == bookmarksPosition()) {
                 mFragmentList.add(ViewThreadsFragment.newInstance(false));
             } else if (position == snaPosition()) {
@@ -196,7 +193,6 @@ public class ActivityMainTabs extends AppCompatActivity {
             } else if (position == boardsPosition()) {
                 mFragmentList.add(new ViewBoardsFragment());
             }
-            Log.d(TAG, "fragment count again " + Integer.toString(mFragmentList.size()));
 
             return mFragmentList.get(position);
         }
@@ -243,20 +239,6 @@ public class ActivityMainTabs extends AppCompatActivity {
 
             mFragmentList = new ArrayList<>();
             return POSITION_NONE;
-            /*
-            if (object instanceof ViewThreadsFragment && ((ViewThreadsFragment) object).getMode() == ViewThreadsFragment.MODE_SNA) {
-                return FragmentStatePagerAdapter.POSITION_UNCHANGED;
-            }
-
-            if (object instanceof ViewThreadsFragment && ((ViewThreadsFragment) object).getMode() == ViewThreadsFragment.MODE_MARKS) {
-                if (!haveBookmarks()) {
-                    return FragmentStatePagerAdapter.POSITION_NONE;
-                } else {
-                    bookmarksPosition();
-                }
-            }
-
-            return boardsPosition();*/
         }
     }
 

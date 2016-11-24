@@ -67,11 +67,11 @@ public class ILXModule {
         SharedPreferences mPreferences = context.getSharedPreferences(ILXRequestor.ILX_SERVER_TAG, Context.MODE_PRIVATE);
 
         int loadPrettyPictures = mPreferences.getInt(UserAppSettings.LoadPrettyPicturesSettingKey, -1);
-        if (loadPrettyPictures == -1 || loadPrettyPictures == 0) {
+        if (loadPrettyPictures == 0) {
             settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.NEVER);
         } else if (loadPrettyPictures == 1) {
             settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.ALWAYS);
-        } else if (loadPrettyPictures == 2) {
+        } else if (loadPrettyPictures == 2 || loadPrettyPictures == -1) {
             settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.WIFI);
         }
 
