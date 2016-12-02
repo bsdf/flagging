@@ -9,11 +9,14 @@ import com.theporouscity.flagging.ilx.ServerBookmarks;
 import com.theporouscity.flagging.ilx.Message;
 import com.theporouscity.flagging.ilx.Thread;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
+
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.transform.Transform;
 
+import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,18 +35,16 @@ public class ILXRequestor {
     public static final String ILX_SERVER_TAG = "ILX";
 
     private static final String TAG = "ILXRequestor";
-    private static final String boardsListUrl = "http://ilxor.com/ILX/BoardsXmlControllerServlet";
-    private static final String updatedThreadsUrl = "http://ilxor.com/ILX/NewAnswersControllerServlet?xml=true&boardid=";
-    private static final String threadUrl = "http://ilxor.com/ILX/ThreadSelectedControllerServlet?xml=true&boardid=";
-    private static final String snaUrl = "http://ilxor.com/ILX/SiteNewAnswersControllerServlet?xml=true";
     private static final String serializedBookmarksPrefix = "serializedBookmarks";
 
     private OkHttpClient mHttpClient;
     private Serializer mSerializer;
     private volatile Boards mBoards;
-    private SharedPreferences mPreferences;
     private Map<String, ServerBookmarks> mServersBookmarks;
     private List<BookmarksCallback> mBookmarksCallbacks = new ArrayList<>();
+    private ArrayList<Pair<String, String>> mServers = null;
+    private Pair<String,String> mCurrentServer;
+    private UserAppSettings mUserAppSettings;
 
     public interface BoardsCallback {
         void onComplete(Boards boards);
@@ -68,9 +69,34 @@ public class ILXRequestor {
     public ILXRequestor(OkHttpClient mHttpClient, Serializer mSerializer) {
         this.mHttpClient = mHttpClient;
         this.mSerializer = mSerializer;
+        mCurrentServer = new Pair<String, String>("ilxor.com", "ILX");
     }
 
-    private String getServerTag() {
+    private String getBaseUrlPath() {
+        return "http://" + mCurrentServer.first + "/" + mCurrentServer.second;
+    }
+
+    private String getBoardsListUrl() {
+        String boardsListPath = "/BoardsXmlControllerServlet";
+        return getBaseUrlPath() + boardsListPath;
+    }
+
+    private String getUpdatedThreadsUrl() {
+        String updatedThreadsPath = "/NewAnswersControllerServlet?xml=true&boardid=";
+        return getBaseUrlPath() + updatedThreadsPath;
+    }
+
+    private String getThreadUrl() {
+        String threadPath = "/ThreadSelectedControllerServlet?xml=true&boardid=";
+        return getBaseUrlPath() + threadPath;
+    }
+
+    private String getSnaUrl() {
+        String snaPath = "/SiteNewAnswersControllerServlet?xml=true";
+        return getBaseUrlPath() + snaPath;
+    }
+
+    private String getCurrentInstanceName() {
         return ILX_SERVER_TAG;
     }
 
@@ -85,14 +111,14 @@ public class ILXRequestor {
             mServersBookmarks = new HashMap<String, ServerBookmarks>();
         }
 
-        if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
+        if (getUserAppSettings(context) == null) {
+            return false;
         }
 
-        if (mServersBookmarks.get(getServerTag()) != null) {
+        if (mServersBookmarks.get(getCurrentInstanceName()) != null) {
             ArrayList<String> bookmarkThreadUrls = new ArrayList<>();
             ArrayList<Bookmark> bookmarksForThreads = new ArrayList<>();
-            ServerBookmarks bookmarks = mServersBookmarks.get(getServerTag());
+            ServerBookmarks bookmarks = mServersBookmarks.get(getCurrentInstanceName());
             boolean allBookmarksHaveThreads = true;
             for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
                 for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
@@ -100,7 +126,7 @@ public class ILXRequestor {
                     if (bookmark.getCachedThread() == null) {
                         allBookmarksHaveThreads = false;
                         bookmarksForThreads.add(bookmark);
-                        bookmarkThreadUrls.add(threadUrl + Integer.toString(bookmark.getBoardId())
+                        bookmarkThreadUrls.add(getThreadUrl() + Integer.toString(bookmark.getBoardId())
                                 + "&threadid=" + Integer.toString(bookmark.getThreadId())
                                 + "&bookmarkedmessageid=" + Integer.toString(bookmark.getBookmarkedMessageId()));
                     }
@@ -120,8 +146,8 @@ public class ILXRequestor {
             }
         } else {
             ServerBookmarks bookmarks = new ServerBookmarks();
-            mServersBookmarks.put(getServerTag(), bookmarks);
-            String serializedBookmarks = mPreferences.getString(serializedBookmarksPrefix + getServerTag(), null);
+            mServersBookmarks.put(getCurrentInstanceName(), bookmarks);
+            String serializedBookmarks = mUserAppSettings.getString(serializedBookmarksPrefix + getCurrentInstanceName(), context);
             if (serializedBookmarks != null) {
                 String[] bookmarkValTriplets = serializedBookmarks.split("-");
                 String[] bookmarkThreadUrls = new String[bookmarkValTriplets.length];
@@ -130,7 +156,7 @@ public class ILXRequestor {
                     String[] bookmarkVals = bookmarkValTriplet.split("\\.");
                     bookmarks.addBookmark(Integer.valueOf(bookmarkVals[0]),
                             Integer.valueOf(bookmarkVals[1]), Integer.valueOf(bookmarkVals[2]));
-                    bookmarkThreadUrls[i] = threadUrl + bookmarkVals[0] +
+                    bookmarkThreadUrls[i] = getThreadUrl() + bookmarkVals[0] +
                             "&threadid=" + bookmarkVals[1] +
                             "&bookmarkedmessageid=" + bookmarkVals[2];
                 }
@@ -157,27 +183,27 @@ public class ILXRequestor {
         while (!mBookmarksCallbacks.isEmpty()) {
             BookmarksCallback callback = mBookmarksCallbacks.get(0);
             mBookmarksCallbacks.remove(callback);
-            callback.onComplete(mServersBookmarks.get(getServerTag()));
+            callback.onComplete(mServersBookmarks.get(getCurrentInstanceName()));
         }
     }
 
     public ServerBookmarks getCachedBookmarks() {
-        if (mServersBookmarks != null && mServersBookmarks.get(getServerTag()) != null) {
-            return mServersBookmarks.get(getServerTag());
+        if (mServersBookmarks != null && mServersBookmarks.get(getCurrentInstanceName()) != null) {
+            return mServersBookmarks.get(getCurrentInstanceName());
         }
         return null;
     }
 
     public void serializeBoardBookmarks(Context context) {
-        if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
-        }
-
-        if (mServersBookmarks == null || mServersBookmarks.get(getServerTag()) == null) {
+        if (getUserAppSettings(context) == null) {
             return;
         }
 
-        ServerBookmarks bookmarks = mServersBookmarks.get(getServerTag());
+        if (mServersBookmarks == null || mServersBookmarks.get(getCurrentInstanceName()) == null) {
+            return;
+        }
+
+        ServerBookmarks bookmarks = mServersBookmarks.get(getCurrentInstanceName());
         String serializedBookmarks = "";
         for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
             for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
@@ -192,104 +218,52 @@ public class ILXRequestor {
                         + "-";
             }
         }
-        SharedPreferences.Editor editor = mPreferences.edit();
-        editor.putString(serializedBookmarksPrefix + getServerTag(), serializedBookmarks);
-        editor.apply();
+        mUserAppSettings.persistString(serializedBookmarksPrefix + getCurrentInstanceName(), serializedBookmarks, context);
     }
 
-    private SharedPreferences getPreferences(Context context) {
-
-        if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
+    public UserAppSettings getUserAppSettings(Context context) {
+        if (mUserAppSettings == null) {
+            mUserAppSettings = new UserAppSettings(context);
         }
-
-        return mPreferences;
+        return mUserAppSettings;
     }
 
-    public void persistUserAppSettings(UserAppSettings settings, Context context) {
-
-        if (mPreferences == null) {
-            mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
+    public boolean persistUserAppSettings(Context context) {
+        if (getUserAppSettings(context) == null) {
+            return false;
         }
-
-        SharedPreferences.Editor editor = mPreferences.edit();
-
-        int newLoadPrettyPicturesSetting;
-        if (settings.getLoadPrettyPicturesSetting() == UserAppSettings.LoadPrettyPicturesSetting.ALWAYS) {
-            newLoadPrettyPicturesSetting = 1;
-        } else if (settings.getLoadPrettyPicturesSetting() == UserAppSettings.LoadPrettyPicturesSetting.WIFI) {
-            newLoadPrettyPicturesSetting = 2;
-        } else {
-            newLoadPrettyPicturesSetting = 0;
-        }
-        editor.putInt(UserAppSettings.LoadPrettyPicturesSettingKey, newLoadPrettyPicturesSetting);
-
-        int newPretendToBeLoggedInSetting;
-        if (settings.getPretendToBeLoggedInSetting()) {
-            newPretendToBeLoggedInSetting = 1;
-        } else {
-            newPretendToBeLoggedInSetting = 0;
-        }
-        editor.putInt(UserAppSettings.PretendToBeLoggedInKey, newPretendToBeLoggedInSetting);
-
-        editor.apply();
-
+        mUserAppSettings.persistUserAppSettings(context);
+        return true;
     }
 
     public void getBoards(BoardsCallback boardsCallback, Context context) {
-        if (mBoards == null) {
+        if (mBoards == null && getUserAppSettings(context) != null) {
             Log.d(TAG, "passing on request for boards xml");
             new GetItemsTask(mHttpClient, (String[] results) -> {
                 if (results != null && results[0] != null) {
                     mBoards = mSerializer.read(Boards.class, results[0], false);
                 }
 
-                if (mPreferences == null) {
-                    mPreferences = context.getSharedPreferences(ILX_SERVER_TAG, Context.MODE_PRIVATE);
-                }
-
                 for (Board board : mBoards.getBoards()) {
-                    int enabled = mPreferences.getInt(getBoardEnabledKey(board), -1);
-                    if (enabled == -1) {
-                        board.setEnabled(true);
-                    } else if (enabled == 0) {
-                        board.setEnabled(false);
-                    } else {
-                        board.setEnabled(true);
-                    }
+                    board.setEnabled(mUserAppSettings.getBoardEnabled(board, context));
                 }
 
                 boardsCallback.onComplete(mBoards);
-            }).execute(boardsListUrl);
+            }).execute(getBoardsListUrl());
         } else {
             Log.d(TAG, "returning cached boards");
             boardsCallback.onComplete(mBoards);
         }
     }
 
-    private String getBoardEnabledKey(Board board) {
-        return "board_enabled_" + Integer.toString(board.getId());
-    }
-
-    public void persistBoardEnabledState(Board board) {
-        if (mPreferences != null) {
-
-            int enabled;
-
-            if (board.isEnabled()) {
-                enabled = 1;
-            } else {
-                enabled = 0;
-            }
-
-            SharedPreferences.Editor editor = mPreferences.edit();
-            editor.putInt(getBoardEnabledKey(board), enabled);
-            editor.apply();
+    public void persistBoardEnabledState(Board board, Context context) {
+        if (getUserAppSettings(context) != null) {
+            mUserAppSettings.persistBoardEnabledState(board, context);
         }
     }
 
     public void getRecentlyUpdatedThreads(int boardId, RecentlyUpdatedThreadsCallback threadsCallback) {
-        String url = updatedThreadsUrl + boardId;
+        String url = getUpdatedThreadsUrl() + boardId;
         Log.d(TAG, "passing on request for recent threads");
         new GetItemsTask(mHttpClient, (String[] results) -> {
             if (results != null && results[0] != null) {
@@ -312,11 +286,11 @@ public class ILXRequestor {
             } else {
                 threadsCallback.onComplete(null);
             }
-        }).execute(snaUrl);
+        }).execute(getSnaUrl());
     }
 
     public void getThread(int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback) {
-        String url = threadUrl + boardId + "&threadid=" + threadId;
+        String url = getThreadUrl() + boardId + "&threadid=" + threadId;
         if (initialMessageId != -1) {
             url = url + "&bookmarkedmessageid=" + initialMessageId;
             Log.d(TAG, "requesting a message in a thread");

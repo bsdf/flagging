@@ -186,15 +186,20 @@ public class ActivityMainTabs extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
 
+            Fragment theFragment = null;
+
             if (position == bookmarksPosition()) {
-                mFragmentList.add(ViewThreadsFragment.newInstance(false));
+                theFragment = ViewThreadsFragment.newInstance(false);
+                mFragmentList.add(theFragment);
             } else if (position == snaPosition()) {
-                mFragmentList.add(ViewThreadsFragment.newInstance(true));
+                theFragment = ViewThreadsFragment.newInstance(true);
+                mFragmentList.add(theFragment);
             } else if (position == boardsPosition()) {
-                mFragmentList.add(new ViewBoardsFragment());
+                theFragment = new ViewBoardsFragment();
+                mFragmentList.add(theFragment);
             }
 
-            return mFragmentList.get(position);
+            return theFragment;
         }
 
         @Override

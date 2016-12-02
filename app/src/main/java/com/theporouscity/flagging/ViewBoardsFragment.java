@@ -237,7 +237,7 @@ public class ViewBoardsFragment extends Fragment {
             boolean newEnabled = mBoard.isEnabled() ? false : true;
 
             mBoard.setEnabled(newEnabled);
-            mILXRequestor.persistBoardEnabledState(mBoard);
+            mILXRequestor.persistBoardEnabledState(mBoard, getContext());
 
         }
     }

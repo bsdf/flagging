@@ -62,26 +62,7 @@ public class ILXModule {
     @Provides
     @Singleton
     public UserAppSettings userAppSettings(ILXRequestor ilxRequestor) {
-        UserAppSettings settings = new UserAppSettings(ilxRequestor);
         Context context = application.getApplicationContext();
-        SharedPreferences mPreferences = context.getSharedPreferences(ILXRequestor.ILX_SERVER_TAG, Context.MODE_PRIVATE);
-
-        int loadPrettyPictures = mPreferences.getInt(UserAppSettings.LoadPrettyPicturesSettingKey, -1);
-        if (loadPrettyPictures == 0) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.NEVER);
-        } else if (loadPrettyPictures == 1) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.ALWAYS);
-        } else if (loadPrettyPictures == 2 || loadPrettyPictures == -1) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.WIFI);
-        }
-
-        int pretendToBeLoggedIn = mPreferences.getInt(UserAppSettings.PretendToBeLoggedInKey, -1);
-        if (pretendToBeLoggedIn == 1) {
-            settings.setPretendToBeLoggedInSetting(true);
-        } else {
-            settings.setPretendToBeLoggedInSetting(false);
-        }
-
-        return settings;
+        return ilxRequestor.getUserAppSettings(context);
     }
 }

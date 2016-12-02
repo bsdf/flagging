@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:paddingLeft="16dp"
+              android:paddingRight="16dp"
+              android:background="@color/background"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        android:textSize="16sp"
+        android:text="Account"
+        android:id="@+id/fragment_addedit_account_title_textview"
+        />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:rowCount="5"
+        android:columnCount="4">
+
+        <TextView
+            android:layout_column="0"
+            android:layout_row="0"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginRight="12dp"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:text="Server"
+            android:id="@+id/fragment_addedit_account_server_textview"
+            />
+
+        <EditText
+            android:layout_row="0"
+            android:layout_column="2"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:text="ilxor.com"
+            android:id="@+id/fragment_addedit_account_server_edittext"
+            />
+
+        <TextView
+            android:layout_row="1"
+            android:layout_column="0"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginRight="12dp"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:text="Instance"
+            android:id="@+id/fragment_addedit_account_instance_textview"
+            />
+
+        <EditText
+            android:layout_row="1"
+            android:layout_column="2"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:text="ILX"
+            android:id="@+id/fragment_addedit_account_instance_edittext"
+            />
+
+        <TextView
+            android:layout_row="2"
+            android:layout_column="0"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginRight="12dp"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:text="Username or email"
+            android:id="@+id/fragment_addedit_account_username_textview"
+            />
+
+        <EditText
+            android:layout_row="2"
+            android:layout_column="2"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:id="@+id/fragment_addedit_account_username_edittext"
+            />
+
+        <TextView
+            android:layout_row="3"
+            android:layout_column="0"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginRight="12dp"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="12sp"
+            android:text="Password"
+            android:id="@+id/fragment_addedit_account_Password_textview"
+            />
+
+        <EditText
+            android:layout_row="3"
+            android:layout_column="2"
+            android:layout_columnSpan="2"
+            android:layout_columnWeight="2"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:inputType="textPassword"
+            android:ems="10"
+            android:id="@+id/fragment_addedit_account_password_edittext"
+            />
+
+        <TextView
+            android:layout_row="4"
+            android:layout_column="1"
+            android:layout_columnWeight="1"
+            android:layout_marginTop="18dp"
+            android:layout_gravity="center_horizontal"
+            android:text="SAVE"
+            style="@style/FlatButton"
+            android:id="@+id/fragment_addedit_account_save_textview"/>
+
+        <TextView
+            android:layout_row="4"
+            android:layout_column="3"
+            android:layout_columnWeight="1"
+            android:layout_marginTop="18dp"
+            android:layout_gravity="center_horizontal"
+            android:text="CANCEL"
+            style="@style/FlatButton"
+            android:id="@+id/fragment_addedit_account_cancel_textview"/>
+
+    </GridLayout>
+
+
+</LinearLayout>
