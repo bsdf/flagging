@@ -4,8 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v4.util.Pair;
+import android.util.Log;
 
 import com.theporouscity.flagging.ilx.Board;
+import com.theporouscity.flagging.ilx.ILXServer;
+
+import java.security.KeyStore;
+import java.util.ArrayList;
 
 /**
  * Created by bergstroml on 9/28/16.
@@ -13,7 +19,10 @@ import com.theporouscity.flagging.ilx.Board;
 
 public class UserAppSettings {
 
+    private final static String TAG = "UserAppSettings";
     private final static String SETTINGS_TAG = "FlaggingSettings";
+    private final static String SERVERS_KEY = "ServersKey";
+    private ArrayList<ILXServer> mServers;
 
     public UserAppSettings(Context context) {
 
@@ -38,6 +47,41 @@ public class UserAppSettings {
 
     private SharedPreferences getPreferences(Context context) {
         return context.getSharedPreferences(SETTINGS_TAG, Context.MODE_PRIVATE);
+    }
+
+    public ArrayList<ILXServer> getServers(Context context) {
+
+        if (mServers != null) {
+            return mServers;
+        }
+
+        mServers = new ArrayList<ILXServer>();
+        SharedPreferences preferences = getPreferences(context);
+
+        String serializedServers = preferences.getString(SERVERS_KEY, null);
+        if (serializedServers == null) {
+            return mServers;
+        }
+
+        String[] serverPairs = serializedServers.split("-");
+        for (int i = 0; i < serverPairs.length; i++) {
+            String serializedUsernamePassword = preferences.getString(serverPairs[i], null);
+            String[] serverVals = serverPairs[i].split(":");
+            String[] loginVals = serializedUsernamePassword.split(":");
+
+            mServers.add(new ILXServer(serverVals[0], serverVals[1], loginVals[0], loginVals[1]));
+        }
+
+        return mServers;
+    }
+
+    public void AddServerAndPersist(ILXServer server, Context context) {
+
+        if (!mServers.contains(server)) {
+            mServers.add(server);
+        }
+
+        persistString(server.getDomain() + ":" + server.getInstance(), server.getUsername() + ":" + server.getPassword(), context);
     }
 
     public static final String LoadPrettyPicturesSettingKey = "load pretty pictures";

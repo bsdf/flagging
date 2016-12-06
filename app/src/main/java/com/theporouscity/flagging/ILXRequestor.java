@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
 import com.theporouscity.flagging.ilx.Bookmark;
+import com.theporouscity.flagging.ilx.ILXServer;
 import com.theporouscity.flagging.ilx.ServerBookmarks;
 import com.theporouscity.flagging.ilx.Message;
 import com.theporouscity.flagging.ilx.Thread;
@@ -42,8 +43,7 @@ public class ILXRequestor {
     private volatile Boards mBoards;
     private Map<String, ServerBookmarks> mServersBookmarks;
     private List<BookmarksCallback> mBookmarksCallbacks = new ArrayList<>();
-    private ArrayList<Pair<String, String>> mServers = null;
-    private Pair<String,String> mCurrentServer;
+    private ILXServer mCurrentServer;
     private UserAppSettings mUserAppSettings;
 
     public interface BoardsCallback {
@@ -69,11 +69,11 @@ public class ILXRequestor {
     public ILXRequestor(OkHttpClient mHttpClient, Serializer mSerializer) {
         this.mHttpClient = mHttpClient;
         this.mSerializer = mSerializer;
-        mCurrentServer = new Pair<String, String>("ilxor.com", "ILX");
+        mCurrentServer = new ILXServer("ilxor.com", "ILX","dummy","dummy");
     }
 
     private String getBaseUrlPath() {
-        return "http://" + mCurrentServer.first + "/" + mCurrentServer.second;
+        return "http://" + mCurrentServer.getDomain() + "/" + mCurrentServer.getInstance();
     }
 
     private String getBoardsListUrl() {
