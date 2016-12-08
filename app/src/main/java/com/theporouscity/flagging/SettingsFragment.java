@@ -37,12 +37,6 @@ public class SettingsFragment extends Fragment {
     @BindView(R.id.fragment_settings_load_pics_wifi_button)
     RadioButton mLoadPicsWifi;
 
-    @BindView(R.id.fragment_settings_pretend_logged_in_no)
-    RadioButton mPretendLoggedInNo;
-
-    @BindView(R.id.fragment_settings_pretend_logged_in_yes)
-    RadioButton mPretendLoggedInYes;
-
     @BindView(R.id.fragment_settings_accounts_recyclerview)
     RecyclerView mAccountsRecyclerView;
 
