@@ -3,14 +3,13 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/colorLoaderBackground">
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp">
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:paddingLeft="16dp"
-              android:paddingRight="16dp"
               android:paddingTop="12dp"
               android:paddingBottom="12dp"
               android:background="?android:attr/selectableItemBackground">
@@ -18,11 +17,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|center_vertical"
+        android:layout_gravity="start|center_vertical"
         android:text="Add a new account"
         android:textSize="16sp"
         android:fontFamily="sans-serif"
-        android:textColor="@color/background"
+        android:textColor="@color/colorTextPrimary"
         android:id="@+id/list_item_add_account_caption"/>
 
 </LinearLayout>

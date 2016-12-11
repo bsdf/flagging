@@ -4,13 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v4.util.Pair;
-import android.util.Log;
 
 import com.theporouscity.flagging.ilx.Board;
+import com.theporouscity.flagging.ilx.ILXAccount;
 import com.theporouscity.flagging.ilx.ILXServer;
 
-import java.security.KeyStore;
 import java.util.ArrayList;
 
 /**
@@ -21,8 +19,8 @@ public class UserAppSettings {
 
     private final static String TAG = "UserAppSettings";
     private final static String SETTINGS_TAG = "FlaggingSettings";
-    private final static String SERVERS_KEY = "ServersKey";
-    private ArrayList<ILXServer> mServers;
+    private final static String ACCOUNTS_KEY = "AccountsKey";
+    private ArrayList<ILXAccount> mAccounts;
 
     public UserAppSettings(Context context) {
 
@@ -36,52 +34,53 @@ public class UserAppSettings {
         } else if (loadPrettyPictures == 2 || loadPrettyPictures == -1) {
             setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.WIFI);
         }
-
-        int pretendToBeLoggedIn = preferences.getInt(UserAppSettings.PretendToBeLoggedInKey, -1);
-        if (pretendToBeLoggedIn == 1) {
-            setPretendToBeLoggedInSetting(true);
-        } else {
-            setPretendToBeLoggedInSetting(false);
-        }
     }
 
     private SharedPreferences getPreferences(Context context) {
         return context.getSharedPreferences(SETTINGS_TAG, Context.MODE_PRIVATE);
     }
 
-    public ArrayList<ILXServer> getServers(Context context) {
+    public ArrayList<ILXAccount> getAccounts(Context context) {
 
-        if (mServers != null) {
-            return mServers;
+        if (mAccounts != null) {
+            return mAccounts;
         }
 
-        mServers = new ArrayList<ILXServer>();
+        mAccounts = new ArrayList<ILXAccount>();
         SharedPreferences preferences = getPreferences(context);
 
-        String serializedServers = preferences.getString(SERVERS_KEY, null);
-        if (serializedServers == null) {
-            return mServers;
+        String serializedAccountIds = preferences.getString(ACCOUNTS_KEY, null);
+        if (serializedAccountIds == null) {
+            return mAccounts;
         }
 
-        String[] serverPairs = serializedServers.split("-");
-        for (int i = 0; i < serverPairs.length; i++) {
-            String serializedUsernamePassword = preferences.getString(serverPairs[i], null);
-            String[] serverVals = serverPairs[i].split(":");
-            String[] loginVals = serializedUsernamePassword.split(":");
-
-            mServers.add(new ILXServer(serverVals[0], serverVals[1], loginVals[0], loginVals[1]));
+        String[] accountIds = serializedAccountIds.split("-");
+        for (int i = 0; i < accountIds.length; i++) {
+            String serializedAccount = preferences.getString(accountIds[i], null);
+            if (serializedAccount == null) {
+                continue;
+            }
+            String[] accountVals = serializedAccount.split(":");
+            mAccounts.add(new ILXAccount(accountIds[i], accountVals[0], accountVals[1],
+                    accountVals[2], accountVals[3], accountVals[4]));
         }
 
-        return mServers;
+        return mAccounts;
     }
 
-    public void AddServerAndPersist(ILXServer server, Context context) {
+    public void addAccountAndPersist(Context context, ILXAccount account) {
 
-        if (!mServers.contains(server)) {
-            mServers.add(server);
+        if (!mAccounts.contains(account)) {
+            mAccounts.add(account);
         }
 
-        persistString(server.getDomain() + ":" + server.getInstance(), server.getUsername() + ":" + server.getPassword(), context);
+        persistString(account.getId(),
+                        account.getDomain() + ":" +
+                        account.getInstance() + ":" +
+                        account.getUsername() + ":" +
+                        account.getPassword() + ":" +
+                        account.getLoginCookies(),
+                    context);
     }
 
     public static final String LoadPrettyPicturesSettingKey = "load pretty pictures";
@@ -91,9 +90,6 @@ public class UserAppSettings {
         WIFI
     }
     private LoadPrettyPicturesSetting mLoadPrettyPicturesSetting;
-
-    public static final String PretendToBeLoggedInKey = "pretend to be logged in";
-    private boolean mPretendToBeLoggedInSetting;
 
     public LoadPrettyPicturesSetting getLoadPrettyPicturesSetting() {
         return mLoadPrettyPicturesSetting;
@@ -106,19 +102,6 @@ public class UserAppSettings {
 
     public void setLoadPrettyPicturesSetting(LoadPrettyPicturesSetting loadPrettyPicturesSetting) {
         mLoadPrettyPicturesSetting = loadPrettyPicturesSetting;
-    }
-
-    public boolean getPretendToBeLoggedInSetting() {
-        return mPretendToBeLoggedInSetting;
-    }
-
-    public void setPretendToBeLoggedInSetting(boolean pretendToBeLoggedInSetting) {
-        mPretendToBeLoggedInSetting = pretendToBeLoggedInSetting;
-    }
-
-    public void setPretendToBeLoggedInSettingAndPersist(boolean pretendToBeLoggedInSetting, Context context) {
-        mPretendToBeLoggedInSetting = pretendToBeLoggedInSetting;
-        persistUserAppSettings(context);
     }
 
     public boolean shouldLoadPictures(Context context) {
@@ -193,14 +176,6 @@ public class UserAppSettings {
             newLoadPrettyPicturesSetting = 0;
         }
         editor.putInt(UserAppSettings.LoadPrettyPicturesSettingKey, newLoadPrettyPicturesSetting);
-
-        int newPretendToBeLoggedInSetting;
-        if (getPretendToBeLoggedInSetting()) {
-            newPretendToBeLoggedInSetting = 1;
-        } else {
-            newPretendToBeLoggedInSetting = 0;
-        }
-        editor.putInt(UserAppSettings.PretendToBeLoggedInKey, newPretendToBeLoggedInSetting);
 
         editor.apply();
 

@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import com.theporouscity.flagging.R;
-import com.theporouscity.flagging.ilx.ILXServer;
+import com.theporouscity.flagging.ilx.ILXAccount;
 
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +17,6 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -28,6 +29,8 @@ import butterknife.ButterKnife;
 
 public class SettingsFragment extends Fragment {
 
+    private static final String TAG = "SettingsFragment";
+
     @BindView(R.id.fragment_settings_load_pics_never_button)
     RadioButton mLoadPicsNever;
 
@@ -37,19 +40,13 @@ public class SettingsFragment extends Fragment {
     @BindView(R.id.fragment_settings_load_pics_wifi_button)
     RadioButton mLoadPicsWifi;
 
-    @BindView(R.id.fragment_settings_pretend_logged_in_no)
-    RadioButton mPretendLoggedInNo;
-
-    @BindView(R.id.fragment_settings_pretend_logged_in_yes)
-    RadioButton mPretendLoggedInYes;
-
     @BindView(R.id.fragment_settings_accounts_recyclerview)
     RecyclerView mAccountsRecyclerView;
 
     @Inject
     UserAppSettings settings;
 
-    ArrayList<ILXServer> mServers;
+    ArrayList<ILXAccount> mAccounts;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,6 +59,8 @@ public class SettingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         ButterKnife.bind(this, view);
+
+        mAccountsRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         updateSettingsUI();
 
         return view;
@@ -100,6 +99,7 @@ public class SettingsFragment extends Fragment {
 
     class AddNewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
+
         public AddNewHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
@@ -148,6 +148,7 @@ public class SettingsFragment extends Fragment {
                 return new AccountHolder(view);
             }
 
+            Log.d(TAG, "creating add account item");
             View view = layoutInflater.inflate(R.layout.list_item_add_account, parent, false);
             return new AddNewHolder(view);
         }

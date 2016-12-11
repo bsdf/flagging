@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
 import com.theporouscity.flagging.ilx.Bookmark;
-import com.theporouscity.flagging.ilx.ILXServer;
+import com.theporouscity.flagging.ilx.ILXAccount;
 import com.theporouscity.flagging.ilx.ServerBookmarks;
 import com.theporouscity.flagging.ilx.Message;
 import com.theporouscity.flagging.ilx.Thread;
@@ -17,6 +17,7 @@ import android.util.Log;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.transform.Transform;
 
+import java.io.IOException;
 import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,7 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * Created by bergstroml on 2/26/16.
@@ -43,7 +48,7 @@ public class ILXRequestor {
     private volatile Boards mBoards;
     private Map<String, ServerBookmarks> mServersBookmarks;
     private List<BookmarksCallback> mBookmarksCallbacks = new ArrayList<>();
-    private ILXServer mCurrentServer;
+    private ILXAccount mCurrentAccount;
     private UserAppSettings mUserAppSettings;
 
     public interface BoardsCallback {
@@ -69,35 +74,124 @@ public class ILXRequestor {
     public ILXRequestor(OkHttpClient mHttpClient, Serializer mSerializer) {
         this.mHttpClient = mHttpClient;
         this.mSerializer = mSerializer;
-        mCurrentServer = new ILXServer("ilxor.com", "ILX","dummy","dummy");
     }
 
-    private String getBaseUrlPath() {
-        return "http://" + mCurrentServer.getDomain() + "/" + mCurrentServer.getInstance();
+    private String getBaseUrlPath(ILXAccount account) {
+        ILXAccount theAccount;
+        if (account == null) {
+            if (mCurrentAccount == null) {
+                return null;
+            } else {
+                theAccount = mCurrentAccount;
+            }
+        } else {
+            theAccount = account;
+        }
+        return "https://" + theAccount.getDomain() + "/" + theAccount.getInstance();
     }
 
-    private String getBoardsListUrl() {
+    private String getBoardsListUrl(ILXAccount account) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
         String boardsListPath = "/BoardsXmlControllerServlet";
-        return getBaseUrlPath() + boardsListPath;
+        return getBaseUrlPath(account) + boardsListPath;
     }
 
-    private String getUpdatedThreadsUrl() {
+    private String getUpdatedThreadsUrl(ILXAccount account) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
         String updatedThreadsPath = "/NewAnswersControllerServlet?xml=true&boardid=";
-        return getBaseUrlPath() + updatedThreadsPath;
+        return getBaseUrlPath(account) + updatedThreadsPath;
     }
 
-    private String getThreadUrl() {
+    private String getThreadUrl(ILXAccount account) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
         String threadPath = "/ThreadSelectedControllerServlet?xml=true&boardid=";
-        return getBaseUrlPath() + threadPath;
+        return getBaseUrlPath(account) + threadPath;
     }
 
-    private String getSnaUrl() {
+    private String getSnaUrl(ILXAccount account) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
         String snaPath = "/SiteNewAnswersControllerServlet?xml=true";
-        return getBaseUrlPath() + snaPath;
+        return getBaseUrlPath(account) + snaPath;
     }
 
+    private String getLoginPageUrl(ILXAccount account) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
+        String loginPath = "/Pages/login.jsp";
+        return getBaseUrlPath(account) + loginPath;
+    }
+
+    private String getLoginControllerUrl(ILXAccount account) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
+        String loginControllerPath = "/LoginControllerServlet";
+        return getBaseUrlPath(account) + loginControllerPath;
+    }
     private String getCurrentInstanceName() {
-        return ILX_SERVER_TAG;
+        if (mCurrentAccount == null) {
+            return null;
+        }
+        return mCurrentAccount.getInstance();
+    }
+
+    public String login(Context context, ILXAccount account) {
+        try {
+            Request request = new Request.Builder().url(getLoginPageUrl(account)).build();
+            Response response = mHttpClient.newCall(request).execute();
+            if (response.code() != 200) {
+                return "Problem getting login page";
+            }
+        } catch (IOException e) {
+            return "Problem getting login page: " + e.toString();
+        }
+
+        String loginContents = "username=" + account.getUsername() +
+                "password=" + account.getPassword() + "rememberMeCheckBox=true";
+
+        MediaType text = MediaType.parse("application/x-www-form-urlencoded");
+        RequestBody body = RequestBody.create(text, loginContents);
+        mHttpClient.cookieJar()
+        Request request = new Request().Builder
+                .url(getLoginControllerUrl(account))
+                .post(body)
+                .addHeader("Content-Length", Integer.toString(loginContents.length()))
+                .addHeader("Keep-Alive", "300")
+                .addHeader("Referer", getLoginControllerUrl(account))
+                .build();
+
+        try {
+            Response response = mHttpClient.newCall(request).execute();
+            String responseBody = response.body().string();
+            if (responseBody.contains("exceeded")) {
+                return "Timed out logging in, try again.";
+            }
+            if (responseBody.contains("failed")) {
+                return "Username and password didn't work.";
+            }
+
+            // TODO store login cookies
+
+        } catch (IOException e) {
+            return "Problem logging in: " + e.toString();
+        }
+
+        // it worked
+        return null;
+
+    }
+
+    public void saveAccount(Context context, ILXAccount account) {
+        mUserAppSettings.addAccountAndPersist(context, account);
     }
 
     public boolean getBookmarks(Context context, BookmarksCallback bookmarksCallback) {

@@ -1,6 +1,7 @@
 package com.theporouscity.flagging.di;
 
 import com.theporouscity.flagging.ActivityMainTabs;
+import com.theporouscity.flagging.AddEditAccountFragment;
 import com.theporouscity.flagging.SettingsFragment;
 import com.theporouscity.flagging.ViewBoardsFragment;
 import com.theporouscity.flagging.ViewMessageFragment;
@@ -18,6 +19,7 @@ public interface ILXComponent {
     void inject(ViewThreadsFragment viewThreadsFragment);
     void inject(ViewMessageFragment viewMessageFragment);
     void inject(SettingsFragment settingsFragment);
+    void inject(AddEditAccountFragment editAccountFragment);
     void inject(ViewThreadFragment viewThreadFragment);
     void inject(ViewBoardsFragment viewBoardsFragment);
 }
