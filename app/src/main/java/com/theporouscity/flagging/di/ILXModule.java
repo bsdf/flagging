@@ -2,10 +2,11 @@ package com.theporouscity.flagging.di;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.SharedPreferences;
-import com.theporouscity.flagging.ILXRequestor;
-import com.theporouscity.flagging.PollClosingDate;
-import com.theporouscity.flagging.UserAppSettings;
+
+import com.theporouscity.flagging.util.CookieGrabber;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.PollClosingDate;
+import com.theporouscity.flagging.util.UserAppSettings;
 
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.transform.Matcher;
@@ -50,7 +51,10 @@ public class ILXModule {
     @Provides
     @Singleton
     public OkHttpClient okHttpClient() {
-        return new OkHttpClient();
+
+        return new OkHttpClient.Builder()
+                .cookieJar(new CookieGrabber())
+                .build();
     }
 
     @Provides

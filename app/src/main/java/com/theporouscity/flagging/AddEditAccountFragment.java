@@ -12,6 +12,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.theporouscity.flagging.ilx.ILXAccount;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.UserAppSettings;
 
 import javax.inject.Inject;
 

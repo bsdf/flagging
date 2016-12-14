@@ -7,10 +7,11 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
-import com.theporouscity.flagging.R;
 
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
+import com.theporouscity.flagging.util.ILXRequestor;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;

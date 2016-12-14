@@ -22,6 +22,9 @@ import com.theporouscity.flagging.ilx.PollWrapper;
 import com.theporouscity.flagging.ilx.RichMessageHolder;
 import com.theporouscity.flagging.ilx.RichThreadHolder;
 import com.theporouscity.flagging.ilx.Thread;
+import com.theporouscity.flagging.util.ILXDateOutputFormatter;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 
 import java.util.List;
 

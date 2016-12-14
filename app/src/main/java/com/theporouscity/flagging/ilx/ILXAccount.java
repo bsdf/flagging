@@ -2,10 +2,11 @@ package com.theporouscity.flagging.ilx;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
-import java.security.KeyStore;
+import java.util.List;
 import java.util.UUID;
+
+import okhttp3.Cookie;
 
 /**
  * Created by bergstroml on 11/29/16.
@@ -19,14 +20,24 @@ public class ILXAccount implements Parcelable {
     private String mInstance;
     private String mUsername;
     private String mPassword;
-    private String mLoginCookies;
+    private List<Cookie> mLoginCookies;
     private String mSessionId;
 
-    public String getLoginCookies() {
+    public List<Cookie> getLoginCookies() {
         return mLoginCookies;
     }
 
-    public void setLoginCookies(String loginCookies) {
+    public String getDehydratedLoginCookies() {
+        String cookiesStr;
+
+        cookiesStr = mLoginCookies.get(1).toString()
+    }
+
+    public void setLoginCookies(String dehydratedCookies) {
+
+    }
+
+    public void setLoginCookies(List<Cookie> loginCookies) {
         mLoginCookies = loginCookies;
     }
 
@@ -99,7 +110,7 @@ public class ILXAccount implements Parcelable {
     }
 
     public ILXAccount(String id, String server, String instance, String username, String password,
-                      String loginCookies) {
+                      List<Cookie> loginCookies) {
         setId(id);
         setDomain(server);
         setInstance(instance);

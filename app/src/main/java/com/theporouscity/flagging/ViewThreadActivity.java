@@ -7,7 +7,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import com.theporouscity.flagging.R;
+
+import com.theporouscity.flagging.util.ILXUrlParser;
 
 /**
  * Created by bergstroml on 6/15/16.

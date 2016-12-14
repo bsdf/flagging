@@ -1,4 +1,4 @@
-package com.theporouscity.flagging;
+package com.theporouscity.flagging.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

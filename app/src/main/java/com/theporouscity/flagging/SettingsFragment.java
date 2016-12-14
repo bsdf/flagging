@@ -3,8 +3,9 @@ package com.theporouscity.flagging;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import com.theporouscity.flagging.R;
+
 import com.theporouscity.flagging.ilx.ILXAccount;
+import com.theporouscity.flagging.util.UserAppSettings;
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;

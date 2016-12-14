@@ -1,4 +1,4 @@
-package com.theporouscity.flagging;
+package com.theporouscity.flagging.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,6 +10,9 @@ import com.theporouscity.flagging.ilx.ILXAccount;
 import com.theporouscity.flagging.ilx.ILXServer;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import okhttp3.Cookie;
 
 /**
  * Created by bergstroml on 9/28/16.
@@ -60,7 +63,7 @@ public class UserAppSettings {
             if (serializedAccount == null) {
                 continue;
             }
-            String[] accountVals = serializedAccount.split(":");
+            List<Cookie>[] accountVals = serializedAccount.split(":");
             mAccounts.add(new ILXAccount(accountIds[i], accountVals[0], accountVals[1],
                     accountVals[2], accountVals[3], accountVals[4]));
         }

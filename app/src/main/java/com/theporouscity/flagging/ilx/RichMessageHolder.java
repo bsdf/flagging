@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
-import com.theporouscity.flagging.ILXTextOutputFormatter;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 
 /**
  * Created by bergstroml on 10/7/16.

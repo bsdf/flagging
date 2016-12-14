@@ -2,7 +2,7 @@ package com.theporouscity.flagging.ilx;
 
 import android.app.Activity;
 import android.text.Spanned;
-import com.theporouscity.flagging.ILXTextOutputFormatter;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 
 import java.util.ArrayList;
 

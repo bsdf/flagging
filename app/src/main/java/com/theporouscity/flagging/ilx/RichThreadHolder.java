@@ -5,7 +5,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
-import com.theporouscity.flagging.ILXTextOutputFormatter;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 import com.theporouscity.flagging.R;
 import android.util.Log;
 

@@ -1,7 +1,7 @@
-package com.theporouscity.flagging;
+package com.theporouscity.flagging.util;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
 import com.theporouscity.flagging.ilx.Bookmark;
@@ -11,14 +11,12 @@ import com.theporouscity.flagging.ilx.Message;
 import com.theporouscity.flagging.ilx.Thread;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
 
-import android.support.v4.util.Pair;
 import android.util.Log;
 
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.transform.Transform;
 
 import java.io.IOException;
-import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -160,7 +158,7 @@ public class ILXRequestor {
 
         MediaType text = MediaType.parse("application/x-www-form-urlencoded");
         RequestBody body = RequestBody.create(text, loginContents);
-        mHttpClient.cookieJar()
+        ((CookieGrabber) mHttpClient.cookieJar()).setActiveAccount(account);
         Request request = new Request().Builder
                 .url(getLoginControllerUrl(account))
                 .post(body)

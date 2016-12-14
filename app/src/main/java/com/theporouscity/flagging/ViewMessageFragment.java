@@ -7,9 +7,12 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Html;
-import com.theporouscity.flagging.R;
 
 import com.theporouscity.flagging.ilx.Message;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
+import com.theporouscity.flagging.util.ILXUrlParser;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
