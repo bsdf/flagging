@@ -88,53 +88,6 @@ public class ILXRequestor {
         return "https://" + theAccount.getDomain() + "/" + theAccount.getInstance();
     }
 
-    private String getBoardsListUrl(ILXAccount account) {
-        if (account == null && mCurrentAccount == null) {
-            return null;
-        }
-        String boardsListPath = "/BoardsXmlControllerServlet";
-        return getBaseUrlPath(account) + boardsListPath;
-    }
-
-    private String getUpdatedThreadsUrl(ILXAccount account) {
-        if (account == null && mCurrentAccount == null) {
-            return null;
-        }
-        String updatedThreadsPath = "/NewAnswersControllerServlet?xml=true&boardid=";
-        return getBaseUrlPath(account) + updatedThreadsPath;
-    }
-
-    private String getThreadUrl(ILXAccount account) {
-        if (account == null && mCurrentAccount == null) {
-            return null;
-        }
-        String threadPath = "/ThreadSelectedControllerServlet?xml=true&boardid=";
-        return getBaseUrlPath(account) + threadPath;
-    }
-
-    private String getSnaUrl(ILXAccount account) {
-        if (account == null && mCurrentAccount == null) {
-            return null;
-        }
-        String snaPath = "/SiteNewAnswersControllerServlet?xml=true";
-        return getBaseUrlPath(account) + snaPath;
-    }
-
-    private String getLoginPageUrl(ILXAccount account) {
-        if (account == null && mCurrentAccount == null) {
-            return null;
-        }
-        String loginPath = "/Pages/login.jsp";
-        return getBaseUrlPath(account) + loginPath;
-    }
-
-    private String getLoginControllerUrl(ILXAccount account) {
-        if (account == null && mCurrentAccount == null) {
-            return null;
-        }
-        String loginControllerPath = "/LoginControllerServlet";
-        return getBaseUrlPath(account) + loginControllerPath;
-    }
     private String getCurrentInstanceName() {
         if (mCurrentAccount == null) {
             return null;
@@ -142,15 +95,50 @@ public class ILXRequestor {
         return mCurrentAccount.getInstance();
     }
 
-    public String login(Context context, ILXAccount account) {
+    private String getBoardsListUrl(ILXAccount account) {
+        return getUrlHelper(account, "/BoardsXmlControllerServlet");
+    }
+
+    private String getUpdatedThreadsUrl(ILXAccount account) {
+        return getUrlHelper(account, "/NewAnswersControllerServlet?xml=true&boardid=");
+    }
+
+    private String getThreadUrl(ILXAccount account) {
+        return getUrlHelper(account, "/ThreadSelectedControllerServlet?xml=true&boardid=");
+    }
+
+    private String getSnaUrl(ILXAccount account) {
+        return getUrlHelper(account, "/SiteNewAnswersControllerServlet?xml=true");
+    }
+
+    private String getLoginPageUrl(ILXAccount account) {
+        return getUrlHelper(account, "/Pages/login.jsp");
+    }
+
+    private String getLoginControllerUrl(ILXAccount account) {
+        return getUrlHelper(account, "/LoginControllerServlet");
+    }
+
+    private String getIndexUrl(ILXAccount account) {
+        return getUrlHelper(account, "/index.jsp");
+    }
+
+    private String getUrlHelper(ILXAccount account, String path) {
+        if (account == null && mCurrentAccount == null) {
+            return null;
+        }
+        return getBaseUrlPath(account) + path;
+    }
+
+    public void login(ILXAccount account) throws CredentialsFailedException, ServerInaccessibleException {
         try {
             Request request = new Request.Builder().url(getLoginPageUrl(account)).build();
             Response response = mHttpClient.newCall(request).execute();
             if (response.code() != 200) {
-                return "Problem getting login page";
+                throw new ServerInaccessibleException("Problem getting login page");
             }
         } catch (IOException e) {
-            return "Problem getting login page: " + e.toString();
+            throw new ServerInaccessibleException("Problem getting login page: " + e.toString());
         }
 
         String loginContents = "username=" + account.getUsername() +
@@ -158,7 +146,6 @@ public class ILXRequestor {
 
         MediaType text = MediaType.parse("application/x-www-form-urlencoded");
         RequestBody body = RequestBody.create(text, loginContents);
-        ((CookieGrabber) mHttpClient.cookieJar()).setActiveAccount(account);
         Request request = new Request().Builder
                 .url(getLoginControllerUrl(account))
                 .post(body)
@@ -171,20 +158,38 @@ public class ILXRequestor {
             Response response = mHttpClient.newCall(request).execute();
             String responseBody = response.body().string();
             if (responseBody.contains("exceeded")) {
-                return "Timed out logging in, try again.";
+                // TODO retry logging in?
+                throw new ServerInaccessibleException("Timed out logging in, try again.");
             }
             if (responseBody.contains("failed")) {
-                return "Username and password didn't work.";
+                throw new CredentialsFailedException("Username and password didn't work.");
             }
 
-            // TODO store login cookies
-
         } catch (IOException e) {
-            return "Problem logging in: " + e.toString();
+            throw new ServerInaccessibleException("Problem logging in: " + e.toString());
         }
 
-        // it worked
-        return null;
+        getSession(account);
+
+    }
+
+    public void getSession(ILXAccount account) throws CredentialsFailedException, ServerInaccessibleException {
+
+        try {
+            Request request = new Request.Builder().url(getIndexUrl(account)).build();
+            Response response = mHttpClient.newCall(request).execute();
+            if (response.code() != 200) {
+                throw new ServerInaccessibleException("Problem getting login page");
+            }
+            String responseBody = response.body().string();
+            if (responseBody.contains("Login Failed")) {
+                throw new CredentialsFailedException("Username + password didn't work");
+            }
+            // save session id to account object
+            //
+        } catch (IOException e) {
+            throw new ServerInaccessibleException("Problem getting login page: " + e.toString());
+        }
 
     }
 
