@@ -2,6 +2,7 @@ package com.theporouscity.flagging.util;
 
 import android.content.Context;
 
+import com.franmontiel.persistentcookiejar.PersistentCookieJar;
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
 import com.theporouscity.flagging.ilx.Bookmark;
@@ -25,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import okhttp3.Cookie;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -123,6 +126,8 @@ public class ILXRequestor {
         return getUrlHelper(account, "/index.jsp");
     }
 
+    private String getBookmarksUrl(ILXAccount account) { return getUrlHelper(account, "/BookmarksControllerServlet?xml=true"); }
+
     private String getUrlHelper(ILXAccount account, String path) {
         if (account == null && mCurrentAccount == null) {
             return null;
@@ -185,8 +190,13 @@ public class ILXRequestor {
             if (responseBody.contains("Login Failed")) {
                 throw new CredentialsFailedException("Username + password didn't work");
             }
-            // save session id to account object
-            //
+            for (Cookie cookie : mHttpClient.cookieJar().loadForRequest(HttpUrl.parse(getIndexUrl(account)))) {
+                if (cookie.name().contentEquals("JSESSIONID")) {
+                    account.setSessionId(cookie.value());
+                    break;
+                }
+            }
+            throw new ServerInaccessibleException("Credentials worked but didn't get a session ID");
         } catch (IOException e) {
             throw new ServerInaccessibleException("Problem getting login page: " + e.toString());
         }

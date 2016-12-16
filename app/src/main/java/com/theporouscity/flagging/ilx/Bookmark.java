@@ -2,19 +2,31 @@ package com.theporouscity.flagging.ilx;
 
 import android.util.Log;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 import java.lang.*;
 
 /**
  * Created by bergstroml on 11/4/16.
  */
-
+@Root(name="Bookmark")
 public class Bookmark {
 
     private final static String TAG = "Bookmark";
+
+    @Element(name="BoardId")
     private int boardId;
+
+    @Element(name="ThreadId")
     private int threadId;
+
+    @Element(name="MessageId")
     private int bookmarkedMessageId;
+
+    @Element(name="Title")
     private String bookmarkThreadTitle;
+
     private Thread mCachedThread;
 
     public Bookmark(int boardId, int threadId, int bookmarkedMessageId) {
