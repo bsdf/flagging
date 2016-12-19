@@ -48,6 +48,7 @@ dependencies {
     compile 'org.simpleframework:simple-xml:2.7.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha9'
     compile 'com.android.support:support-v4:25.0.1'
+    compile 'io.github.yavski:fab-speed-dial:1.0.6'
     compile 'com.google.dagger:dagger:2.7'
     compile 'com.jakewharton:butterknife:8.4.0'
     compile 'com.github.franmontiel:PersistentCookieJar:v1.0.0'

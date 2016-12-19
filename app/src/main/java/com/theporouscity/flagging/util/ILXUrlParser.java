@@ -1,5 +1,7 @@
 package com.theporouscity.flagging.util;
 
+import android.net.Uri;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -8,6 +10,9 @@ import java.util.regex.Pattern;
  */
 
 public class ILXUrlParser {
+
+    private static Uri.Builder threadUriBuilder
+            = Uri.parse("http://ilxor.com/ILX/ThreadSelectedControllerServlet?showall=true").buildUpon();
 
     public static boolean isThreadUrl(String url) {
         if (url.startsWith("http://www.ilxor.com/ILX/ThreadSelectedControllerServlet") ||
@@ -18,7 +23,7 @@ public class ILXUrlParser {
         }
     }
 
-    public static ilxIds getIds(String url) {
+    public static ILXIds getIds(String url) {
         int boardId, threadId;
         int messageId = -1;
 
@@ -31,28 +36,26 @@ public class ILXUrlParser {
             if (matcher.group(2) != null) {
                 messageId = Integer.parseInt(matcher.group(2));
             }
-            ilxIds ids = new ILXUrlParser().new ilxIds(boardId, threadId, messageId);
-            return ids;
+            return new ILXIds(boardId, threadId, messageId);
         } else {
             return null;
         }
     }
 
     public static String getMessageUrl(int boardId, int threadId, int messageId) {
-        String url = "http://ilxor.com/ILX/ThreadSelectedControllerServlet?showall=true";
-        url = url + "&bookmarkedmessageid=" + String.valueOf(messageId);
-        url = url + "&boardid=" + String.valueOf(boardId);
-        url = url + "&threadid=" + String.valueOf(threadId);
-
-        return url;
+        return threadUriBuilder
+                .appendQueryParameter("bookmarkedmessageid", Integer.toString(messageId))
+                .appendQueryParameter("boardid", Integer.toString(boardId))
+                .appendQueryParameter("threadid", Integer.toString(threadId))
+                .build().toString();
     }
 
-    public class ilxIds {
+    public static class ILXIds {
         public int boardId;
         public int threadId;
         public int messageId;
 
-        public ilxIds(int boardId, int threadId, int messageId) {
+        public ILXIds(int boardId, int threadId, int messageId) {
             this.boardId = boardId;
             this.threadId = threadId;
             this.messageId = messageId;

@@ -52,7 +52,7 @@ public class ViewThreadActivity extends AppCompatActivity {
     public static Intent newIntent(Context packageContent, String threadUrl) {
         Intent intent = new Intent(packageContent, ViewThreadActivity.class);
 
-        ILXUrlParser.ilxIds ids = ILXUrlParser.getIds(threadUrl);
+        ILXUrlParser.ILXIds ids = ILXUrlParser.getIds(threadUrl);
 
         if (ids != null) {
             intent.putExtra(EXTRA_BOARD_ID, ids.boardId);

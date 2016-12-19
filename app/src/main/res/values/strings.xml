@@ -3,4 +3,7 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="thread_actions_find">Find</string>
+    <string name="thread_actions_bookmark">Bookmark</string>
+    <string name="thread_actions_reply">Reply</string>
 </resources>
