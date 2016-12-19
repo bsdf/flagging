@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -34,6 +35,8 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.github.yavski.fabspeeddial.FabSpeedDial;
+import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 
 import static butterknife.ButterKnife.findById;
 
@@ -362,6 +365,26 @@ public class ViewThreadFragment extends Fragment {
 
         mSwipeRefreshLayoutBottom.setOnRefreshListener(() -> {
             loadLaterMessages(25);
+        });
+
+        FabSpeedDial fabSpeedDial = (FabSpeedDial) view.findViewById(R.id.fragment_view_thread_fab_speed_dial);
+        fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
+            @Override
+            public boolean onMenuItemSelected(MenuItem menuItem) {
+                Log.d(TAG, "onMenuItemSelected");
+                if (menuItem.getItemId() == R.id.thread_actions_menu_bookmark) {
+                    Log.d(TAG, "bookmark selected");
+                    List<Message> messages = mThreadHolder.getThread().getMessages();
+                    Message lastMessage = messages.get(messages.size() - 1);
+
+                    mILXRequestor.getCachedBookmarks()
+                            .addBookmark(mBoardId, mThreadId, lastMessage.getMessageId());
+                    mILXRequestor.serializeBoardBookmarks(getContext());
+                    Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+                }
+
+                return false;
+            }
         });
 
         updateUI();
