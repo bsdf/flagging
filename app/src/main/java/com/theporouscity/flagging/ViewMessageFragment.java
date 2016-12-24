@@ -102,10 +102,7 @@ public class ViewMessageFragment extends Fragment {
         getActivity().setTitle(Html.fromHtml(mThreadName));
 
         mBookmarkTextView.setOnClickListener((View v) -> {
-            mILXRequestor.getCachedBookmarks()
-                    .addBookmark(mBoardId, mThreadId, mMessage.getMessageId());
-            mILXRequestor.serializeBoardBookmarks(getContext());
-            Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Bookmark not really set", Toast.LENGTH_SHORT).show();
         });
 
         mOpenTextView.setOnClickListener((View v) -> {

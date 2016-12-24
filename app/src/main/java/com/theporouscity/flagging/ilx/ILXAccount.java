@@ -1,12 +1,21 @@
 package com.theporouscity.flagging.ilx;
 
+import android.app.Application;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.franmontiel.persistentcookiejar.ClearableCookieJar;
+import com.franmontiel.persistentcookiejar.PersistentCookieJar;
+import com.franmontiel.persistentcookiejar.cache.SetCookieCache;
+import com.theporouscity.flagging.util.AccountCookiePersistor;
 
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import okhttp3.Cookie;
+import okhttp3.OkHttpClient;
 
 /**
  * Created by bergstroml on 11/29/16.
@@ -20,25 +29,33 @@ public class ILXAccount implements Parcelable {
     private String mInstance;
     private String mUsername;
     private String mPassword;
-    private List<Cookie> mLoginCookies;
-    private String mSessionId;
+    private String mSessionId = null;
 
-    public List<Cookie> getLoginCookies() {
-        return mLoginCookies;
-    }
+    @Inject
+    public OkHttpClient mSharedHttpClient;
 
-    public String getDehydratedLoginCookies() {
-        String cookiesStr;
+    @Inject
+    public Application mApplication;
 
-        cookiesStr = mLoginCookies.get(1).toString()
-    }
+    private OkHttpClient mAccountHttpClient = null;
 
-    public void setLoginCookies(String dehydratedCookies) {
+    public OkHttpClient getHttpClient() {
+        if (mAccountHttpClient == null) {
+            if (mSharedHttpClient == null) {
+                return null;
+            }
 
-    }
+            ClearableCookieJar cookieJar =
+                new PersistentCookieJar(new SetCookieCache(), new AccountCookiePersistor(mApplication.getApplicationContext(), this));
 
-    public void setLoginCookies(List<Cookie> loginCookies) {
-        mLoginCookies = loginCookies;
+            mAccountHttpClient = mSharedHttpClient.newBuilder()
+                    .cookieJar(cookieJar)
+                    .build();
+
+            return mAccountHttpClient;
+        }
+
+        return mAccountHttpClient;
     }
 
     public String getSessionId() {
@@ -109,14 +126,12 @@ public class ILXAccount implements Parcelable {
         setPassword(password);
     }
 
-    public ILXAccount(String id, String server, String instance, String username, String password,
-                      List<Cookie> loginCookies) {
+    public ILXAccount(String id, String server, String instance, String username, String password) {
         setId(id);
         setDomain(server);
         setInstance(instance);
         setUsername(username);
         setPassword(password);
-        setLoginCookies(loginCookies);
     }
 
     @Override
@@ -131,14 +146,13 @@ public class ILXAccount implements Parcelable {
         parcel.writeString(getInstance());
         parcel.writeString(getUsername());
         parcel.writeString(getPassword());
-        parcel.writeString(getLoginCookies());
         parcel.writeString(getSessionId());
     }
 
     public static final Parcelable.Creator<ILXAccount> CREATOR = new Parcelable.Creator<ILXAccount>() {
         public ILXAccount createFromParcel(Parcel in) { return new ILXAccount(in); }
         public ILXAccount[] newArray(int size) { return new ILXAccount[size]; }
-    }
+    };
 
     private ILXAccount(Parcel parcel) {
         setId(parcel.readString());
@@ -146,7 +160,6 @@ public class ILXAccount implements Parcelable {
         setInstance(parcel.readString());
         setUsername(parcel.readString());
         setPassword(parcel.readString());
-        setLoginCookies(parcel.readString());
         setSessionId(parcel.readString());
     }
 }

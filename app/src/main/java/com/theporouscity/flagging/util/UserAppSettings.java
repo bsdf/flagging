@@ -7,7 +7,6 @@ import android.net.NetworkInfo;
 
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.ILXAccount;
-import com.theporouscity.flagging.ilx.ILXServer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,9 +62,9 @@ public class UserAppSettings {
             if (serializedAccount == null) {
                 continue;
             }
-            List<Cookie>[] accountVals = serializedAccount.split(":");
+            String[] accountVals = serializedAccount.split(":");
             mAccounts.add(new ILXAccount(accountIds[i], accountVals[0], accountVals[1],
-                    accountVals[2], accountVals[3], accountVals[4]));
+                    accountVals[2], accountVals[3]));
         }
 
         return mAccounts;
@@ -81,8 +80,7 @@ public class UserAppSettings {
                         account.getDomain() + ":" +
                         account.getInstance() + ":" +
                         account.getUsername() + ":" +
-                        account.getPassword() + ":" +
-                        account.getLoginCookies(),
+                        account.getPassword(),
                     context);
     }
 

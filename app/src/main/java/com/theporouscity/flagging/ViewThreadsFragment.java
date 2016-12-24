@@ -25,9 +25,9 @@ import android.widget.Toast;
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
 import com.theporouscity.flagging.ilx.Bookmark;
+import com.theporouscity.flagging.ilx.Bookmarks;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThread;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
-import com.theporouscity.flagging.ilx.ServerBookmarks;
 import com.theporouscity.flagging.util.ILXDateOutputFormatter;
 import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.UserAppSettings;
@@ -78,11 +78,11 @@ public class ViewThreadsFragment extends Fragment {
     private int mMode;
     private Board mBoard;
     private Boards mBoards;
-    private RecentlyUpdatedThreads mThreads;
+    private RecentlyUpdatedThreads mThreads = null;
     private boolean mFetchingThreads;
     private boolean mFetchingBoards;
     private boolean mHasBookmarks;
-    private ServerBookmarks mBookmarks;
+    private Bookmarks mBookmarks = null;
 
     public int getMode() {
         return mMode;
@@ -139,43 +139,45 @@ public class ViewThreadsFragment extends Fragment {
         updateThreads();
     }
 
+    private void showErrorText(String error) {
+        mLoadErrorTextView.setText(error);
+        mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+    }
+
     private void updateThreads() {
         mFetchingThreads = true;
-        if (mMode == MODE_BOARD) {
-            mILXRequestor.getRecentlyUpdatedThreads(mBoard.getId(),
-                    (RecentlyUpdatedThreads threads) -> {
-                        updateThreadsReady(threads);
-                    });
-        } else if (mMode == MODE_SNA) {
-            mILXRequestor.getSiteNewAnswers(
-                    (RecentlyUpdatedThreads threads) -> {
-                        updateThreadsReady(threads);
-                    });
-        } else if (mMode == MODE_MARKS) {
-            mILXRequestor.getBookmarks(getContext(), (ServerBookmarks bookmarks) -> {
-                RecentlyUpdatedThreads threads = new RecentlyUpdatedThreads();
-                ArrayList<RecentlyUpdatedThread> bookmarksThreads = new ArrayList<>();
-                for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
-                    for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
-                        Bookmark bookmark = bookmarkEntry.getValue();
-                        if (bookmark.getBookmarkedMessageId() != bookmark.getCachedThread().mostRecentMessageId()) {
-                            bookmarksThreads.add(new RecentlyUpdatedThread(bookmark.getCachedThread()));
-                        }
-                    }
-                }
-                threads.setRecentlyUpdatedThreads(bookmarksThreads);
-                updateThreadsReady(threads);
-            });
+        try {
+            if (mMode == MODE_BOARD) {
+                mILXRequestor.getRecentlyUpdatedThreads(getContext(), mBoard.getId(),
+                        (RecentlyUpdatedThreads threads) -> {
+                            updateThreadsReady(threads);
+                        });
+            } else if (mMode == MODE_SNA) {
+                mILXRequestor.getSiteNewAnswers(getContext(),
+                        (RecentlyUpdatedThreads threads) -> {
+                            updateThreadsReady(threads);
+                        });
+            } else if (mMode == MODE_MARKS) {
+                mILXRequestor.getBookmarks(getContext(), (Bookmarks bookmarks) -> {
+                    updateThreadsReady(bookmarks);
+                });
+            }
+        } catch (Exception e) {
+            showErrorText(e.toString());
         }
     }
 
     private void getBoards() {
         mFetchingBoards = true;
-        if (mMode == MODE_SNA || mMode == MODE_MARKS) {
-            mILXRequestor.getBoards(
-                    (Boards boards) -> {
-                        getBoardsReady(boards);
-            }, getContext());
+        try {
+            if (mMode == MODE_SNA || mMode == MODE_MARKS) {
+                mILXRequestor.getBoards(
+                        (Boards boards) -> {
+                            getBoardsReady(boards);
+                        }, getContext());
+            }
+        } catch (Exception e) {
+            showErrorText(e.toString());
         }
     }
 
@@ -191,8 +193,14 @@ public class ViewThreadsFragment extends Fragment {
         if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
-        if (mThreads != null) {
-            Log.d("got threads", threads.getURI() + " " + threads.getTotalMessages());
+        updateUI();
+    }
+
+    private void updateThreadsReady(Bookmarks bookmarks) {
+        mFetchingThreads = false;
+        mBookmarks = bookmarks;
+        if (mSwipeRefreshLayout != null) {
+            mSwipeRefreshLayout.setRefreshing(false);
         }
         updateUI();
     }
@@ -202,15 +210,18 @@ public class ViewThreadsFragment extends Fragment {
         updateProgressBar();
 
         if (!mFetchingThreads && !mFetchingBoards && mLoadErrorTextView != null) {
-            if (mThreads == null) {
-                mLoadErrorTextView.setVisibility(TextView.VISIBLE);
-            } else if (mThreads.getRecentlyUpdatedThreads().size() == 0) {
-                mLoadErrorTextView.setText("No recent threads");
-                mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+            if (mThreads == null && mBookmarks == null) {
+                showErrorText("Problem loading threads");
+            } else if (mMode == MODE_SNA && mThreads.getRecentlyUpdatedThreads().size() == 0) {
+                showErrorText("No recently updated threads");
+            } else if (mMode == MODE_MARKS && mBookmarks.getBookmarks().isEmpty()) {
+                showErrorText("No updated bookmarks");
             }
         }
 
-        if (mRecyclerView != null && mThreads != null && (mBoards != null || mMode == MODE_BOARD)) {
+        if (mRecyclerView != null
+                && ((mThreads != null && (mBoards != null || mMode == MODE_BOARD))
+                    || (mMode == MODE_MARKS && mBookmarks != null))) {
             mThreadAdapter = new ThreadAdapter();
             mRecyclerView.setAdapter(mThreadAdapter);
         }
@@ -251,8 +262,7 @@ public class ViewThreadsFragment extends Fragment {
             updateThreads();
         });
 
-        if (mUserAppSettings.getPretendToBeLoggedInSetting()
-                && mMode == MODE_BOARD) {
+        if (mMode == MODE_BOARD) {
             mFloatingActionButton.setVisibility(FloatingActionButton.VISIBLE);
             mFloatingActionButton.setOnClickListener((View v) -> {
                 Log.d(TAG, "asking a new question");
@@ -289,7 +299,7 @@ public class ViewThreadsFragment extends Fragment {
             if (mMode == MODE_BOARD) {
                 mTitleTextView = findById(itemView, R.id.list_item_thread_title_text_view);
                 mDateTextView  = findById(itemView, R.id.list_item_thread_date_text_view);
-            } else if (mMode == MODE_SNA || mMode == MODE_MARKS) {
+            } else if (mMode == MODE_SNA) {
                 mTitleTextView = findById(itemView, R.id.list_item_snathread_title_text_view);
                 mDateTextView  = findById(itemView, R.id.list_item_snathread_date_text_view);
                 mBoardTitleTextView = findById(itemView, R.id.list_item_snathread_board_name_text_view);
@@ -312,7 +322,7 @@ public class ViewThreadsFragment extends Fragment {
             mTitleTextView.setText(ssb);
             Date lastUpdated = mThread.getLastUpdated();
             mDateTextView.setText(ILXDateOutputFormatter.formatRelativeDateShort(lastUpdated, false));
-            if (mMode == MODE_SNA || mMode == MODE_MARKS) {
+            if (mMode == MODE_SNA) {
                 mBoardTitleTextView.setText(mBoards.getBoardById(mThread.getBoardId()).getName());
             }
         }
@@ -321,24 +331,48 @@ public class ViewThreadsFragment extends Fragment {
         public void onClick(View view) {
             int bookmarkedMessageId = -1;
 
-            if (mMode == MODE_MARKS) {
-                bookmarkedMessageId = mILXRequestor
-                        .getCachedBookmarks().getBookmark(mThread.getBoardId(), mThread.getThreadId())
-                        .getBookmarkedMessageId();
-            }
-
             Intent intent = ViewThreadActivity
                     .newIntent(getActivity(), mThread.getBoardId(), mThread.getThreadId(), bookmarkedMessageId);
             startActivity(intent);
         }
     }
 
-    private class ThreadAdapter extends RecyclerView.Adapter<ThreadHolder> {
+    private class BookmarkHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener {
+
+        private Bookmark mBookmark;
+        private TextView mTitleTextView;
+
+        public BookmarkHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(this);
+            mTitleTextView = (TextView) itemView.findViewById(R.id.list_item_bookmark_title_text_view);
+        }
+
+        public void bindBookmark(Bookmark bookmark) {
+            mBookmark = bookmark;
+            mTitleTextView.setText(mBookmark.getTitleForDisplay());
+        }
 
         @Override
-        public void onBindViewHolder(ThreadHolder holder, int position) {
-            holder.bindThread(
-                    (RecentlyUpdatedThread) mThreads.getRecentlyUpdatedThreads().get(position));
+        public void onClick(View view) {
+            Intent intent = ViewThreadActivity
+                    .newIntent(getActivity(), mBookmark.getBoardId(), mBookmark.getThreadId(), mBookmark.getBookmarkedMessageId());
+            startActivity(intent);
+        }
+    }
+
+    private class ThreadAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+            if (holder instanceof ThreadHolder) {
+                ((ThreadHolder) holder).bindThread(
+                        (RecentlyUpdatedThread) mThreads.getRecentlyUpdatedThreads().get(position));
+            } else if (mMode == MODE_MARKS) {
+                ((BookmarkHolder) holder).bindBookmark(mBookmarks.getBookmarks().get(position));
+            }
         }
 
         @Override
@@ -347,21 +381,30 @@ public class ViewThreadsFragment extends Fragment {
             View view = null;
             if (mMode == MODE_BOARD) {
                 view = layoutInflater.inflate(R.layout.list_item_thread, parent, false);
-            } else if (mMode == MODE_SNA || mMode == MODE_MARKS) {
+            } else if (mMode == MODE_SNA) {
                 view = layoutInflater.inflate(R.layout.list_item_sna_thread, parent, false);
+            } else if (mMode == MODE_MARKS) {
+                view = layoutInflater.inflate(R.layout.list_item_bookmark, parent, false);
             }
             return new ThreadHolder(view);
         }
 
         @Override
         public int getItemCount() {
-            List<RecentlyUpdatedThread> threads = mThreads.getRecentlyUpdatedThreads();
-            if (threads != null) {
-                return threads.size();
-            } else {
-                Log.d("ThreadAdapter", "no threads");
-                return 0;
+
+            if (mMode == MODE_SNA || mMode == MODE_BOARD) {
+                List<RecentlyUpdatedThread> threads = mThreads.getRecentlyUpdatedThreads();
+                if (threads != null) {
+                    return threads.size();
+                } else {
+                    Log.d("ThreadAdapter", "no threads");
+                    return 0;
+                }
+            } else if (mMode == MODE_MARKS) {
+                return mBookmarks.getBookmarks().size();
             }
+
+            return 0;
         }
     }
 

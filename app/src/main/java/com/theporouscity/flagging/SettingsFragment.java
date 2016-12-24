@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 import com.theporouscity.flagging.ilx.ILXAccount;
+import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.UserAppSettings;
 
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -47,7 +49,8 @@ public class SettingsFragment extends Fragment {
     @Inject
     UserAppSettings settings;
 
-    ArrayList<ILXAccount> mAccounts;
+    @Inject
+    ILXRequestor ilxRequestor;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,7 +78,6 @@ public class SettingsFragment extends Fragment {
         updateLoadPrettyPicturesButtons(mLoadPicsWifi,
                 settings.getLoadPrettyPicturesSetting() == UserAppSettings.LoadPrettyPicturesSetting.WIFI);
 
-        mServers = settings.getServers(getContext());
         mAccountsRecyclerView.setAdapter(new AccountAdapter());
     }
 
@@ -114,10 +116,11 @@ public class SettingsFragment extends Fragment {
 
     class AccountHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
+
         @BindView(R.id.list_item_account_instance_text_view)
         TextView mAccountInstanceTextView;
 
-        private ILXServer mServer;
+        private ILXAccount mAccount;
 
         public AccountHolder(View itemView) {
             super(itemView);
@@ -125,14 +128,14 @@ public class SettingsFragment extends Fragment {
             itemView.setOnClickListener(this);
         }
 
-        public void bindServer(ILXServer server) {
-            mServer = server;
-            mAccountInstanceTextView.setText(mServer.getInstance());
+        public void bindAccount(ILXAccount account) {
+            mAccount = account;
+            mAccountInstanceTextView.setText(mAccount.getInstance());
         }
 
         @Override
         public void onClick(View view) {
-            //TODO
+            Toast.makeText(getContext(), "No, this doesn't do anything get", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -157,13 +160,13 @@ public class SettingsFragment extends Fragment {
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (getItemViewType(position) == TYPE_ACCOUNT) {
-                ((AccountHolder) holder).bindServer(mServers.get(position));
+                ((AccountHolder) holder).bindAccount(settings.getAccounts(getContext()).get(position));
             }
         }
 
         @Override
         public int getItemViewType(int position) {
-            if (position == mServers.size()) {
+            if (position == settings.getAccounts(getContext()).size()) {
                 return TYPE_ADD_BUTTON;
             }
             return TYPE_ACCOUNT;
@@ -171,7 +174,7 @@ public class SettingsFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return mServers.size() + 1;
+            return settings.getAccounts(getContext()).size() + 1;
         }
     }
 

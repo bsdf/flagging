@@ -111,14 +111,16 @@ public class AddEditAccountFragment extends Fragment {
         }
 
         ILXAccount newAccount = new ILXAccount(newServer, newInstance, newUsername, newPassword);
-        String error = mILXRequestor.login(newAccount);
-        if (error != null) {
-            Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+
+        try {
+            mILXRequestor.login(newAccount);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
             return;
         }
 
         Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
-        mILXRequestor.saveAccount(newAccount);
+        mILXRequestor.saveAccount(getContext(), newAccount);
         getActivity().finish();
 
     }

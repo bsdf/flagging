@@ -1,5 +1,7 @@
 package com.theporouscity.flagging.ilx;
 
+import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 
 import org.simpleframework.xml.Element;
@@ -58,6 +60,8 @@ public class Bookmark {
     public void setBookmarkedMessageId(int bookmarkedMessageId) {
         this.bookmarkedMessageId = bookmarkedMessageId;
     }
+
+    public Spanned getTitleForDisplay() { return Html.fromHtml(bookmarkThreadTitle.trim()); }
 
     public void setCachedThread(Thread thread) {
         mCachedThread = thread;

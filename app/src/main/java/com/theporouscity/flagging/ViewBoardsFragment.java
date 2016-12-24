@@ -142,25 +142,34 @@ public class ViewBoardsFragment extends Fragment {
         }
     }
 
+    private void showErrorText(String error)
+    {
+        mLoadErrorTextView.setText(error);
+        mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+    }
+
     private void updateBoards() {
 
         mFetching = true;
-        mILXRequestor.getBoards((Boards boards) -> {
-            mFetching = false;
-            mBoards = boards;
-            if (mBoardsForDisplay == null) {
-                mBoardsForDisplay = new ArrayList<Board>();
-            } else {
-                mBoardsForDisplay.clear();
-            }
-            for (Board board : boards.getBoards()) {
-                if (mEditing || board.isEnabled()) {
-                    mBoardsForDisplay.add(board);
+        try {
+            mILXRequestor.getBoards((Boards boards) -> {
+                mFetching = false;
+                mBoards = boards;
+                if (mBoardsForDisplay == null) {
+                    mBoardsForDisplay = new ArrayList<Board>();
+                } else {
+                    mBoardsForDisplay.clear();
                 }
-            }
-            updateUI();
-        }, getContext());
-
+                for (Board board : boards.getBoards()) {
+                    if (mEditing || board.isEnabled()) {
+                        mBoardsForDisplay.add(board);
+                    }
+                }
+                updateUI();
+            }, getContext());
+        } catch (Exception e) {
+            showErrorText(e.toString());
+        }
     }
 
     private void updateUI() {
@@ -171,7 +180,7 @@ public class ViewBoardsFragment extends Fragment {
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (mBoards == null) {
-                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+                    showErrorText("Problem loading boards");
                 }
             }
         }

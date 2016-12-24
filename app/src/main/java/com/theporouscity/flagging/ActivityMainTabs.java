@@ -11,13 +11,16 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import com.theporouscity.flagging.ilx.ServerBookmarks;
+import com.theporouscity.flagging.ilx.Bookmarks;
+import com.theporouscity.flagging.util.CredentialsFailedException;
 import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.ServerInaccessibleException;
 
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,28 +55,39 @@ public class ActivityMainTabs extends AppCompatActivity {
 
     private int mShortAnimationDuration;
     private boolean mFetchedBookmarks;
-    private boolean mHadBookmarksLastWeChecked;
+    private boolean mHaveBookmarks = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        Log.d(TAG, System.identityHashCode(this) + "onCreate");
-
         super.onCreate(savedInstanceState);
+
+        if (mILXRequestor.getUserAppSettings(this).getAccounts(this) == null) {
+            Intent i = AddEditAccountActivity.newIntent(this, null);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(i);
+            finish();
+        }
 
         setContentView(R.layout.activity_main_tabs);
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
         ButterKnife.bind(this);
 
         mFetchedBookmarks = false;
-        if (mILXRequestor.getBookmarks(this, (ServerBookmarks b) ->
-        {
-            mFetchedBookmarks = true;
-        })) {
-            mHadBookmarksLastWeChecked = true;
-        } else {
-            mHadBookmarksLastWeChecked = false;
+
+        try {
+            mILXRequestor.getBookmarks(this, (Bookmarks b) ->
+            {
+                mFetchedBookmarks = true;
+                if (b != null) {
+                    mHaveBookmarks = true;
+                }
+            });
+        } catch (Exception e) {
+            Log.d(TAG, e.toString());
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
         }
+
         setupViewPager(mViewPager, savedInstanceState);
 
         mTabLayout.setupWithViewPager(mViewPager);
@@ -93,11 +107,9 @@ public class ActivityMainTabs extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        Log.d(TAG, System.identityHashCode(this) + " resuming");
-        //TODO check to see if we need to get rid of the bookmarks tab
         super.onResume();
-        boolean hadBookmarks = mHadBookmarksLastWeChecked;
-        if (hadBookmarks != haveBookmarks()) {
+        if ((mViewPager.getChildCount() == 2 && mHaveBookmarks) ||
+                mViewPager.getChildCount() == 3 && !mHaveBookmarks) {
             mViewPager.getAdapter().notifyDataSetChanged();
         }
     }
@@ -139,22 +151,8 @@ public class ActivityMainTabs extends AppCompatActivity {
         }
     }
 
-    private boolean haveBookmarks() {
-
-        if (!mFetchedBookmarks) {
-            return mHadBookmarksLastWeChecked;
-        }
-
-        if (mILXRequestor.getCachedBookmarks() != null) {
-            mHadBookmarksLastWeChecked = !mILXRequestor.getCachedBookmarks().getBookmarks().isEmpty();
-        } else {
-            mHadBookmarksLastWeChecked = false;
-        }
-        return mHadBookmarksLastWeChecked;
-    }
-
     private int bookmarksPosition() {
-        if (haveBookmarks()) {
+        if (mHaveBookmarks) {
             return 1;
         } else {
             return -1;
@@ -166,7 +164,7 @@ public class ActivityMainTabs extends AppCompatActivity {
     }
 
     private int boardsPosition() {
-        if (haveBookmarks()) {
+        if (mHaveBookmarks) {
             return 2;
         } else {
             return 1;
@@ -204,7 +202,7 @@ public class ActivityMainTabs extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            if (haveBookmarks()) {
+            if (mHaveBookmarks) {
                 return 3;
             } else {
                 return 2;

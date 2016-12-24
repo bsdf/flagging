@@ -6,12 +6,13 @@ import com.franmontiel.persistentcookiejar.PersistentCookieJar;
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
 import com.theporouscity.flagging.ilx.Bookmark;
+import com.theporouscity.flagging.ilx.Bookmarks;
 import com.theporouscity.flagging.ilx.ILXAccount;
-import com.theporouscity.flagging.ilx.ServerBookmarks;
 import com.theporouscity.flagging.ilx.Message;
 import com.theporouscity.flagging.ilx.Thread;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.simpleframework.xml.Serializer;
@@ -42,12 +43,10 @@ public class ILXRequestor {
     public static final String ILX_SERVER_TAG = "ILX";
 
     private static final String TAG = "ILXRequestor";
-    private static final String serializedBookmarksPrefix = "serializedBookmarks";
 
     private OkHttpClient mHttpClient;
     private Serializer mSerializer;
     private volatile Boards mBoards;
-    private Map<String, ServerBookmarks> mServersBookmarks;
     private List<BookmarksCallback> mBookmarksCallbacks = new ArrayList<>();
     private ILXAccount mCurrentAccount;
     private UserAppSettings mUserAppSettings;
@@ -65,7 +64,7 @@ public class ILXRequestor {
     }
 
     public interface BookmarksCallback {
-        void onComplete(ServerBookmarks bookmarks);
+        void onComplete(Bookmarks bookmarks);
     }
 
     public interface HaveBookmarksCallback {
@@ -101,32 +100,40 @@ public class ILXRequestor {
     private String getBoardsListUrl(ILXAccount account) {
         return getUrlHelper(account, "/BoardsXmlControllerServlet");
     }
+    private String getBoardsListUrl() { return getBoardsListUrl(null); }
 
     private String getUpdatedThreadsUrl(ILXAccount account) {
         return getUrlHelper(account, "/NewAnswersControllerServlet?xml=true&boardid=");
     }
+    private String getUpdatedThreadsUrl() { return getUpdatedThreadsUrl(null); }
 
     private String getThreadUrl(ILXAccount account) {
         return getUrlHelper(account, "/ThreadSelectedControllerServlet?xml=true&boardid=");
     }
+    private String getThreadUrl() { return getThreadUrl(null); }
 
     private String getSnaUrl(ILXAccount account) {
         return getUrlHelper(account, "/SiteNewAnswersControllerServlet?xml=true");
     }
+    private String getSnaUrl() { return getSnaUrl(null); }
 
     private String getLoginPageUrl(ILXAccount account) {
         return getUrlHelper(account, "/Pages/login.jsp");
     }
+    private String getLoginPageUrl() { return getLoginPageUrl(null); }
 
     private String getLoginControllerUrl(ILXAccount account) {
         return getUrlHelper(account, "/LoginControllerServlet");
     }
+    private String getLoginControllerUrl() { return getLoginControllerUrl(null); }
 
     private String getIndexUrl(ILXAccount account) {
         return getUrlHelper(account, "/index.jsp");
     }
+    private String getIndexUrl() { return getIndexUrl(null); }
 
     private String getBookmarksUrl(ILXAccount account) { return getUrlHelper(account, "/BookmarksControllerServlet?xml=true"); }
+    private String getBookmarksUrl() { return getBookmarksUrl(null); }
 
     private String getUrlHelper(ILXAccount account, String path) {
         if (account == null && mCurrentAccount == null) {
@@ -136,9 +143,10 @@ public class ILXRequestor {
     }
 
     public void login(ILXAccount account) throws CredentialsFailedException, ServerInaccessibleException {
+        OkHttpClient client = account.getHttpClient();
         try {
             Request request = new Request.Builder().url(getLoginPageUrl(account)).build();
-            Response response = mHttpClient.newCall(request).execute();
+            Response response = client.newCall(request).execute();
             if (response.code() != 200) {
                 throw new ServerInaccessibleException("Problem getting login page");
             }
@@ -151,7 +159,7 @@ public class ILXRequestor {
 
         MediaType text = MediaType.parse("application/x-www-form-urlencoded");
         RequestBody body = RequestBody.create(text, loginContents);
-        Request request = new Request().Builder
+        Request request = new Request.Builder()
                 .url(getLoginControllerUrl(account))
                 .post(body)
                 .addHeader("Content-Length", Integer.toString(loginContents.length()))
@@ -160,7 +168,7 @@ public class ILXRequestor {
                 .build();
 
         try {
-            Response response = mHttpClient.newCall(request).execute();
+            Response response = client.newCall(request).execute();
             String responseBody = response.body().string();
             if (responseBody.contains("exceeded")) {
                 // TODO retry logging in?
@@ -179,10 +187,10 @@ public class ILXRequestor {
     }
 
     public void getSession(ILXAccount account) throws CredentialsFailedException, ServerInaccessibleException {
-
+        OkHttpClient client = account.getHttpClient();
         try {
             Request request = new Request.Builder().url(getIndexUrl(account)).build();
-            Response response = mHttpClient.newCall(request).execute();
+            Response response = client.newCall(request).execute();
             if (response.code() != 200) {
                 throw new ServerInaccessibleException("Problem getting login page");
             }
@@ -190,10 +198,10 @@ public class ILXRequestor {
             if (responseBody.contains("Login Failed")) {
                 throw new CredentialsFailedException("Username + password didn't work");
             }
-            for (Cookie cookie : mHttpClient.cookieJar().loadForRequest(HttpUrl.parse(getIndexUrl(account)))) {
+            for (Cookie cookie : account.getHttpClient().cookieJar().loadForRequest(HttpUrl.parse(getIndexUrl(account)))) {
                 if (cookie.name().contentEquals("JSESSIONID")) {
                     account.setSessionId(cookie.value());
-                    break;
+                    return;
                 }
             }
             throw new ServerInaccessibleException("Credentials worked but didn't get a session ID");
@@ -207,125 +215,54 @@ public class ILXRequestor {
         mUserAppSettings.addAccountAndPersist(context, account);
     }
 
-    public boolean getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
+    private void validateSession(Context context) throws CredentialsFailedException, ServerInaccessibleException {
+
+        if (mCurrentAccount == null) {
+
+            if (mUserAppSettings == null || mUserAppSettings.getAccounts(context).isEmpty()) {
+                throw new CredentialsFailedException("no accounts");
+            }
+
+            mCurrentAccount = mUserAppSettings.getAccounts(context).get(0);
+        }
+
+        if (mCurrentAccount.getHttpClient().cookieJar()
+                .loadForRequest(HttpUrl.parse(getLoginPageUrl(mCurrentAccount))) == null) {
+
+            login(mCurrentAccount);
+        }
+
+        if (mCurrentAccount.getSessionId() == null) {
+            getSession(mCurrentAccount);
+        }
+    }
+
+    public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) throws CredentialsFailedException, ServerInaccessibleException {
+
+        validateSession(context);
 
         mBookmarksCallbacks.add(bookmarksCallback);
         if (mBookmarksCallbacks.size() > 1) {
-            return true;
+            return;
         }
 
-        if (mServersBookmarks == null) {
-            mServersBookmarks = new HashMap<String, ServerBookmarks>();
-        }
-
-        if (getUserAppSettings(context) == null) {
-            return false;
-        }
-
-        if (mServersBookmarks.get(getCurrentInstanceName()) != null) {
-            ArrayList<String> bookmarkThreadUrls = new ArrayList<>();
-            ArrayList<Bookmark> bookmarksForThreads = new ArrayList<>();
-            ServerBookmarks bookmarks = mServersBookmarks.get(getCurrentInstanceName());
-            boolean allBookmarksHaveThreads = true;
-            for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
-                for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
-                    Bookmark bookmark = bookmarkEntry.getValue();
-                    if (bookmark.getCachedThread() == null) {
-                        allBookmarksHaveThreads = false;
-                        bookmarksForThreads.add(bookmark);
-                        bookmarkThreadUrls.add(getThreadUrl() + Integer.toString(bookmark.getBoardId())
-                                + "&threadid=" + Integer.toString(bookmark.getThreadId())
-                                + "&bookmarkedmessageid=" + Integer.toString(bookmark.getBookmarkedMessageId()));
-                    }
-                }
-            }
-            if (allBookmarksHaveThreads) {
-                processBookmarkCallbacks();
+        new GetItemsTask(mCurrentAccount.getHttpClient(), (String[] results) -> {
+            if (results != null && results[0] != null) {
+                Bookmarks bookmarks =
+                        mSerializer.read(Bookmarks.class, results[0], false);
+                processBookmarkCallbacks(bookmarks);
             } else {
-                new GetItemsTask(mHttpClient, (String[] results) -> {
-                    for (int i = 0; i < results.length; i++) {
-                        Bookmark bookmark = bookmarksForThreads.get(i);
-                        Thread bookmarkThread = mSerializer.read(Thread.class, results[i], false);
-                        bookmark.setCachedThread(bookmarkThread);
-                    }
-                    processBookmarkCallbacks();
-                }).execute(bookmarkThreadUrls.toArray(new String[0]));
+                processBookmarkCallbacks(null);
             }
-        } else {
-            ServerBookmarks bookmarks = new ServerBookmarks();
-            mServersBookmarks.put(getCurrentInstanceName(), bookmarks);
-            String serializedBookmarks = mUserAppSettings.getString(serializedBookmarksPrefix + getCurrentInstanceName(), context);
-            if (serializedBookmarks != null) {
-                String[] bookmarkValTriplets = serializedBookmarks.split("-");
-                String[] bookmarkThreadUrls = new String[bookmarkValTriplets.length];
-                for (int i=0; i<bookmarkValTriplets.length; i++) {
-                    String bookmarkValTriplet = bookmarkValTriplets[i];
-                    String[] bookmarkVals = bookmarkValTriplet.split("\\.");
-                    bookmarks.addBookmark(Integer.valueOf(bookmarkVals[0]),
-                            Integer.valueOf(bookmarkVals[1]), Integer.valueOf(bookmarkVals[2]));
-                    bookmarkThreadUrls[i] = getThreadUrl() + bookmarkVals[0] +
-                            "&threadid=" + bookmarkVals[1] +
-                            "&bookmarkedmessageid=" + bookmarkVals[2];
-                }
-                new GetItemsTask(mHttpClient, (String[] results) -> {
-                    for (int i=0; i<results.length; i++) {
-                        String bookmarkValTriplet = bookmarkValTriplets[i];
-                        String[] bookmarkVals = bookmarkValTriplet.split("\\.");
-                        Bookmark bookmark = bookmarks.getBookmark(
-                                Integer.valueOf(bookmarkVals[0]), Integer.valueOf(bookmarkVals[1]));
-                        Thread bookmarkThread = mSerializer.read(Thread.class, results[i], false);
-                        bookmark.setCachedThread(bookmarkThread);
-                    }
-                    processBookmarkCallbacks();
-                }).execute(bookmarkThreadUrls);
-            } else {
-                processBookmarkCallbacks();
-                return false;
-            }
-        }
-        return true;
+        }).execute(getBookmarksUrl());
     }
 
-    private void processBookmarkCallbacks() {
+    private void processBookmarkCallbacks(Bookmarks bookmarks) {
         while (!mBookmarksCallbacks.isEmpty()) {
             BookmarksCallback callback = mBookmarksCallbacks.get(0);
             mBookmarksCallbacks.remove(callback);
-            callback.onComplete(mServersBookmarks.get(getCurrentInstanceName()));
+            callback.onComplete(bookmarks);
         }
-    }
-
-    public ServerBookmarks getCachedBookmarks() {
-        if (mServersBookmarks != null && mServersBookmarks.get(getCurrentInstanceName()) != null) {
-            return mServersBookmarks.get(getCurrentInstanceName());
-        }
-        return null;
-    }
-
-    public void serializeBoardBookmarks(Context context) {
-        if (getUserAppSettings(context) == null) {
-            return;
-        }
-
-        if (mServersBookmarks == null || mServersBookmarks.get(getCurrentInstanceName()) == null) {
-            return;
-        }
-
-        ServerBookmarks bookmarks = mServersBookmarks.get(getCurrentInstanceName());
-        String serializedBookmarks = "";
-        for (HashMap.Entry<Integer, HashMap<Integer, Bookmark>> boardBookmarks: bookmarks.getBookmarks().entrySet()) {
-            for (HashMap.Entry<Integer, Bookmark> bookmarkEntry : boardBookmarks.getValue().entrySet()) {
-                Bookmark bookmark = bookmarkEntry.getValue();
-
-                serializedBookmarks
-                        += Integer.toString(bookmark.getBoardId())
-                        + "."
-                        + Integer.toString(bookmark.getThreadId())
-                        + "."
-                        + Integer.toString(bookmark.getBookmarkedMessageId())
-                        + "-";
-            }
-        }
-        mUserAppSettings.persistString(serializedBookmarksPrefix + getCurrentInstanceName(), serializedBookmarks, context);
     }
 
     public UserAppSettings getUserAppSettings(Context context) {
@@ -343,10 +280,13 @@ public class ILXRequestor {
         return true;
     }
 
-    public void getBoards(BoardsCallback boardsCallback, Context context) {
+    public void getBoards(BoardsCallback boardsCallback, Context context) throws CredentialsFailedException, ServerInaccessibleException {
+
+        validateSession(context);
+
         if (mBoards == null && getUserAppSettings(context) != null) {
             Log.d(TAG, "passing on request for boards xml");
-            new GetItemsTask(mHttpClient, (String[] results) -> {
+            new GetItemsTask(mCurrentAccount.getHttpClient(), (String[] results) -> {
                 if (results != null && results[0] != null) {
                     mBoards = mSerializer.read(Boards.class, results[0], false);
                 }
@@ -369,10 +309,15 @@ public class ILXRequestor {
         }
     }
 
-    public void getRecentlyUpdatedThreads(int boardId, RecentlyUpdatedThreadsCallback threadsCallback) {
+    public void getRecentlyUpdatedThreads(Context context, int boardId, RecentlyUpdatedThreadsCallback threadsCallback)
+            throws CredentialsFailedException, ServerInaccessibleException
+    {
+
+        validateSession(context);
+
         String url = getUpdatedThreadsUrl() + boardId;
         Log.d(TAG, "passing on request for recent threads");
-        new GetItemsTask(mHttpClient, (String[] results) -> {
+        new GetItemsTask(mCurrentAccount.getHttpClient(), (String[] results) -> {
             if (results != null && results[0] != null) {
                 RecentlyUpdatedThreads threads =
                         mSerializer.read(RecentlyUpdatedThreads.class, results[0], false);
@@ -383,9 +328,13 @@ public class ILXRequestor {
         }).execute(url);
     }
 
-    public void getSiteNewAnswers(RecentlyUpdatedThreadsCallback threadsCallback) {
+    public void getSiteNewAnswers(Context context, RecentlyUpdatedThreadsCallback threadsCallback)
+            throws CredentialsFailedException, ServerInaccessibleException {
+
+        validateSession(context);
+
         Log.d(TAG, "getting site new answers");
-        new GetItemsTask(mHttpClient, (String[] results) -> {
+        new GetItemsTask(mCurrentAccount.getHttpClient(), (String[] results) -> {
             if (results != null && results[0] != null) {
                 RecentlyUpdatedThreads threads =
                         mSerializer.read(RecentlyUpdatedThreads.class, results[0], false);
@@ -396,7 +345,12 @@ public class ILXRequestor {
         }).execute(getSnaUrl());
     }
 
-    public void getThread(int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback) {
+    public void getThread(Context context, int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback)
+            throws CredentialsFailedException, ServerInaccessibleException
+    {
+
+        validateSession(context);
+
         String url = getThreadUrl() + boardId + "&threadid=" + threadId;
         if (initialMessageId != -1) {
             url = url + "&bookmarkedmessageid=" + initialMessageId;
@@ -407,7 +361,7 @@ public class ILXRequestor {
         } else {
             Log.d(TAG, "getting a thread");
         }
-        new GetItemsTask(mHttpClient, (String[] results) -> {
+        new GetItemsTask(mCurrentAccount.getHttpClient(), (String[] results) -> {
             Thread thread = null;
             if (results != null && results[0] != null) {
                 thread = mSerializer.read(Thread.class, results[0], false);

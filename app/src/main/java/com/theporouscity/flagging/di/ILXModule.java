@@ -55,11 +55,10 @@ public class ILXModule {
     @Singleton
     public OkHttpClient okHttpClient() {
 
-        ClearableCookieJar cookieJar =
-                new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(application.getApplicationContext()));
+        /*ClearableCookieJar cookieJar =
+                new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(application.getApplicationContext()));*/
 
         return new OkHttpClient.Builder()
-                .cookieJar(cookieJar)
                 .build();
     }
 
