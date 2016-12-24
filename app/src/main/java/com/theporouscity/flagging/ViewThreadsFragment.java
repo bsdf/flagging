@@ -139,9 +139,25 @@ public class ViewThreadsFragment extends Fragment {
         updateThreads();
     }
 
-    private void showErrorText(String error) {
-        mLoadErrorTextView.setText(error);
-        mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+    private void showError(Exception e)
+    {
+        Log.d(TAG, e.toString());
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e.getMessage());
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showError(String error) {
+        Log.d(TAG, error);
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(error);
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateThreads() {
@@ -163,7 +179,7 @@ public class ViewThreadsFragment extends Fragment {
                 });
             }
         } catch (Exception e) {
-            showErrorText(e.toString());
+            showError(e);
         }
     }
 
@@ -177,7 +193,7 @@ public class ViewThreadsFragment extends Fragment {
                         }, getContext());
             }
         } catch (Exception e) {
-            showErrorText(e.toString());
+            showError(e);
         }
     }
 
@@ -211,11 +227,11 @@ public class ViewThreadsFragment extends Fragment {
 
         if (!mFetchingThreads && !mFetchingBoards && mLoadErrorTextView != null) {
             if (mThreads == null && mBookmarks == null) {
-                showErrorText("Problem loading threads");
+                showError("Problem loading threads");
             } else if (mMode == MODE_SNA && mThreads.getRecentlyUpdatedThreads().size() == 0) {
-                showErrorText("No recently updated threads");
+                showError("No recently updated threads");
             } else if (mMode == MODE_MARKS && mBookmarks.getBookmarks().isEmpty()) {
-                showErrorText("No updated bookmarks");
+                showError("No updated bookmarks");
             }
         }
 

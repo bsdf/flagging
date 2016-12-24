@@ -11,6 +11,7 @@ import com.theporouscity.flagging.ilx.ILXAccount;
 public class AddEditAccountActivity extends AppCompatActivity {
 
     public static final String EXTRA_ACCOUNT = "ILXAccountExtra";
+    public static final String EXTRA_NOACCOUNTSYET = "NoAccountsYet";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +24,11 @@ public class AddEditAccountActivity extends AppCompatActivity {
 
         if (fragment == null) {
             ILXAccount account = getIntent().getParcelableExtra(EXTRA_ACCOUNT);
-            fragment = AddEditAccountFragment.newInstance(account);
+            if (getIntent().getBooleanExtra(EXTRA_NOACCOUNTSYET, false)) {
+                fragment = AddEditAccountFragment.newInstance();
+            } else {
+                fragment = AddEditAccountFragment.newInstance(account);
+            }
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
                     .commit();
@@ -38,6 +43,12 @@ public class AddEditAccountActivity extends AppCompatActivity {
         if (account != null) {
             intent.putExtra(EXTRA_ACCOUNT, account);
         }
+        return intent;
+    }
+
+    public static Intent newIntent(Context context) {
+        Intent intent = new Intent(context, AddEditAccountActivity.class);
+        intent.putExtra(EXTRA_NOACCOUNTSYET, true);
         return intent;
     }
 }

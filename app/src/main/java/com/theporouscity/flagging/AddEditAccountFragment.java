@@ -1,6 +1,7 @@
 package com.theporouscity.flagging;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -24,6 +25,7 @@ public class AddEditAccountFragment extends Fragment {
 
     private static final String TAG = "AddEditAccountFragment";
     private static final String ARG_ACCOUNT = "ILXAccountArg";
+    private static final String ARG_NOACCOUNTSYET = "ArgNoAccountsYet";
 
     @BindView(R.id.fragment_addedit_account_server_edittext)
     EditText mServerEditText;
@@ -50,16 +52,26 @@ public class AddEditAccountFragment extends Fragment {
     ILXRequestor mILXRequestor;
 
     private ILXAccount mAccount;
+    private boolean mNoAccountsYet;
 
     public static AddEditAccountFragment newInstance(ILXAccount account) {
         AddEditAccountFragment fragment = new AddEditAccountFragment();
 
+        Bundle args = new Bundle();
         if (account != null) {
-            Bundle args = new Bundle();
             args.putParcelable(ARG_ACCOUNT, account);
-            fragment.setArguments(args);
         }
+        args.putBoolean(ARG_NOACCOUNTSYET, false);
+        fragment.setArguments(args);
 
+        return fragment;
+    }
+
+    public static AddEditAccountFragment newInstance() {
+        AddEditAccountFragment fragment = new AddEditAccountFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_NOACCOUNTSYET, true);
+        fragment.setArguments(args);
         return fragment;
     }
 
@@ -70,6 +82,7 @@ public class AddEditAccountFragment extends Fragment {
 
         if (getArguments() != null) {
             mAccount = getArguments().getParcelable(ARG_ACCOUNT);
+            mNoAccountsYet = getArguments().getBoolean(ARG_NOACCOUNTSYET);
         }
     }
 
@@ -121,11 +134,22 @@ public class AddEditAccountFragment extends Fragment {
 
         Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
         mILXRequestor.saveAccount(getContext(), newAccount);
+
+        if (mNoAccountsYet) {
+            Intent i = new Intent(getContext(), ActivityMainTabs.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(i);
+        }
+
         getActivity().finish();
 
     }
 
     private void handleCancel(View v) {
-        getActivity().finish();
+        if (!mNoAccountsYet) {
+            getActivity().finish();
+        } else {
+            Toast.makeText(getContext(), "Need an account to continue", Toast.LENGTH_SHORT).show();
+        }
     }
 }

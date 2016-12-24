@@ -142,10 +142,26 @@ public class ViewBoardsFragment extends Fragment {
         }
     }
 
-    private void showErrorText(String error)
+    private void showError(Exception e)
     {
-        mLoadErrorTextView.setText(error);
-        mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        Log.d(TAG, e.toString());
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e.getMessage());
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showError(String e)
+    {
+        Log.d(TAG, e);
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e);
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateBoards() {
@@ -168,7 +184,7 @@ public class ViewBoardsFragment extends Fragment {
                 updateUI();
             }, getContext());
         } catch (Exception e) {
-            showErrorText(e.toString());
+            showError(e);
         }
     }
 
@@ -180,7 +196,7 @@ public class ViewBoardsFragment extends Fragment {
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (mBoards == null) {
-                    showErrorText("Problem loading boards");
+                    showError("Problem loading boards");
                 }
             }
         }

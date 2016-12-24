@@ -90,7 +90,7 @@ public class ILXRequestor {
         return "https://" + theAccount.getDomain() + "/" + theAccount.getInstance();
     }
 
-    private String getCurrentInstanceName() {
+    public String getCurrentInstanceName() {
         if (mCurrentAccount == null) {
             return null;
         }

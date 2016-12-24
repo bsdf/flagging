@@ -15,6 +15,7 @@ import com.theporouscity.flagging.ilx.Bookmarks;
 import com.theporouscity.flagging.util.CredentialsFailedException;
 import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.ServerInaccessibleException;
+import com.theporouscity.flagging.util.UserAppSettings;
 
 import android.util.Log;
 import android.view.MenuItem;
@@ -53,6 +54,9 @@ public class ActivityMainTabs extends AppCompatActivity {
     @Inject
     ILXRequestor mILXRequestor;
 
+    @Inject
+    UserAppSettings mSettings;
+
     private int mShortAnimationDuration;
     private boolean mFetchedBookmarks;
     private boolean mHaveBookmarks = false;
@@ -62,16 +66,16 @@ public class ActivityMainTabs extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-        if (mILXRequestor.getUserAppSettings(this).getAccounts(this) == null) {
+        setContentView(R.layout.activity_main_tabs);
+        ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
+        ButterKnife.bind(this);
+
+        if (mSettings.getAccounts(this) == null || mSettings.getAccounts(this).isEmpty()) {
             Intent i = AddEditAccountActivity.newIntent(this, null);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
             finish();
         }
-
-        setContentView(R.layout.activity_main_tabs);
-        ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
-        ButterKnife.bind(this);
 
         mFetchedBookmarks = false;
 
@@ -96,7 +100,7 @@ public class ActivityMainTabs extends AppCompatActivity {
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
 
-        mToolbar.setTitle("ILX");
+        mToolbar.setTitle(mILXRequestor.getCurrentInstanceName());
         mToolbar.setOnMenuItemClickListener((MenuItem item) -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);

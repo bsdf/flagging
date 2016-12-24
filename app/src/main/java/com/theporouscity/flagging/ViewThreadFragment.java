@@ -140,9 +140,26 @@ public class ViewThreadFragment extends Fragment {
         updateUI();
     }
 
-    private void showErrorText(String error) {
-        mLoadErrorTextView.setText(error);
-        mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+    private void showError(Exception e)
+    {
+        Log.d(TAG, e.toString());
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e.getMessage());
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showError(String e)
+    {
+        Log.d(TAG, e);
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e);
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void loadThread() {
@@ -194,7 +211,7 @@ public class ViewThreadFragment extends Fragment {
                         });
             }
         } catch (Exception e) {
-            showErrorText(e.toString());
+            showError(e);
         }
     }
 
@@ -289,7 +306,7 @@ public class ViewThreadFragment extends Fragment {
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (mThreadHolder == null || mThreadHolder.getThread() == null) {
-                    showErrorText("Problem loading thread");
+                    showError("Problem loading thread");
                 } else {
                     mLoadErrorTextView.setVisibility(TextView.INVISIBLE);
                 }
