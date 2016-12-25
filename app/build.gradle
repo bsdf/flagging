@@ -21,6 +21,9 @@ android {
             enabled true
         }
         signingConfig signingConfigs.config
+        vectorDrawables {
+            useSupportLibrary true
+        }
     }
     buildTypes {
         release {
