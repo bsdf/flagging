@@ -299,6 +299,41 @@ public class ViewThreadFragment extends Fragment {
 
     }
 
+    private void registerFabListeners(View view) {
+        FabSpeedDial fabSpeedDial = (FabSpeedDial) view.findViewById(R.id.fragment_view_thread_fab_speed_dial);
+        fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
+            @Override
+            public boolean onMenuItemSelected(MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case R.id.thread_actions_menu_bookmark:
+                        fabBookmarkHandler();
+                        break;
+                    case R.id.thread_actions_menu_reply:
+                        fabReplyHandler();
+                        break;
+                }
+                return false;
+            }
+        });
+    }
+
+    private void fabBookmarkHandler() {
+        List<Message> messages = mThreadHolder.getThread().getMessages();
+        Message lastMessage = messages.get(messages.size() - 1);
+
+        mILXRequestor.getCachedBookmarks()
+                .addBookmark(mBoardId, mThreadId, lastMessage.getMessageId());
+        mILXRequestor.serializeBoardBookmarks(getContext());
+        Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+    }
+
+    private void fabReplyHandler() {
+        Intent intent = ThreadReplyActivity.newIntent(getActivity(), mBoardId, mThreadId, mThreadHolder.getThread().getTitle());
+        startActivity(intent);
+
+        Log.d(TAG, "inside fabReplyHandler");
+    }
+
     private void updateUI() {
 
         if (mProgressBar != null) {
@@ -363,26 +398,7 @@ public class ViewThreadFragment extends Fragment {
             loadLaterMessages(25);
         });
 
-        FabSpeedDial fabSpeedDial = (FabSpeedDial) view.findViewById(R.id.fragment_view_thread_fab_speed_dial);
-        fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
-            @Override
-            public boolean onMenuItemSelected(MenuItem menuItem) {
-                Log.d(TAG, "onMenuItemSelected");
-                if (menuItem.getItemId() == R.id.thread_actions_menu_bookmark) {
-                    Log.d(TAG, "bookmark selected");
-                    List<Message> messages = mThreadHolder.getThread().getMessages();
-                    Message lastMessage = messages.get(messages.size() - 1);
-
-                    mILXRequestor.getCachedBookmarks()
-                            .addBookmark(mBoardId, mThreadId, lastMessage.getMessageId());
-                    mILXRequestor.serializeBoardBookmarks(getContext());
-                    Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
-                }
-
-                return false;
-            }
-        });
-
+        registerFabListeners(view);
         updateUI();
 
         return view;

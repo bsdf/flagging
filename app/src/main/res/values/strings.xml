@@ -6,4 +6,6 @@
     <string name="thread_actions_find">Find</string>
     <string name="thread_actions_bookmark">Bookmark</string>
     <string name="thread_actions_reply">Reply</string>
+    <string name="title_activity_thread_reply">Reply to Thread</string>
+    <string name="thread_reply_text_hint">Enter reply</string>
 </resources>
