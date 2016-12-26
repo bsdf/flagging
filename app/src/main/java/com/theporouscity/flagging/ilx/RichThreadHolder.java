@@ -9,12 +9,15 @@ import android.support.v4.content.ContextCompat;
 import com.theporouscity.flagging.util.AsyncTaskResult;
 import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 import com.theporouscity.flagging.R;
+import com.theporouscity.flagging.util.ILXUrlParser;
 import com.theporouscity.flagging.util.ServerInaccessibleException;
 
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -35,7 +38,7 @@ public class RichThreadHolder {
     private Drawable mEmptyPlaceholderImage;
     private int mLinkColor;
     private ILXTextOutputFormatter mILXTextOutputFormatter;
-    private String mHtmlThread = null;
+    private String mSid = null;
 
     public RichThreadHolder(Thread thread, ILXAccount account, OkHttpClient sharedClient,
                             Context context, ILXTextOutputFormatter mILXTextOutputFormatter) {
@@ -72,6 +75,8 @@ public class RichThreadHolder {
         return mLinkColor;
     }
 
+    public String getSid() { return mSid; }
+
     public void addMessages(int startPosition, List<Message> messages) {
 
         mThread.getMessages().addAll(0, messages);
@@ -103,7 +108,7 @@ public class RichThreadHolder {
         ArrayList<RichMessageHolder> messagesToPrep = getThisMessageAndLater(startPosition);
         // then prep earlier messages, in reverse chronological order
         messagesToPrep.addAll(getEarlierMessages(startPosition));
-        new PrepMessagesTask(activity, false).execute(messagesToPrep);
+        new PrepMessagesTask(activity).execute(messagesToPrep);
     }
 
     public void ingestEarlierMessages(Thread thread, Activity activity, int count) {
@@ -114,7 +119,7 @@ public class RichThreadHolder {
 
     public void prepEarlierMessages(int startPosition, Activity activity) {
         ArrayList<RichMessageHolder> messagesToPrep = getEarlierMessages(startPosition);
-        new PrepMessagesTask(activity, false).execute(messagesToPrep);
+        new PrepMessagesTask(activity).execute(messagesToPrep);
 
     }
 
@@ -125,7 +130,9 @@ public class RichThreadHolder {
     }
 
     public void prepLaterMessages(int numMessages, Activity activity) {
-        //ArrayList<RichMessageHolder messagesToPrep = >
+        ArrayList<RichMessageHolder> messagesToPrep = getThisMessageAndLater(
+                mRichMessageHolders.size() - numMessages);
+        new PrepMessagesTask(activity).execute(messagesToPrep);
     }
 
     private ArrayList<RichMessageHolder> getThisMessageAndLater(int startPosition) {
@@ -152,12 +159,10 @@ public class RichThreadHolder {
     class PrepMessagesTask extends AsyncTask<ArrayList<RichMessageHolder>, Void, Void>
     {
         private Activity mActivity;
-        private boolean mLoadedLaterMessages;
 
-        public PrepMessagesTask(Activity activity, boolean loadedLaterMessages) {
+        public PrepMessagesTask(Activity activity) {
             super();
             mActivity = activity;
-            mLoadedLaterMessages = loadedLaterMessages;
         }
 
         @Override
@@ -168,15 +173,12 @@ public class RichThreadHolder {
             //TODO why aren't we prepping as many messages as we're loading
             Log.d(TAG, "prepping " + Integer.toString(theMessages.size()) + " messages");
 
-            // in order to bookmark messages we need an id for each message (not the message id)
+            // in order to bookmark messages we need a thread-specific id
             // unfortunately it's only available in the html for the thread
-            //
-            // also unfortunate, seems the only way to guarantee we get all the messages we
-            // need in html is to load the entire thread
 
-            if (mHtmlThread == null || mLoadedLaterMessages == true) {
+            if (mSid == null) {
+                String threadHtml = null;
                 String url = mAccount.getThreadHtmlUrl(mThread.getBoardId(), mThread.getThreadId());
-                url = url + "&showall=true";
 
                 Request request = new Request.Builder()
                         .url(url)
@@ -186,13 +188,26 @@ public class RichThreadHolder {
                     if (response.code() != 200) {
                         Log.d(TAG, "Couldn't get thread html");
                     }
-                    mHtmlThread = response.body().string();
+                    threadHtml = response.body().string();
                 } catch (Exception e) {
                     Log.d(TAG, "Error getting thread html: " + e.toString());
                 }
+
+                Pattern pattern = Pattern.compile("messageid=" +
+                        Integer.toString(theMessages.get(theMessages.size()-1).getMessage().getMessageId())
+                        + "&amp;sid=([^']+)'");
+                Matcher matcher = pattern.matcher(threadHtml);
+
+                if (matcher.find() && matcher.group(1) != null) {
+                    mSid = matcher.group(1);
+                } else {
+                    Log.d(TAG, "couldn't find sid");
+                }
+
             }
 
             for (RichMessageHolder m : theMessages) {
+
                 m.prepDisplayNameForDisplay();
                 m.prepBodyForDisplayShort(mActivity, null);
             }

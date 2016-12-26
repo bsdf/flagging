@@ -24,6 +24,7 @@ public class ViewMessageActivity extends AppCompatActivity {
     public static final String EXTRA_BOARD_ID = "com.theporouscity.android.flagging.board_id";
     public static final String EXTRA_THREAD_ID = "com.theporouscity.android.flagging.thread_id";
     public static final String EXTRA_THREAD_NAME = "com.theporouscity.android.flagging.thread_name";
+    public static final String EXTRA_THREAD_SID = "com.theporouscity.android.flagging.thread_sid";
     public static final String TAG = "ViewMessageActivity";
 
     @Override
@@ -40,19 +41,22 @@ public class ViewMessageActivity extends AppCompatActivity {
             int boardId = getIntent().getIntExtra(EXTRA_BOARD_ID, -1);
             int threadId = getIntent().getIntExtra(EXTRA_THREAD_ID, -1);
             String threadName = getIntent().getStringExtra(EXTRA_THREAD_NAME);
-            fragment = ViewMessageFragment.newInstance(message, boardId, threadId, threadName);
+            String sid = getIntent().getStringExtra(EXTRA_THREAD_SID);
+            fragment = ViewMessageFragment.newInstance(message, boardId, threadId, threadName, sid);
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
                     .commit();
         }
     }
 
-    public static Intent newIntent(Context packageContent, Message message, int boardId, int threadId, String threadName) {
+    public static Intent newIntent(Context packageContent, Message message, int boardId, int threadId,
+                                   String threadName, String threadSid) {
         Intent intent = new Intent(packageContent, ViewMessageActivity.class);
         intent.putExtra(EXTRA_MESSAGE, message);
         intent.putExtra(EXTRA_BOARD_ID, boardId);
         intent.putExtra(EXTRA_THREAD_ID, threadId);
         intent.putExtra(EXTRA_THREAD_NAME, threadName);
+        intent.putExtra(EXTRA_THREAD_SID, threadSid);
         return intent;
     }
 

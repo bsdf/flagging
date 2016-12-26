@@ -448,7 +448,7 @@ public class ViewThreadFragment extends Fragment {
         private void openMessage() {
             Intent intent = ViewMessageActivity.newIntent(getActivity(),
                     mRichMessageHolder.getMessage(), mBoardId, mThreadId,
-                    mThreadHolder.getThread().getTitle());
+                    mThreadHolder.getThread().getTitle(), mThreadHolder.getSid());
             startActivity(intent);
         }
     }
@@ -618,7 +618,7 @@ public class ViewThreadFragment extends Fragment {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-            View view = null;
+            View view;
 
             switch (viewType) {
 

@@ -57,6 +57,10 @@ public class ILXRequestor {
         void onComplete(AsyncTaskResult<Boolean> result);
     }
 
+    public interface AddBookmarkCallback {
+        void onComplete(AsyncTaskResult<Boolean> result);
+    }
+
     public ILXRequestor(Serializer mSerializer, OkHttpClient sharedClient) {
         this.mSerializer = mSerializer;
         this.mSharedHttpClient = sharedClient;
@@ -115,6 +119,22 @@ public class ILXRequestor {
             mBookmarksCallbacks.remove(callback);
             callback.onComplete(result);
         }
+    }
+
+    public void addBookmark(int boardId, int threadId, int messageId, String threadSid,
+        Context context, AddBookmarkCallback callback) {
+
+        String url = getCurrentAccount().getAddBookmarkUrl(boardId, threadId, messageId, threadSid);
+
+        new LoggedInRequestTask(getCurrentAccount(),
+                getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+                    if (result.getError() == null) {
+                        callback.onComplete(new AsyncTaskResult<>(true));
+                    } else {
+                        callback.onComplete(new AsyncTaskResult<>(result.getError()));
+                    }
+                }).execute(url);
     }
 
     public UserAppSettings getUserAppSettings(Context context) {

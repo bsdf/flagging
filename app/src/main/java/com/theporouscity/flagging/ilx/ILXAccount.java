@@ -197,6 +197,15 @@ public class ILXAccount implements Parcelable {
         return getUrlHelper("/BookmarksControllerServlet?xml=true");
     }
 
+    public String getAddBookmarkUrl(int boardId, int threadId, int messageId, String threadSid) {
+        String url = getUrlHelper("/AddBookmarkControllerServlet");
+        url = url + "?boardid=" + Integer.toString(boardId);
+        url = url + "&threadid=" + Integer.toString(threadId);
+        url = url + "&messageid=" + Integer.toString(messageId);
+        url = url + "&sid=" + threadSid;
+        return url;
+    }
+
     private String getUrlHelper(String path) {
         return getBaseUrlPath() + path;
     }

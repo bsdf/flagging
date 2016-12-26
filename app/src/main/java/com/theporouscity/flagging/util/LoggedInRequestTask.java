@@ -45,7 +45,7 @@ public class LoggedInRequestTask extends AsyncTask<String, Void, AsyncTaskResult
 
             Response response = mHttpClient.newCall(request).execute();
             if (response.code() != 200) {
-                return new AsyncTaskResult<>(new ServerInaccessibleException("Problem reaching server"));
+                return new AsyncTaskResult<>(new ServerInaccessibleException("Server error"));
             }
             resultString = response.body().string();
 

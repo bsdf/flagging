@@ -23,7 +23,6 @@ public class RichMessageHolder {
     private Drawable mEmptyPlaceholderImage;
     private int mlinkColor;
     private ILXTextOutputFormatter mILXTextOutputFormatter;
-    private String mSid;
 
     public RichMessageHolder(ILXTextOutputFormatter mILXTextOutputFormatter, Message message,
                              Drawable youtubePlaceholderImage, Drawable emptyPlaceholderImage, int linkColor) {
@@ -37,14 +36,6 @@ public class RichMessageHolder {
 
     public Message getMessage() {
         return mMessage;
-    }
-
-    public String getSid() {
-        return mSid;
-    }
-
-    public void setSid(String mSid) {
-        this.mSid = mSid;
     }
 
     public Spanned getDisplayNameForDisplay() {
