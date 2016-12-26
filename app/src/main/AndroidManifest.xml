@@ -25,10 +25,7 @@
         <activity android:name=".ViewMessageActivity" />
         <activity android:name=".SettingsActivity" />
         <activity android:name=".AddEditAccountActivity" />
-        <activity
-            android:name=".ThreadReplyActivity"
-            android:label="@string/title_activity_thread_reply"
-            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".ThreadReplyActivity" />
         <activity android:name=".StartActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
