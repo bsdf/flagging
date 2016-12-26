@@ -28,13 +28,12 @@ import com.theporouscity.flagging.ilx.Bookmark;
 import com.theporouscity.flagging.ilx.Bookmarks;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThread;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
+import com.theporouscity.flagging.util.AsyncTaskResult;
 import com.theporouscity.flagging.util.ILXDateOutputFormatter;
 import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.UserAppSettings;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -81,7 +80,6 @@ public class ViewThreadsFragment extends Fragment {
     private RecentlyUpdatedThreads mThreads = null;
     private boolean mFetchingThreads;
     private boolean mFetchingBoards;
-    private boolean mHasBookmarks;
     private Bookmarks mBookmarks = null;
 
     public int getMode() {
@@ -162,63 +160,69 @@ public class ViewThreadsFragment extends Fragment {
 
     private void updateThreads() {
         mFetchingThreads = true;
-        try {
-            if (mMode == MODE_BOARD) {
-                mILXRequestor.getRecentlyUpdatedThreads(getContext(), mBoard.getId(),
-                        (RecentlyUpdatedThreads threads) -> {
-                            updateThreadsReady(threads);
-                        });
-            } else if (mMode == MODE_SNA) {
-                mILXRequestor.getSiteNewAnswers(getContext(),
-                        (RecentlyUpdatedThreads threads) -> {
-                            updateThreadsReady(threads);
-                        });
-            } else if (mMode == MODE_MARKS) {
-                mILXRequestor.getBookmarks(getContext(), (Bookmarks bookmarks) -> {
-                    updateThreadsReady(bookmarks);
-                });
-            }
-        } catch (Exception e) {
-            showError(e);
+
+        if (mMode == MODE_BOARD) {
+            mILXRequestor.getRecentlyUpdatedThreads(getContext(), mBoard.getId(),
+                    (AsyncTaskResult<RecentlyUpdatedThreads> result) -> {
+                        updateThreadsReady(result);
+                    });
+        } else if (mMode == MODE_SNA) {
+            mILXRequestor.getSiteNewAnswers(getContext(),
+                    (AsyncTaskResult<RecentlyUpdatedThreads> result) -> {
+                        updateThreadsReady(result);
+                    });
+        } else if (mMode == MODE_MARKS) {
+            mILXRequestor.getBookmarks(getContext(), (AsyncTaskResult<Bookmarks> result) -> {
+                updateBookmarksReady(result);
+            });
         }
     }
 
     private void getBoards() {
         mFetchingBoards = true;
-        try {
-            if (mMode == MODE_SNA || mMode == MODE_MARKS) {
-                mILXRequestor.getBoards(
-                        (Boards boards) -> {
-                            getBoardsReady(boards);
-                        }, getContext());
-            }
-        } catch (Exception e) {
-            showError(e);
+
+        if (mMode == MODE_SNA || mMode == MODE_MARKS) {
+            mILXRequestor.getBoards(
+                    (AsyncTaskResult<Boards> result) -> {
+                        getBoardsReady(result);
+                    }, getContext());
         }
     }
 
-    private void getBoardsReady(Boards boards) {
+    private void getBoardsReady(AsyncTaskResult<Boards> result) {
         mFetchingBoards = false;
-        mBoards = boards;
-        updateUI();
+        if (result.getError() == null) {
+            mBoards = result.getResult();
+            updateUI();
+        } else {
+            showError(result.getError());
+        }
     }
 
-    private void updateThreadsReady(RecentlyUpdatedThreads threads) {
+    private void updateThreadsReady(AsyncTaskResult<RecentlyUpdatedThreads> result) {
         mFetchingThreads = false;
-        mThreads = threads;
         if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
-        updateUI();
+        if (result.getError() == null) {
+            mThreads = result.getResult();
+            updateUI();
+        } else {
+            showError(result.getError());
+        }
     }
 
-    private void updateThreadsReady(Bookmarks bookmarks) {
+    private void updateBookmarksReady(AsyncTaskResult<Bookmarks> result) {
         mFetchingThreads = false;
-        mBookmarks = bookmarks;
         if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
-        updateUI();
+        if (result.getError() == null) {
+            mBookmarks = result.getResult();
+            updateUI();
+        } else {
+            showError(result.getError());
+        }
     }
 
     private void updateUI() {
@@ -385,24 +389,29 @@ public class ViewThreadsFragment extends Fragment {
 
             if (holder instanceof ThreadHolder) {
                 ((ThreadHolder) holder).bindThread(
-                        (RecentlyUpdatedThread) mThreads.getRecentlyUpdatedThreads().get(position));
+                        mThreads.getRecentlyUpdatedThreads().get(position));
             } else if (mMode == MODE_MARKS) {
                 ((BookmarkHolder) holder).bindBookmark(mBookmarks.getBookmarks().get(position));
             }
         }
 
         @Override
-        public ThreadHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-            View view = null;
+            View view;
+
             if (mMode == MODE_BOARD) {
                 view = layoutInflater.inflate(R.layout.list_item_thread, parent, false);
+                return new ThreadHolder(view);
             } else if (mMode == MODE_SNA) {
                 view = layoutInflater.inflate(R.layout.list_item_sna_thread, parent, false);
+                return new ThreadHolder(view);
             } else if (mMode == MODE_MARKS) {
                 view = layoutInflater.inflate(R.layout.list_item_bookmark, parent, false);
+                return new BookmarkHolder(view);
             }
-            return new ThreadHolder(view);
+
+            return null;
         }
 
         @Override

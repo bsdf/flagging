@@ -9,9 +9,6 @@ import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.ILXAccount;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import okhttp3.Cookie;
 
 /**
  * Created by bergstroml on 9/28/16.
@@ -23,6 +20,7 @@ public class UserAppSettings {
     private final static String SETTINGS_TAG = "FlaggingSettings";
     private final static String ACCOUNTS_KEY = "AccountsKey";
     private ArrayList<ILXAccount> mAccounts;
+    private ILXAccount mCurrentAccount;
 
     public UserAppSettings(Context context) {
 
@@ -56,7 +54,7 @@ public class UserAppSettings {
             return mAccounts;
         }
 
-        String[] accountIds = serializedAccountIds.split("-");
+        String[] accountIds = serializedAccountIds.split(":");
         for (int i = 0; i < accountIds.length; i++) {
             String serializedAccount = preferences.getString(accountIds[i], null);
             if (serializedAccount == null) {
@@ -67,7 +65,17 @@ public class UserAppSettings {
                     accountVals[2], accountVals[3]));
         }
 
+        mCurrentAccount = mAccounts.get(0);
+
         return mAccounts;
+    }
+
+    public ILXAccount getCurrentAccount() {
+        return mCurrentAccount;
+    }
+
+    public void setCurrentAccount(ILXAccount mCurrentAccount) {
+        this.mCurrentAccount = mCurrentAccount;
     }
 
     public void addAccountAndPersist(Context context, ILXAccount account) {
@@ -75,6 +83,13 @@ public class UserAppSettings {
         if (!mAccounts.contains(account)) {
             mAccounts.add(account);
         }
+
+        String serializedAccountIds = "";
+        for (ILXAccount anAccount : mAccounts) {
+            serializedAccountIds = serializedAccountIds + anAccount.getId() + ":";
+        }
+        serializedAccountIds = serializedAccountIds.substring(0, serializedAccountIds.length() - 1);
+        persistString(ACCOUNTS_KEY, serializedAccountIds, context);
 
         persistString(account.getId(),
                         account.getDomain() + ":" +
@@ -116,12 +131,6 @@ public class UserAppSettings {
             }
         }
         return false;
-    }
-
-    // TODO remove once we have real bookmarks
-    public String getString(String key, Context context) {
-        SharedPreferences preferences = getPreferences(context);
-        return preferences.getString(key, null);
     }
 
     public void persistString(String key, String value, Context context) {

@@ -7,8 +7,6 @@ import android.util.Log;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-import java.lang.*;
-
 /**
  * Created by bergstroml on 11/4/16.
  */
@@ -18,50 +16,36 @@ public class Bookmark {
     private final static String TAG = "Bookmark";
 
     @Element(name="BoardId")
-    private int boardId;
+    private int BoardId;
 
     @Element(name="ThreadId")
-    private int threadId;
+    private int ThreadId;
 
     @Element(name="MessageId")
-    private int bookmarkedMessageId;
+    private int BookmarkedMessageId;
 
     @Element(name="Title")
-    private String bookmarkThreadTitle;
+    private String Title;
 
     private Thread mCachedThread;
 
-    public Bookmark(int boardId, int threadId, int bookmarkedMessageId) {
-        this.boardId = boardId;
-        this.threadId = threadId;
-        this.bookmarkedMessageId = bookmarkedMessageId;
-    }
-
     public int getBoardId() {
-        return boardId;
-    }
-
-    public void setBoardId(int boardId) {
-        this.boardId = boardId;
+        return BoardId;
     }
 
     public int getThreadId() {
-        return threadId;
-    }
-
-    public void setThreadId(int threadId) {
-        this.threadId = threadId;
+        return ThreadId;
     }
 
     public int getBookmarkedMessageId() {
-        return bookmarkedMessageId;
+        return BookmarkedMessageId;
     }
 
-    public void setBookmarkedMessageId(int bookmarkedMessageId) {
-        this.bookmarkedMessageId = bookmarkedMessageId;
+    public void setBookmarkedMessageId(int BookmarkedMessageId) {
+        this.BookmarkedMessageId = BookmarkedMessageId;
     }
 
-    public Spanned getTitleForDisplay() { return Html.fromHtml(bookmarkThreadTitle.trim()); }
+    public Spanned getTitleForDisplay() { return Html.fromHtml(Title.trim()); }
 
     public void setCachedThread(Thread thread) {
         mCachedThread = thread;

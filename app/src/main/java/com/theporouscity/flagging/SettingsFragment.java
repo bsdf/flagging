@@ -19,8 +19,6 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -110,7 +108,7 @@ public class SettingsFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-
+            Toast.makeText(getContext(), "Add a new account", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -135,7 +133,7 @@ public class SettingsFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            Toast.makeText(getContext(), "No, this doesn't do anything get", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Edit this account", Toast.LENGTH_SHORT).show();
         }
     }
 

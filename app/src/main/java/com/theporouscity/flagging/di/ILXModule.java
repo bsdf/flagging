@@ -3,10 +3,6 @@ package com.theporouscity.flagging.di;
 import android.app.Application;
 import android.content.Context;
 
-import com.franmontiel.persistentcookiejar.ClearableCookieJar;
-import com.franmontiel.persistentcookiejar.PersistentCookieJar;
-import com.franmontiel.persistentcookiejar.cache.SetCookieCache;
-import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor;
 import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.PollClosingDate;
 import com.theporouscity.flagging.util.UserAppSettings;
@@ -55,17 +51,14 @@ public class ILXModule {
     @Singleton
     public OkHttpClient okHttpClient() {
 
-        /*ClearableCookieJar cookieJar =
-                new PersistentCookieJar(new SetCookieCache(), new SharedPrefsCookiePersistor(application.getApplicationContext()));*/
-
         return new OkHttpClient.Builder()
                 .build();
     }
 
     @Provides
     @Singleton
-    public ILXRequestor ilxRequestor(OkHttpClient okHttpClient, Persister persister) {
-        return new ILXRequestor(okHttpClient, persister);
+    public ILXRequestor ilxRequestor(Persister persister, OkHttpClient client) {
+        return new ILXRequestor(persister, client);
     }
 
     @Provides

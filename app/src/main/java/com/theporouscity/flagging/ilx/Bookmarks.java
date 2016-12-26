@@ -12,7 +12,7 @@ import java.util.List;
 @Root(name="Bookmarks")
 public class Bookmarks {
 
-    @ElementList(name="Bookmark")
+    @ElementList(name="Bookmark", inline=true)
     private List<Bookmark> mBookmarks;
 
     public List<Bookmark> getBookmarks() {

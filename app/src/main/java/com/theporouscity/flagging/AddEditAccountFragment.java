@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.theporouscity.flagging.ilx.ILXAccount;
+import com.theporouscity.flagging.util.AsyncTaskResult;
 import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.UserAppSettings;
 
@@ -106,12 +108,14 @@ public class AddEditAccountFragment extends Fragment {
 
     private void handleSave(View v) {
 
-        String newServer = mServerEditText.toString();
-        String newInstance = mInstanceEditText.toString();
-        String newUsername = mUsernameEditText.toString();
-        String newPassword = mPasswordEditText.toString();
+        // TODO sanitize?
 
-        if (mAccount.getDomain() == newServer &&
+        String newServer = mServerEditText.getText().toString();
+        String newInstance = mInstanceEditText.getText().toString();
+        String newUsername = mUsernameEditText.getText().toString();
+        String newPassword = mPasswordEditText.getText().toString();
+
+        if (mAccount != null && mAccount.getDomain() == newServer &&
                 mAccount.getInstance() == newInstance &&
                 mAccount.getUsername() == newUsername &&
                 mAccount.getPassword() == newPassword) {
@@ -125,23 +129,25 @@ public class AddEditAccountFragment extends Fragment {
 
         ILXAccount newAccount = new ILXAccount(newServer, newInstance, newUsername, newPassword);
 
-        try {
-            mILXRequestor.login(newAccount);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), e.toString(), Toast.LENGTH_SHORT).show();
-            return;
-        }
+        mILXRequestor.login(getContext(), newAccount, (AsyncTaskResult<Boolean> result) -> {
+            if (result.getError() == null) {
 
-        Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
-        mILXRequestor.saveAccount(getContext(), newAccount);
+                Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
+                mILXRequestor.saveAccount(getContext(), newAccount);
 
-        if (mNoAccountsYet) {
-            Intent i = new Intent(getContext(), ActivityMainTabs.class);
-            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-        }
+                if (mNoAccountsYet) {
+                    Intent i = new Intent(getContext(), ActivityMainTabs.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(i);
+                }
 
-        getActivity().finish();
+                getActivity().finish();
+
+            } else {
+                Log.d(TAG, result.getError().toString());
+                Toast.makeText(getContext(), result.getError().getLocalizedMessage().toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 

@@ -4,11 +4,15 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.UserAppSettings;
 
 import javax.inject.Inject;
 
 public class StartActivity extends AppCompatActivity {
+
+    @Inject
+    ILXRequestor mIlxRequestor;
 
     @Inject
     UserAppSettings mSettings;
@@ -17,10 +21,9 @@ public class StartActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
-        Intent i = null;
+        Intent i;
         if (mSettings.getAccounts(this) == null || mSettings.getAccounts(this).isEmpty()) {
-            i = AddEditAccountActivity.newIntent(this, null);
-
+            i = AddEditAccountActivity.newIntent(this);
         } else {
             i = new Intent(getApplicationContext(), ActivityMainTabs.class);
         }

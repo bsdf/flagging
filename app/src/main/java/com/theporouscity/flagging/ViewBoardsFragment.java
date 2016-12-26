@@ -10,6 +10,7 @@ import android.support.v7.widget.SwitchCompat;
 
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
+import com.theporouscity.flagging.util.AsyncTaskResult;
 import com.theporouscity.flagging.util.ILXRequestor;
 
 import android.util.Log;
@@ -167,25 +168,26 @@ public class ViewBoardsFragment extends Fragment {
     private void updateBoards() {
 
         mFetching = true;
-        try {
-            mILXRequestor.getBoards((Boards boards) -> {
+
+        mILXRequestor.getBoards((AsyncTaskResult<Boards> result) -> {
+            if (result.getError() == null) {
                 mFetching = false;
-                mBoards = boards;
+                mBoards = result.getResult();
                 if (mBoardsForDisplay == null) {
                     mBoardsForDisplay = new ArrayList<Board>();
                 } else {
                     mBoardsForDisplay.clear();
                 }
-                for (Board board : boards.getBoards()) {
+                for (Board board : mBoards.getBoards()) {
                     if (mEditing || board.isEnabled()) {
                         mBoardsForDisplay.add(board);
                     }
                 }
                 updateUI();
-            }, getContext());
-        } catch (Exception e) {
-            showError(e);
-        }
+            } else {
+                showError(result.getError());
+            }
+        }, getContext());
     }
 
     private void updateUI() {

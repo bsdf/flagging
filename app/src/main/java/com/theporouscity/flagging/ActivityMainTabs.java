@@ -12,9 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.theporouscity.flagging.ilx.Bookmarks;
-import com.theporouscity.flagging.util.CredentialsFailedException;
+import com.theporouscity.flagging.util.AsyncTaskResult;
 import com.theporouscity.flagging.util.ILXRequestor;
-import com.theporouscity.flagging.util.ServerInaccessibleException;
 import com.theporouscity.flagging.util.UserAppSettings;
 
 import android.util.Log;
@@ -58,7 +57,6 @@ public class ActivityMainTabs extends AppCompatActivity {
     UserAppSettings mSettings;
 
     private int mShortAnimationDuration;
-    private boolean mFetchedBookmarks;
     private boolean mHaveBookmarks = false;
 
     @Override
@@ -70,31 +68,22 @@ public class ActivityMainTabs extends AppCompatActivity {
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
         ButterKnife.bind(this);
 
-        if (mSettings.getAccounts(this) == null || mSettings.getAccounts(this).isEmpty()) {
-            Intent i = AddEditAccountActivity.newIntent(this, null);
-            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
-            finish();
-        }
-
-        mFetchedBookmarks = false;
-
-        try {
-            mILXRequestor.getBookmarks(this, (Bookmarks b) ->
-            {
-                mFetchedBookmarks = true;
-                if (b != null) {
+        mILXRequestor.getBookmarks(this, (AsyncTaskResult<Bookmarks> result) ->
+        {
+            if (result.getError() == null) {
+                if (!result.getResult().getBookmarks().isEmpty()){
                     mHaveBookmarks = true;
+                } else {
+                    mHaveBookmarks = false;
                 }
-            });
-        } catch (Exception e) {
-            Log.d(TAG, e.toString());
-            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
-        }
+            } else {
+                Log.d(TAG, result.getError().toString());
+                Toast.makeText(this, result.getError().toString(), Toast.LENGTH_SHORT).show();
+            }
 
-        setupViewPager(mViewPager, savedInstanceState);
-
-        mTabLayout.setupWithViewPager(mViewPager);
+            setupViewPager(mViewPager);
+            mTabLayout.setupWithViewPager(mViewPager);
+        });
 
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(
@@ -119,7 +108,7 @@ public class ActivityMainTabs extends AppCompatActivity {
     }
 
     // can only modify # of tabs on UI thread
-    private void setupViewPager(ViewPager viewPager, Bundle savedInstanceState) {
+    private void setupViewPager(ViewPager viewPager) {
 
         Log.d(TAG, System.identityHashCode(this) + "setupViewPager");
 

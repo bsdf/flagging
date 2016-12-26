@@ -8,6 +8,7 @@ import com.theporouscity.flagging.ViewBoardsFragment;
 import com.theporouscity.flagging.ViewMessageFragment;
 import com.theporouscity.flagging.ViewThreadFragment;
 import com.theporouscity.flagging.ViewThreadsFragment;
+import com.theporouscity.flagging.ilx.ILXAccount;
 
 import javax.inject.Singleton;
 

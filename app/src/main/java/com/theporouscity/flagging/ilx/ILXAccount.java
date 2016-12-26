@@ -1,20 +1,21 @@
 package com.theporouscity.flagging.ilx;
 
 import android.app.Application;
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.franmontiel.persistentcookiejar.ClearableCookieJar;
 import com.franmontiel.persistentcookiejar.PersistentCookieJar;
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache;
+import com.theporouscity.flagging.FlaggingApplication;
+import com.theporouscity.flagging.di.ILXComponent;
 import com.theporouscity.flagging.util.AccountCookiePersistor;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
-import okhttp3.Cookie;
 import okhttp3.OkHttpClient;
 
 /**
@@ -31,24 +32,15 @@ public class ILXAccount implements Parcelable {
     private String mPassword;
     private String mSessionId = null;
 
-    @Inject
-    public OkHttpClient mSharedHttpClient;
-
-    @Inject
-    public Application mApplication;
-
     private OkHttpClient mAccountHttpClient = null;
 
-    public OkHttpClient getHttpClient() {
+    public OkHttpClient getHttpClient(Context context, OkHttpClient sharedClient) {
         if (mAccountHttpClient == null) {
-            if (mSharedHttpClient == null) {
-                return null;
-            }
 
             ClearableCookieJar cookieJar =
-                new PersistentCookieJar(new SetCookieCache(), new AccountCookiePersistor(mApplication.getApplicationContext(), this));
+                new PersistentCookieJar(new SetCookieCache(), new AccountCookiePersistor(context, this));
 
-            mAccountHttpClient = mSharedHttpClient.newBuilder()
+            mAccountHttpClient = sharedClient.newBuilder()
                     .cookieJar(cookieJar)
                     .build();
 
@@ -161,5 +153,51 @@ public class ILXAccount implements Parcelable {
         setUsername(parcel.readString());
         setPassword(parcel.readString());
         setSessionId(parcel.readString());
+    }
+
+    private String getBaseUrlPath() {
+        return "http://" + getDomain() + "/" + getInstance();
+    }
+
+    public String getBoardsListUrl() {
+        return getUrlHelper("/BoardsXmlControllerServlet");
+    }
+
+    public String getUpdatedThreadsUrl(int boardId) {
+        return getUrlHelper("/NewAnswersControllerServlet?xml=true&boardid=" + Integer.toString(boardId));
+    }
+
+    public String getThreadUrl(int boardId, int threadId) {
+        return getUrlHelper("/ThreadSelectedControllerServlet?xml=true&boardid="
+            + Integer.toString(boardId) + "&threadid=" + Integer.toString(threadId));
+    }
+
+    public String getThreadHtmlUrl(int boardId, int threadId) {
+        return getUrlHelper("/ThreadSelectedControllerServlet?boardid="
+                + Integer.toString(boardId) + "&threadid=" + Integer.toString(threadId));
+    }
+
+    public String getSnaUrl() {
+        return getUrlHelper("/SiteNewAnswersControllerServlet?xml=true");
+    }
+
+    public String getLoginPageUrl() {
+        return getUrlHelper("/Pages/login.jsp");
+    }
+
+    public String getLoginControllerUrl() {
+        return getUrlHelper("/LoginControllerServlet");
+    }
+
+    public String getIndexUrl() {
+        return getUrlHelper("/index.jsp");
+    }
+
+    public String getBookmarksUrl() {
+        return getUrlHelper("/BookmarksControllerServlet?xml=true");
+    }
+
+    private String getUrlHelper(String path) {
+        return getBaseUrlPath() + path;
     }
 }
