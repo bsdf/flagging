@@ -64,6 +64,7 @@ public class ThreadReplyFragment extends Fragment {
 
         mReplyFab.setOnClickListener(v -> {
             Log.d(TAG, "fab clicked");
+            mILXRequestor.postAnswer(mThread, "hello world");
 //            mILXRequestor.postAnswer();
         });
 
