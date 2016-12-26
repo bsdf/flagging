@@ -35,6 +35,9 @@ import com.theporouscity.flagging.util.ILXDateOutputFormatter;
 import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.UserAppSettings;
 
+import org.parceler.Parcels;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -92,7 +95,7 @@ public class ViewThreadsFragment extends Fragment {
         ViewThreadsFragment fragment = new ViewThreadsFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_MODE, MODE_BOARD);
-        args.putParcelable(ARG_BOARD, board);
+        args.putParcelable(ARG_BOARD, Parcels.wrap(board));
         fragment.setArguments(args);
         return fragment;
     }
@@ -118,7 +121,7 @@ public class ViewThreadsFragment extends Fragment {
         if (getArguments() != null) {
             if (getArguments().getInt(ARG_MODE) == MODE_BOARD) {
                 mMode = MODE_BOARD;
-                mBoard = getArguments().getParcelable(ARG_BOARD);
+                mBoard = Parcels.unwrap(getArguments().getParcelable(ARG_BOARD));
             } else {
                 if (getArguments().getInt(ARG_MODE) == MODE_SNA) {
                     mMode = MODE_SNA;

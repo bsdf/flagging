@@ -1,19 +1,22 @@
 package com.theporouscity.flagging.util;
 
+import org.parceler.Parcel;
+import org.parceler.ParcelConstructor;
+
 import java.util.Date;
 
 /**
  * Created by bergstroml on 6/29/16.
  */
 
+@Parcel
 public class PollClosingDate {
+    Date date;
 
-    private Date mDate;
-
+    @ParcelConstructor
     public PollClosingDate(Date date) {
-        mDate = date;
+        this.date = date;
     }
 
-    public Date getDate() { return mDate; }
-
+    public Date getDate() { return date; }
 }

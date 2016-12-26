@@ -328,7 +328,7 @@ public class ViewThreadFragment extends Fragment {
     }
 
     private void fabReplyHandler() {
-        Intent intent = ThreadReplyActivity.newIntent(getActivity(), mBoardId, mThreadId, mThreadHolder.getThread().getTitle());
+        Intent intent = ThreadReplyActivity.newIntent(getActivity(), mThreadHolder.getThread());
         startActivity(intent);
 
         Log.d(TAG, "inside fabReplyHandler");

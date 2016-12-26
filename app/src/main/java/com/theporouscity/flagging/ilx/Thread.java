@@ -5,6 +5,7 @@ import android.text.Spanned;
 
 import com.theporouscity.flagging.util.PollClosingDate;
 
+import org.parceler.Parcel;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -17,71 +18,59 @@ import java.util.Set;
 /**
  * Created by bergstroml on 2/29/16.
  */
+@Parcel
 @Root(name="Thread")
 public class Thread {
     @Element(name="URI")
-    private String URI;
+    String URI;
 
     @Element(name="BoardId")
-    private int BoardId;
+    int BoardId;
 
     @Element(name="ThreadId")
-    private int ThreadId;
+    int ThreadId;
 
     @Element(name="MessageCount")
-    private int MessageCount;
+    int MessageCount;
 
     @Element(name="Title",data=true)
-    private String Title;
+    String Title;
 
     @Element(name="CreatorId",data=true)
-    private String CreatorId;
+    String CreatorId;
 
     @Element(name="CreatedOn")
-    private Date CreatedOn;
+    Date CreatedOn;
 
     @Element(name="Key")
-    private String Key;
+    String Key;
 
     @Element(name="LastUpdated")
-    private Date LastUpdated;
+    Date LastUpdated;
 
     @Element(name="Deleted")
-    private Boolean Deleted;
+    Boolean Deleted;
 
     @Element(name="Worksafe")
-    private Boolean Worksafe;
+    Boolean Worksafe;
 
     @Element(name="Locked")
-    private Boolean Locked;
+    Boolean Locked;
 
     @Element(name="Poll")
-    private Boolean Poll;
+    Boolean Poll;
 
     @Element(name="PollClosingDate",required=false)
-    private PollClosingDate PollClosingDate;
+    PollClosingDate PollClosingDate;
 
     @ElementList(name="PollResults",required=false)
-    private List<Result> PollResults;
+    List<Result> PollResults;
 
     @Element(name="PollOptions",required=false)
-    private PollOptions PollOptions;
+    PollOptions PollOptions;
 
     @ElementList(name="Messages")
-    private List<Message> Messages;
-
-    /*public Thread(int boardId, int threadId, String title, Date createdOn, Date lastUpdated, Boolean deleted, Boolean worksafe, Boolean locked, Boolean poll, List<Message> messages) {
-        BoardId = boardId;
-        ThreadId = threadId;
-        Title = title;
-        CreatedOn = createdOn;
-        LastUpdated = lastUpdated;
-        Deleted = deleted;
-        Worksafe = worksafe;
-        Locked = locked;
-        Poll = poll;
-        Messages = messages;
-    }*/
+    List<Message> Messages;
 
     public String getURI() { return URI; }
 
