@@ -6,11 +6,13 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
+import com.theporouscity.flagging.ilx.Thread;
+
+import org.parceler.Parcels;
+
 public class ThreadReplyActivity extends AppCompatActivity {
 
-    public static final String EXTRA_BOARD_ID = "com.theporouscity.android.flagging.board_id";
-    public static final String EXTRA_THREAD_ID = "com.theporouscity.android.flagging.thread_id";
-    public static final String EXTRA_THREAD_NAME = "com.theporouscity.android.flagging.thread_name";
+    public static final String EXTRA_THREAD = "com.theporouscity.android.flagging.thread";
     public static final String TAG = "ThreadReplyActivity";
 
     @Override
@@ -22,22 +24,18 @@ public class ThreadReplyActivity extends AppCompatActivity {
         ThreadReplyFragment fragment = (ThreadReplyFragment) fm.findFragmentById(R.id.fragment_container);
 
         if (fragment == null) {
-            int boardId = getIntent().getIntExtra(EXTRA_BOARD_ID, -1);
-            int threadId = getIntent().getIntExtra(EXTRA_THREAD_ID, -1);
-            String threadName = getIntent().getStringExtra(EXTRA_THREAD_NAME);
+            Thread thread = Parcels.unwrap(getIntent().getParcelableExtra(EXTRA_THREAD));
 
-            fragment = ThreadReplyFragment.newInstance(boardId, threadId, threadName);
+            fragment = ThreadReplyFragment.newInstance(thread);
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
                     .commit();
         }
     }
 
-    public static Intent newIntent(Context packageContent, int boardId, int threadId, String threadName) {
+    public static Intent newIntent(Context packageContent, Thread thread) {
         Intent intent = new Intent(packageContent, ThreadReplyActivity.class);
-        intent.putExtra(EXTRA_BOARD_ID, boardId);
-        intent.putExtra(EXTRA_THREAD_ID, threadId);
-        intent.putExtra(EXTRA_THREAD_NAME, threadName);
+        intent.putExtra(EXTRA_THREAD, Parcels.wrap(thread));
         return intent;
     }
 }

@@ -1,8 +1,7 @@
 package com.theporouscity.flagging.ilx;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
+import org.parceler.Parcel;
+import org.parceler.ParcelConstructor;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
@@ -11,105 +10,65 @@ import java.util.Date;
 /**
  * Created by bergstroml on 2/29/16.
  */
+@Parcel
 @Root
-public class Message implements Parcelable {
+public class Message {
 
-    @Element
-    private int MessageId;
+    @Element(name = "MessageId")
+    int messageId;
 
-    @Element
-    private Boolean Deleted;
+    @Element(name = "Deleted")
+    Boolean deleted;
 
-    @Element
-    private Date Timestamp;
+    @Element(name = "Timestamp")
+    Date timestamp;
 
-    @Element(data=true)
-    private String DisplayName;
+    @Element(data = true, name = "DisplayName")
+    String displayName;
 
-    @Element(data=true)
-    private String Body;
+    @Element(data = true, name = "Body")
+    String body;
 
+    @ParcelConstructor
     public Message(@Element(name="MessageId") int messageId,
                    @Element(name="Deleted") Boolean deleted,
                    @Element(name="Timestamp") Date timestamp,
                    @Element(name="DisplayName") String displayName,
                    @Element(name="Body") String body) {
-        MessageId = messageId;
-        Deleted = deleted;
-        Timestamp = timestamp;
-        DisplayName = displayName;
-        Body = body;
+        this.messageId = messageId;
+        this.deleted = deleted;
+        this.timestamp = timestamp;
+        this.displayName = displayName;
+        this.body = body;
     }
 
-    public int getMessageId() { return MessageId; }
+    public int getMessageId() { return messageId; }
 
-    public Boolean getDeleted() { return Deleted; }
+    public Boolean getDeleted() { return deleted; }
 
-    public Date getTimestamp() { return Timestamp; }
+    public Date getTimestamp() { return timestamp; }
 
-    public String getDisplayName() { return DisplayName; }
+    public String getDisplayName() { return displayName; }
 
-    public String getBody() { return Body; }
+    public String getBody() { return body; }
 
     public void setMessageId(int messageId) {
-        MessageId = messageId;
+        this.messageId = messageId;
     }
 
     public void setDeleted(Boolean deleted) {
-        Deleted = deleted;
+        this.deleted = deleted;
     }
 
     public void setTimestamp(Date timestamp) {
-        Timestamp = timestamp;
+        this.timestamp = timestamp;
     }
 
     public void setDisplayName(String displayName) {
-        DisplayName = displayName;
+        this.displayName = displayName;
     }
 
     public void setBody(String body) {
-        Body = body;
+        this.body = body;
     }
-
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeInt(MessageId);
-        if (Deleted) {
-            parcel.writeInt(1);
-        } else {
-            parcel.writeInt(0);
-        }
-        parcel.writeLong(Timestamp.getTime());
-        parcel.writeString(DisplayName);
-        parcel.writeString(Body);
-    }
-
-    private Message(Parcel parcel) {
-        MessageId = parcel.readInt();
-        if (parcel.readInt() == 1) {
-            Deleted = true;
-        } else {
-            Deleted = false;
-        }
-        Timestamp = new Date(parcel.readLong());
-        DisplayName = parcel.readString();
-        Body = parcel.readString();
-    }
-
-    // this is used to regenerate your object. All Parcelables must have a CREATOR that implements these two methods
-    public static final Parcelable.Creator<Message> CREATOR = new Parcelable.Creator<Message>() {
-        public Message createFromParcel(Parcel in) {
-            return new Message(in);
-        }
-
-        public Message[] newArray(int size) {
-            return new Message[size];
-        }
-    };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
 }

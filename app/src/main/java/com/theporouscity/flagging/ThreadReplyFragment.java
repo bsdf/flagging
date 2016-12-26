@@ -10,6 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.theporouscity.flagging.ilx.Thread;
+
+import org.parceler.Parcels;
+
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -18,10 +22,7 @@ import butterknife.ButterKnife;
 public class ThreadReplyFragment extends Fragment {
 
     private static final String TAG = "ThreadReplyFragment";
-
-    private static final String ARG_BOARD_ID = "board_id";
-    private static final String ARG_THREAD_ID = "thread_id";
-    private static final String ARG_THREAD_NAME = "thread_name";
+    private static final String ARG_THREAD = "thread";
 
     @BindView(R.id.fragment_thread_reply_title)
     TextView mReplyTitle;
@@ -32,16 +33,12 @@ public class ThreadReplyFragment extends Fragment {
     @Inject
     ILXRequestor mILXRequestor;
 
-    private int mBoardId;
-    private int mThreadId;
-    private String mThreadName;
+    private Thread mThread;
 
-    public static ThreadReplyFragment newInstance(int boardId, int threadId, String threadName) {
+    public static ThreadReplyFragment newInstance(Thread thread) {
         ThreadReplyFragment fragment = new ThreadReplyFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_BOARD_ID, boardId);
-        args.putInt(ARG_THREAD_ID, threadId);
-        args.putString(ARG_THREAD_NAME, threadName);
+        args.putParcelable(ARG_THREAD, Parcels.wrap(thread));
         fragment.setArguments(args);
         return fragment;
     }
@@ -52,9 +49,7 @@ public class ThreadReplyFragment extends Fragment {
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
         if (getArguments() != null) {
-            mBoardId = getArguments().getInt(ARG_BOARD_ID);
-            mThreadId = getArguments().getInt(ARG_THREAD_ID);
-            mThreadName = getArguments().getString(ARG_THREAD_NAME);
+            mThread = Parcels.unwrap(getArguments().getParcelable(ARG_THREAD));
         }
     }
 
@@ -64,11 +59,12 @@ public class ThreadReplyFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_thread_reply, container, false);
         ButterKnife.bind(this, view);
 
-        mReplyTitle.setText(Html.fromHtml(mThreadName));
+        mReplyTitle.setText(Html.fromHtml(mThread.getTitle()));
         getActivity().setTitle("Reply to Thread");
 
         mReplyFab.setOnClickListener(v -> {
-            Log.d(TAG, "ASDASDASDASD CLICKED!!!");
+            Log.d(TAG, "fab clicked");
+//            mILXRequestor.postAnswer();
         });
 
         return view;

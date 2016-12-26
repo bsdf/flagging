@@ -26,6 +26,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.parceler.Parcels;
+
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -77,7 +79,7 @@ public class ViewMessageFragment extends Fragment {
                                                   String threadName, String threadSid) {
         ViewMessageFragment fragment = new ViewMessageFragment();
         Bundle args = new Bundle();
-        args.putParcelable(ARG_MESSAGE, message);
+        args.putParcelable(ARG_MESSAGE, Parcels.wrap(message));
         args.putInt(ARG_BOARD_ID, boardId);
         args.putInt(ARG_THREAD_ID, threadId);
         args.putString(ARG_THREAD_NAME, threadName);
@@ -92,7 +94,7 @@ public class ViewMessageFragment extends Fragment {
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
         if (getArguments() != null) {
-            mMessage = (Message) getArguments().getParcelable(ARG_MESSAGE);
+            mMessage = Parcels.unwrap(getArguments().getParcelable(ARG_MESSAGE));
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
             mThreadName = getArguments().getString(ARG_THREAD_NAME);

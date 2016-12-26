@@ -14,6 +14,8 @@ import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
 
+import org.parceler.Parcels;
+
 /**
  * Created by bergstroml on 7/21/16.
  */
@@ -37,7 +39,7 @@ public class ViewMessageActivity extends AppCompatActivity {
         ViewMessageFragment fragment = (ViewMessageFragment) fm.findFragmentById(R.id.fragment_container);
 
         if (fragment == null) {
-            Message message = getIntent().getParcelableExtra(EXTRA_MESSAGE);
+            Message message = Parcels.unwrap(getIntent().getParcelableExtra(EXTRA_MESSAGE));
             int boardId = getIntent().getIntExtra(EXTRA_BOARD_ID, -1);
             int threadId = getIntent().getIntExtra(EXTRA_THREAD_ID, -1);
             String threadName = getIntent().getStringExtra(EXTRA_THREAD_NAME);
@@ -52,7 +54,7 @@ public class ViewMessageActivity extends AppCompatActivity {
     public static Intent newIntent(Context packageContent, Message message, int boardId, int threadId,
                                    String threadName, String threadSid) {
         Intent intent = new Intent(packageContent, ViewMessageActivity.class);
-        intent.putExtra(EXTRA_MESSAGE, message);
+        intent.putExtra(EXTRA_MESSAGE, Parcels.wrap(message));
         intent.putExtra(EXTRA_BOARD_ID, boardId);
         intent.putExtra(EXTRA_THREAD_ID, threadId);
         intent.putExtra(EXTRA_THREAD_NAME, threadName);

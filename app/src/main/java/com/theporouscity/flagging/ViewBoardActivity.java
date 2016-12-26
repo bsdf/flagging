@@ -10,6 +10,8 @@ import com.theporouscity.flagging.R;
 
 import com.theporouscity.flagging.ilx.Board;
 
+import org.parceler.Parcels;
+
 /**
  * Created by bergstroml on 6/6/16.
  */
@@ -27,7 +29,7 @@ public class ViewBoardActivity extends AppCompatActivity {
         ViewThreadsFragment fragment = (ViewThreadsFragment) fm.findFragmentById(R.id.fragment_container);
 
         if (fragment == null) {
-            Board board = (Board) getIntent().getParcelableExtra(EXTRA_BOARD);
+            Board board = Parcels.unwrap(getIntent().getParcelableExtra(EXTRA_BOARD));
             fragment = ViewThreadsFragment.newInstance(board);
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
@@ -37,7 +39,7 @@ public class ViewBoardActivity extends AppCompatActivity {
 
     public static Intent newIntent(Context packageContent, Board board) {
         Intent intent = new Intent(packageContent, ViewBoardActivity.class);
-        intent.putExtra(EXTRA_BOARD, board);
+        intent.putExtra(EXTRA_BOARD, Parcels.wrap(board));
         return intent;
     }
 

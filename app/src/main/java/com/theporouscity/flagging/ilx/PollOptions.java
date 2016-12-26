@@ -2,6 +2,8 @@ package com.theporouscity.flagging.ilx;
 
 import android.util.Log;
 
+import org.parceler.Parcel;
+import org.parceler.ParcelConstructor;
 import org.simpleframework.xml.ElementList;
 
 import java.util.ArrayList;
@@ -11,15 +13,16 @@ import java.util.List;
  * Created by bergstroml on 6/28/16.
  */
 
+@Parcel
 public class PollOptions {
 
-    @ElementList(entry="Id",inline=true)
-    private List<Integer> Ids;
+    @ElementList(entry="id",inline=true)
+    List<Integer> Ids;
 
-    @ElementList(entry="OptionText",inline=true)
-    private List<String> OptionTexts;
+    @ElementList(entry="optionText",inline=true)
+    List<String> OptionTexts;
 
-    private List<PollOption> PollOptions;
+    List<PollOption> PollOptions;
 
     public List<Integer> getIds() { return Ids; }
 
@@ -45,17 +48,19 @@ public class PollOptions {
         return PollOptions;
     }
 
-    public class PollOption {
-        private int Id;
-        private String OptionText;
+    @Parcel
+    public static class PollOption {
+        int id;
+        String optionText;
 
+        @ParcelConstructor
         public PollOption(int id, String optionText) {
-            Id = id;
-            OptionText = optionText;
+            this.id = id;
+            this.optionText = optionText;
         }
 
-        public int getId() { return Id; }
-        public String getOptionText() { return OptionText; }
+        public int getId() { return id; }
+        public String getOptionText() { return optionText; }
 
     }
 }
