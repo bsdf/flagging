@@ -177,7 +177,6 @@ public class RichThreadHolder {
             // unfortunately it's only available in the html for the thread
 
             if (mSid == null) {
-                String threadHtml = null;
                 String url = mAccount.getThreadHtmlUrl(mThread.getBoardId(), mThread.getThreadId());
 
                 Request request = new Request.Builder()
@@ -187,23 +186,21 @@ public class RichThreadHolder {
                     Response response = mAccountClient.newCall(request).execute();
                     if (response.code() != 200) {
                         Log.d(TAG, "Couldn't get thread html");
+                    } else {
+                        String threadHtml = response.body().string();
+
+                        Pattern pattern = Pattern.compile("\\?boardid=.+?;sid=([^']+)");
+                        Matcher matcher = pattern.matcher(threadHtml);
+
+                        if (matcher.find() && matcher.group(1) != null) {
+                            mSid = matcher.group(1);
+                        } else {
+                            Log.d(TAG, "couldn't find sid");
+                        }
                     }
-                    threadHtml = response.body().string();
                 } catch (Exception e) {
                     Log.d(TAG, "Error getting thread html: " + e.toString());
                 }
-
-                Pattern pattern = Pattern.compile("messageid=" +
-                        Integer.toString(theMessages.get(theMessages.size()-1).getMessage().getMessageId())
-                        + "&amp;sid=([^']+)'");
-                Matcher matcher = pattern.matcher(threadHtml);
-
-                if (matcher.find() && matcher.group(1) != null) {
-                    mSid = matcher.group(1);
-                } else {
-                    Log.d(TAG, "couldn't find sid");
-                }
-
             }
 
             for (RichMessageHolder m : theMessages) {
