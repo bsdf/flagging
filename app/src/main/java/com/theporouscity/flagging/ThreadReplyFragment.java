@@ -10,7 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.theporouscity.flagging.ilx.Thread;
+import com.theporouscity.flagging.util.ILXRequestor;
 
 import org.parceler.Parcels;
 
@@ -22,7 +22,12 @@ import butterknife.ButterKnife;
 public class ThreadReplyFragment extends Fragment {
 
     private static final String TAG = "ThreadReplyFragment";
-    private static final String ARG_THREAD = "thread";
+
+    private static final String ARG_BOARD_ID = "boardId";
+    private static final String ARG_THREAD_ID = "threadId";
+    private static final String ARG_THREAD_NAME = "threadName";
+    private static final String ARG_MESSAGE_COUNT = "messageCount";
+    private static final String ARG_SKEY = "sKey";
 
     @BindView(R.id.fragment_thread_reply_title)
     TextView mReplyTitle;
@@ -33,12 +38,20 @@ public class ThreadReplyFragment extends Fragment {
     @Inject
     ILXRequestor mILXRequestor;
 
-    private Thread mThread;
+    private int boardId;
+    private int threadId;
+    private String threadName;
+    private int messageCount;
+    private String sKey;
 
-    public static ThreadReplyFragment newInstance(Thread thread) {
+    public static ThreadReplyFragment newInstance(int boardId, int threadId, String threadName, String sKey, int messageCount) {
         ThreadReplyFragment fragment = new ThreadReplyFragment();
         Bundle args = new Bundle();
-        args.putParcelable(ARG_THREAD, Parcels.wrap(thread));
+        args.putInt(ARG_BOARD_ID, boardId);
+        args.putInt(ARG_THREAD_ID, threadId);
+        args.putString(ARG_THREAD_NAME, threadName);
+        args.putInt(ARG_MESSAGE_COUNT, messageCount);
+        args.putString(ARG_SKEY, sKey);
         fragment.setArguments(args);
         return fragment;
     }
@@ -49,7 +62,11 @@ public class ThreadReplyFragment extends Fragment {
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
         if (getArguments() != null) {
-            mThread = Parcels.unwrap(getArguments().getParcelable(ARG_THREAD));
+            boardId = getArguments().getInt(ARG_BOARD_ID);
+            threadId = getArguments().getInt(ARG_THREAD_ID);
+            threadName = getArguments().getString(ARG_THREAD_NAME);
+            messageCount = getArguments().getInt(ARG_MESSAGE_COUNT);
+            sKey = getArguments().getString(ARG_SKEY);
         }
     }
 
@@ -59,13 +76,12 @@ public class ThreadReplyFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_thread_reply, container, false);
         ButterKnife.bind(this, view);
 
-        mReplyTitle.setText(Html.fromHtml(mThread.getTitle()));
+        mReplyTitle.setText(Html.fromHtml(threadName));
         getActivity().setTitle("Reply to Thread");
 
         mReplyFab.setOnClickListener(v -> {
             Log.d(TAG, "fab clicked");
-            mILXRequestor.postAnswer(mThread, "hello world");
-//            mILXRequestor.postAnswer();
+            mILXRequestor.postAnswer("hello world", boardId, threadId, sKey, messageCount);
         });
 
         return view;
