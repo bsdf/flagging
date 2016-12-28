@@ -324,8 +324,12 @@ public class ViewThreadFragment extends Fragment {
     }
 
     private void fabBookmarkHandler() {
+        // find the last visible post to bookmark
+        LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        int idx = layoutManager.findLastVisibleItemPosition() - numHeaderRows();
+
         List<Message> messages = mThreadHolder.getThread().getMessages();
-        Message lastMessage = messages.get(messages.size() - 1);
+        Message lastMessage = messages.get(idx);
 
         mILXRequestor.addBookmark(mBoardId, mThreadId, lastMessage.getMessageId(), mThreadHolder.getSid(),
                 getContext(), (AsyncTaskResult<Boolean> result) -> {
