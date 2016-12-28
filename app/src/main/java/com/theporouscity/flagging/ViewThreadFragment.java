@@ -321,17 +321,27 @@ public class ViewThreadFragment extends Fragment {
         List<Message> messages = mThreadHolder.getThread().getMessages();
         Message lastMessage = messages.get(messages.size() - 1);
 
-        mILXRequestor.getCachedBookmarks()
-                .addBookmark(mBoardId, mThreadId, lastMessage.getMessageId());
-        mILXRequestor.serializeBoardBookmarks(getContext());
-        Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+        mILXRequestor.addBookmark(mBoardId, mThreadId, lastMessage.getMessageId(), mThreadHolder.getSid(),
+                getContext(), (AsyncTaskResult<Boolean> result) -> {
+                    if (result.getError() == null) {
+                        Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(),
+                                "Problem setting bookmark: " + result.getError().getLocalizedMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void fabReplyHandler() {
-        Intent intent = ThreadReplyActivity.newIntent(getActivity(), mThreadHolder.getThread());
-        startActivity(intent);
-
         Log.d(TAG, "inside fabReplyHandler");
+        if (mThreadHolder != null && mThreadHolder.getThread() != null) {
+            Thread thread = mThreadHolder.getThread();
+            Intent intent = ThreadReplyActivity.newIntent(getActivity(), thread.getBoardId(),
+                    thread.getThreadId(), thread.getTitle(), thread.getKey(), thread.getLocalMessageCount());
+
+            startActivity(intent);
+        }
     }
 
     private void updateUI() {

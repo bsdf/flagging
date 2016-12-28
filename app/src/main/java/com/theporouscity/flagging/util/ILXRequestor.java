@@ -15,6 +15,7 @@ import android.util.Log;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.transform.Transform;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,7 +24,13 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * Created by bergstroml on 2/26/16.
@@ -314,4 +321,34 @@ public class ILXRequestor {
             return  sdf.get ().format (source);
         }
     }
+
+//    private static final String newAnswerUrl = "http://ilxor.com/ILX/NewAnswerControllerServlet";
+//    public void postAnswer(String message, int boardId, int threadId, String sKey, int messageCount) {
+//        RequestBody body = new FormBody.Builder()
+//                .add("boardId", String.valueOf(boardId))
+//                .add("threadId", String.valueOf(threadId))
+//                .add("messageCount", String.valueOf(messageCount))
+//                .add("sKey", sKey)
+////                .add("sKey", "C79071A24C1647BC224DF2C718A54015")
+//                .add("text", message)
+//                .build();
+//
+//        Request req = new Request.Builder()
+//                .url(newAnswerUrl)
+////                .header("Cookie", "StyleSheet=newold.css; username=\"aGiDYXzdnWd8lWK/Y5psYJkimZJr\"; password=\"QlrFZzKgpnVDkzW0MJJXbA==\"; JSESSIONID=C79071A24C1647BC224DF2C718A54015; __utma=43332989.1687555477.1479489587.1479489587.1479489587.1; __utmc=43332989; __utmz=43332989.1479489587.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)")
+//                .post(body)
+//                .build();
+//
+//        mSharedHttpClient.newCall(req).enqueue(new Callback() {
+//            @Override
+//            public void onFailure(Call call, IOException e) {
+//                Log.e(TAG, e.getMessage());
+//            }
+//
+//            @Override
+//            public void onResponse(Call call, Response response) throws IOException {
+//                Log.e(TAG, response.toString());
+//            }
+//        });
+//    }
 }
