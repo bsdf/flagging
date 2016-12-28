@@ -1,0 +1,269 @@
+package com.theporouscity.flagging.util;
+
+import android.content.Context;
+
+import com.theporouscity.flagging.ilx.Board;
+import com.theporouscity.flagging.ilx.Boards;
+import com.theporouscity.flagging.ilx.Bookmarks;
+import com.theporouscity.flagging.ilx.ILXAccount;
+import com.theporouscity.flagging.ilx.Thread;
+import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
+
+import android.util.Log;
+
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.transform.Transform;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
+import okhttp3.OkHttpClient;
+
+/**
+ * Created by bergstroml on 2/26/16.
+ */
+public class ILXRequestor {
+
+    public static final String ILX_SERVER_TAG = "ILX";
+
+    private static final String TAG = "ILXRequestor";
+
+    private Serializer mSerializer;
+    private volatile Boards mBoards;
+    private List<BookmarksCallback> mBookmarksCallbacks = new ArrayList<>();
+    private UserAppSettings mUserAppSettings;
+    private OkHttpClient mSharedHttpClient;
+
+    public interface BoardsCallback {
+        void onComplete(AsyncTaskResult<Boards> result);
+    }
+
+    public interface RecentlyUpdatedThreadsCallback {
+        void onComplete(AsyncTaskResult<RecentlyUpdatedThreads> result);
+    }
+
+    public interface ThreadCallback {
+        void onComplete(AsyncTaskResult<Thread> result);
+    }
+
+    public interface BookmarksCallback {
+        void onComplete(AsyncTaskResult<Bookmarks> result);
+    }
+
+    public interface LoginCallback {
+        void onComplete(AsyncTaskResult<Boolean> result);
+    }
+
+    public interface AddBookmarkCallback {
+        void onComplete(AsyncTaskResult<Boolean> result);
+    }
+
+    public ILXRequestor(Serializer mSerializer, OkHttpClient sharedClient) {
+        this.mSerializer = mSerializer;
+        this.mSharedHttpClient = sharedClient;
+    }
+
+    public ILXAccount getCurrentAccount() {
+        return mUserAppSettings.getCurrentAccount();
+    }
+
+    public OkHttpClient getCurrentClient(Context context) {
+        return getCurrentAccount().getHttpClient(context, mSharedHttpClient);
+    }
+
+    public String getCurrentInstanceName() {
+        if (getCurrentAccount() == null) {
+            return null;
+        }
+        return getCurrentAccount().getInstance();
+    }
+
+    public void login(Context context, ILXAccount account, LoginCallback callback) {
+
+        mUserAppSettings.setCurrentAccount(account);
+        OkHttpClient client = getCurrentAccount().getHttpClient(context, mSharedHttpClient);
+
+        new LoginTask(getCurrentAccount(), client, (AsyncTaskResult<Boolean> result) -> {
+            callback.onComplete(result);
+        }).execute();
+    }
+
+    public void saveAccount(Context context, ILXAccount account) {
+        mUserAppSettings.addAccountAndPersist(context, account);
+    }
+
+    public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) {
+
+        mBookmarksCallbacks.add(bookmarksCallback);
+        if (mBookmarksCallbacks.size() > 1) {
+            return;
+        }
+
+        new LoggedInRequestTask(getCurrentAccount(),
+                getCurrentAccount().getHttpClient(context, mSharedHttpClient), (AsyncTaskResult<String> result) -> {
+            if (result.getError() == null) {
+                Bookmarks bookmarks = mSerializer.read(Bookmarks.class, result.getResult(), false);
+                processBookmarkCallbacks(new AsyncTaskResult<>(bookmarks));
+            } else {
+                processBookmarkCallbacks(new AsyncTaskResult<>(result.getError()));
+            }
+        }).execute(getCurrentAccount().getBookmarksUrl());
+    }
+
+    private void processBookmarkCallbacks(AsyncTaskResult<Bookmarks> result) {
+        while (!mBookmarksCallbacks.isEmpty()) {
+            BookmarksCallback callback = mBookmarksCallbacks.get(0);
+            mBookmarksCallbacks.remove(callback);
+            callback.onComplete(result);
+        }
+    }
+
+    public void addBookmark(int boardId, int threadId, int messageId, String threadSid,
+        Context context, AddBookmarkCallback callback) {
+
+        String url = getCurrentAccount().getAddBookmarkUrl(boardId, threadId, messageId, threadSid);
+
+        new LoggedInRequestTask(getCurrentAccount(),
+                getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+                    if (result.getError() == null) {
+                        callback.onComplete(new AsyncTaskResult<>(true));
+                    } else {
+                        callback.onComplete(new AsyncTaskResult<>(result.getError()));
+                    }
+                }).execute(url);
+    }
+
+    public UserAppSettings getUserAppSettings(Context context) {
+        if (mUserAppSettings == null) {
+            mUserAppSettings = new UserAppSettings(context);
+        }
+        return mUserAppSettings;
+    }
+
+    public void getBoards(BoardsCallback boardsCallback, Context context) {
+
+        if (mBoards == null && getUserAppSettings(context) != null) {
+            Log.d(TAG, "passing on request for boards xml");
+            new LoggedInRequestTask(getCurrentAccount(), getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                    (AsyncTaskResult<String> result) -> {
+                if (result.getError() == null) {
+                    mBoards = mSerializer.read(Boards.class, result.getResult(), false);
+                } else {
+                    boardsCallback.onComplete(new AsyncTaskResult<>(result.getError()));
+                }
+
+                for (Board board : mBoards.getBoards()) {
+                    board.setEnabled(mUserAppSettings.getBoardEnabled(board, context));
+                }
+
+                boardsCallback.onComplete(new AsyncTaskResult<>(mBoards));
+            }).execute(getCurrentAccount().getBoardsListUrl());
+        } else {
+            Log.d(TAG, "returning cached boards");
+            boardsCallback.onComplete(new AsyncTaskResult<>(mBoards));
+        }
+    }
+
+    public void persistBoardEnabledState(Board board, Context context) {
+        if (getUserAppSettings(context) != null) {
+            mUserAppSettings.persistBoardEnabledState(board, context);
+        }
+    }
+
+    public void getRecentlyUpdatedThreads(Context context, int boardId, RecentlyUpdatedThreadsCallback threadsCallback) {
+        new LoggedInRequestTask(getCurrentAccount(), getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+            if (result.getError() == null) {
+                RecentlyUpdatedThreads threads =
+                        mSerializer.read(RecentlyUpdatedThreads.class, result.getResult(), false);
+                threadsCallback.onComplete(new AsyncTaskResult<>(threads));
+            } else {
+                threadsCallback.onComplete(new AsyncTaskResult<>(result.getError()));
+            }
+        }).execute(getCurrentAccount().getUpdatedThreadsUrl(boardId));
+    }
+
+    public void getSiteNewAnswers(Context context, RecentlyUpdatedThreadsCallback threadsCallback) {
+
+        Log.d(TAG, "getting site new answers");
+        new LoggedInRequestTask(getCurrentAccount(), getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+            if (result.getError() == null) {
+                RecentlyUpdatedThreads threads =
+                        mSerializer.read(RecentlyUpdatedThreads.class, result.getResult(), false);
+                threadsCallback.onComplete(new AsyncTaskResult<>(threads));
+            } else {
+                threadsCallback.onComplete(new AsyncTaskResult<>(result.getError()));
+            }
+        }).execute(getCurrentAccount().getSnaUrl());
+    }
+
+    public void getThread(Context context, int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback) {
+
+        String url = getCurrentAccount().getThreadUrl(boardId, threadId);
+        if (initialMessageId != -1) {
+            url = url + "&bookmarkedmessageid=" + initialMessageId;
+            Log.d(TAG, "requesting a message in a thread");
+        } else if (count > 0) {
+            url = url + "&showlastmessages=" + count;
+            Log.d(TAG, "requesting " + String.valueOf(count) + " messages in a thread");
+        } else {
+            Log.d(TAG, "getting a thread");
+        }
+        new LoggedInRequestTask(getCurrentAccount(), getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+            Thread thread = null;
+            if (result.getError() == null) {
+                thread = mSerializer.read(Thread.class, result.getResult(), false);
+                threadCallback.onComplete(new AsyncTaskResult<>(thread));
+            } else {
+                threadCallback.onComplete(new AsyncTaskResult<>(result.getError()));
+            }
+        }).execute(url);
+    }
+
+    public static final class ILXDateTransform implements Transform<Date> {
+        ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat> () {
+            protected SimpleDateFormat initialValue ()
+            {
+                SimpleDateFormat r = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss.SSS");
+                r.setTimeZone (TimeZone.getTimeZone ("GMT"));
+                return r;
+            }
+        };
+
+        public Date read (String source) throws Exception
+        {
+            return sdf.get ().parse (source);
+        }
+        public String write (Date source) throws Exception
+        {
+            return sdf.get ().format (source);
+        }
+    }
+
+    public static final class ILXPollDateTransform implements Transform<PollClosingDate> {
+        ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat> () {
+            protected SimpleDateFormat initialValue ()
+            {
+                SimpleDateFormat r = new SimpleDateFormat ("yyyy-MM-dd");
+                r.setTimeZone (TimeZone.getTimeZone ("GMT"));
+                return r;
+            }
+        };
+
+        public PollClosingDate read (String source) throws Exception
+        {
+            Date date = sdf.get ().parse (source);
+            return new PollClosingDate(date);
+        }
+        public String write (PollClosingDate source) throws Exception
+        {
+            return  sdf.get ().format (source);
+        }
+    }
+}

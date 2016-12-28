@@ -29,9 +29,6 @@ public class Message implements Parcelable {
     @Element(data=true)
     private String Body;
 
-    private int BoardId;
-    private int ThreadId;
-
     public Message(@Element(name="MessageId") int messageId,
                    @Element(name="Deleted") Boolean deleted,
                    @Element(name="Timestamp") Date timestamp,

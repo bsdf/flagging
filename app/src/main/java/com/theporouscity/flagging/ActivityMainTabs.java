@@ -6,18 +6,21 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import com.theporouscity.flagging.R;
 
-import com.theporouscity.flagging.ilx.ServerBookmarks;
+import com.theporouscity.flagging.ilx.Bookmarks;
+import com.theporouscity.flagging.util.AsyncTaskResult;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.UserAppSettings;
+
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,14 +53,14 @@ public class ActivityMainTabs extends AppCompatActivity {
     @Inject
     ILXRequestor mILXRequestor;
 
+    @Inject
+    UserAppSettings mSettings;
+
     private int mShortAnimationDuration;
-    private boolean mFetchedBookmarks;
-    private boolean mHadBookmarksLastWeChecked;
+    private boolean mHaveBookmarks = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        Log.d(TAG, System.identityHashCode(this) + "onCreate");
 
         super.onCreate(savedInstanceState);
 
@@ -65,24 +68,28 @@ public class ActivityMainTabs extends AppCompatActivity {
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
         ButterKnife.bind(this);
 
-        mFetchedBookmarks = false;
-        if (mILXRequestor.getBookmarks(this, (ServerBookmarks b) ->
+        mILXRequestor.getBookmarks(this, (AsyncTaskResult<Bookmarks> result) ->
         {
-            mFetchedBookmarks = true;
-        })) {
-            mHadBookmarksLastWeChecked = true;
-        } else {
-            mHadBookmarksLastWeChecked = false;
-        }
-        setupViewPager(mViewPager, savedInstanceState);
+            if (result.getError() == null) {
+                if (!result.getResult().getBookmarks().isEmpty()){
+                    mHaveBookmarks = true;
+                } else {
+                    mHaveBookmarks = false;
+                }
+            } else {
+                Log.d(TAG, result.getError().toString());
+                Toast.makeText(this, result.getError().toString(), Toast.LENGTH_SHORT).show();
+            }
 
-        mTabLayout.setupWithViewPager(mViewPager);
+            setupViewPager(mViewPager);
+            mTabLayout.setupWithViewPager(mViewPager);
+        });
 
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_shortAnimTime);
 
-        mToolbar.setTitle("ILX");
+        mToolbar.setTitle(mILXRequestor.getCurrentInstanceName());
         mToolbar.setOnMenuItemClickListener((MenuItem item) -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
@@ -93,17 +100,15 @@ public class ActivityMainTabs extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        Log.d(TAG, System.identityHashCode(this) + " resuming");
-        //TODO check to see if we need to get rid of the bookmarks tab
         super.onResume();
-        boolean hadBookmarks = mHadBookmarksLastWeChecked;
-        if (hadBookmarks != haveBookmarks()) {
+        if ((mViewPager.getChildCount() == 2 && mHaveBookmarks) ||
+                mViewPager.getChildCount() == 3 && !mHaveBookmarks) {
             mViewPager.getAdapter().notifyDataSetChanged();
         }
     }
 
     // can only modify # of tabs on UI thread
-    private void setupViewPager(ViewPager viewPager, Bundle savedInstanceState) {
+    private void setupViewPager(ViewPager viewPager) {
 
         Log.d(TAG, System.identityHashCode(this) + "setupViewPager");
 
@@ -139,22 +144,8 @@ public class ActivityMainTabs extends AppCompatActivity {
         }
     }
 
-    private boolean haveBookmarks() {
-
-        if (!mFetchedBookmarks) {
-            return mHadBookmarksLastWeChecked;
-        }
-
-        if (mILXRequestor.getCachedBookmarks() != null) {
-            mHadBookmarksLastWeChecked = !mILXRequestor.getCachedBookmarks().getBookmarks().isEmpty();
-        } else {
-            mHadBookmarksLastWeChecked = false;
-        }
-        return mHadBookmarksLastWeChecked;
-    }
-
     private int bookmarksPosition() {
-        if (haveBookmarks()) {
+        if (mHaveBookmarks) {
             return 1;
         } else {
             return -1;
@@ -166,7 +157,7 @@ public class ActivityMainTabs extends AppCompatActivity {
     }
 
     private int boardsPosition() {
-        if (haveBookmarks()) {
+        if (mHaveBookmarks) {
             return 2;
         } else {
             return 1;
@@ -186,20 +177,25 @@ public class ActivityMainTabs extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
 
+            Fragment theFragment = null;
+
             if (position == bookmarksPosition()) {
-                mFragmentList.add(ViewThreadsFragment.newInstance(false));
+                theFragment = ViewThreadsFragment.newInstance(false);
+                mFragmentList.add(theFragment);
             } else if (position == snaPosition()) {
-                mFragmentList.add(ViewThreadsFragment.newInstance(true));
+                theFragment = ViewThreadsFragment.newInstance(true);
+                mFragmentList.add(theFragment);
             } else if (position == boardsPosition()) {
-                mFragmentList.add(new ViewBoardsFragment());
+                theFragment = new ViewBoardsFragment();
+                mFragmentList.add(theFragment);
             }
 
-            return mFragmentList.get(position);
+            return theFragment;
         }
 
         @Override
         public int getCount() {
-            if (haveBookmarks()) {
+            if (mHaveBookmarks) {
                 return 3;
             } else {
                 return 2;

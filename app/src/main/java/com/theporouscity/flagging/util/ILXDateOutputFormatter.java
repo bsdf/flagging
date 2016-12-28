@@ -1,4 +1,4 @@
-package com.theporouscity.flagging;
+package com.theporouscity.flagging.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

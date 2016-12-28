@@ -7,9 +7,13 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Html;
-import com.theporouscity.flagging.R;
 
 import com.theporouscity.flagging.ilx.Message;
+import com.theporouscity.flagging.util.AsyncTaskResult;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
+import com.theporouscity.flagging.util.ILXUrlParser;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +40,7 @@ public class ViewMessageFragment extends Fragment {
     private static final String ARG_BOARD_ID = "board_id";
     private static final String ARG_THREAD_ID = "thread_id";
     private static final String ARG_THREAD_NAME = "thread_name";
+    private static final String ARG_THREAD_SID = "thread_sid";
 
     @BindView(R.id.fragment_view_message_webview)
     WebView mWebView;
@@ -65,14 +70,17 @@ public class ViewMessageFragment extends Fragment {
     private int mBoardId;
     private int mThreadId;
     private String mThreadName;
+    private String mThreadSid;
 
-    public static ViewMessageFragment newInstance(Message message, int boardId, int threadId, String threadName) {
+    public static ViewMessageFragment newInstance(Message message, int boardId, int threadId,
+                                                  String threadName, String threadSid) {
         ViewMessageFragment fragment = new ViewMessageFragment();
         Bundle args = new Bundle();
         args.putParcelable(ARG_MESSAGE, message);
         args.putInt(ARG_BOARD_ID, boardId);
         args.putInt(ARG_THREAD_ID, threadId);
         args.putString(ARG_THREAD_NAME, threadName);
+        args.putString(ARG_THREAD_SID, threadSid);
         fragment.setArguments(args);
         return fragment;
     }
@@ -87,6 +95,7 @@ public class ViewMessageFragment extends Fragment {
             mBoardId = getArguments().getInt(ARG_BOARD_ID);
             mThreadId = getArguments().getInt(ARG_THREAD_ID);
             mThreadName = getArguments().getString(ARG_THREAD_NAME);
+            mThreadSid = getArguments().getString(ARG_THREAD_SID);
         }
     }
 
@@ -99,10 +108,16 @@ public class ViewMessageFragment extends Fragment {
         getActivity().setTitle(Html.fromHtml(mThreadName));
 
         mBookmarkTextView.setOnClickListener((View v) -> {
-            mILXRequestor.getCachedBookmarks()
-                    .addBookmark(mBoardId, mThreadId, mMessage.getMessageId());
-            mILXRequestor.serializeBoardBookmarks(getContext());
-            Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+            mILXRequestor.addBookmark(mBoardId, mThreadId, mMessage.getMessageId(), mThreadSid,
+                    getContext(), (AsyncTaskResult<Boolean> result) -> {
+                        if (result.getError() == null) {
+                            Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(),
+                                    "Problem setting bookmark: " + result.getError().getLocalizedMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
         });
 
         mOpenTextView.setOnClickListener((View v) -> {

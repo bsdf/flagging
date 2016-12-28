@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
-import com.theporouscity.flagging.ILXTextOutputFormatter;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 
 /**
  * Created by bergstroml on 10/7/16.
@@ -23,8 +23,6 @@ public class RichMessageHolder {
     private Drawable mEmptyPlaceholderImage;
     private int mlinkColor;
     private ILXTextOutputFormatter mILXTextOutputFormatter;
-    //private WeakReference<ILXTextOutputFormatter.ImageGetterAsyncTask> mImageGetterTaskWeakRef;
-    //private WeakReference<Bitmap>
 
     public RichMessageHolder(ILXTextOutputFormatter mILXTextOutputFormatter, Message message,
                              Drawable youtubePlaceholderImage, Drawable emptyPlaceholderImage, int linkColor) {

@@ -2,10 +2,10 @@ package com.theporouscity.flagging.di;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.SharedPreferences;
-import com.theporouscity.flagging.ILXRequestor;
-import com.theporouscity.flagging.PollClosingDate;
-import com.theporouscity.flagging.UserAppSettings;
+
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.PollClosingDate;
+import com.theporouscity.flagging.util.UserAppSettings;
 
 import org.simpleframework.xml.core.Persister;
 import org.simpleframework.xml.transform.Matcher;
@@ -50,38 +50,21 @@ public class ILXModule {
     @Provides
     @Singleton
     public OkHttpClient okHttpClient() {
-        return new OkHttpClient();
+
+        return new OkHttpClient.Builder()
+                .build();
     }
 
     @Provides
     @Singleton
-    public ILXRequestor ilxRequestor(OkHttpClient okHttpClient, Persister persister) {
-        return new ILXRequestor(okHttpClient, persister);
+    public ILXRequestor ilxRequestor(Persister persister, OkHttpClient client) {
+        return new ILXRequestor(persister, client);
     }
 
     @Provides
     @Singleton
     public UserAppSettings userAppSettings(ILXRequestor ilxRequestor) {
-        UserAppSettings settings = new UserAppSettings(ilxRequestor);
         Context context = application.getApplicationContext();
-        SharedPreferences mPreferences = context.getSharedPreferences(ILXRequestor.ILX_SERVER_TAG, Context.MODE_PRIVATE);
-
-        int loadPrettyPictures = mPreferences.getInt(UserAppSettings.LoadPrettyPicturesSettingKey, -1);
-        if (loadPrettyPictures == 0) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.NEVER);
-        } else if (loadPrettyPictures == 1) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.ALWAYS);
-        } else if (loadPrettyPictures == 2 || loadPrettyPictures == -1) {
-            settings.setLoadPrettyPicturesSetting(UserAppSettings.LoadPrettyPicturesSetting.WIFI);
-        }
-
-        int pretendToBeLoggedIn = mPreferences.getInt(UserAppSettings.PretendToBeLoggedInKey, -1);
-        if (pretendToBeLoggedIn == 1) {
-            settings.setPretendToBeLoggedInSetting(true);
-        } else {
-            settings.setPretendToBeLoggedInSetting(false);
-        }
-
-        return settings;
+        return ilxRequestor.getUserAppSettings(context);
     }
 }

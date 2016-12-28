@@ -16,12 +16,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.theporouscity.flagging.ilx.Message;
 import com.theporouscity.flagging.ilx.PollWrapper;
 import com.theporouscity.flagging.ilx.RichMessageHolder;
 import com.theporouscity.flagging.ilx.RichThreadHolder;
 import com.theporouscity.flagging.ilx.Thread;
+import com.theporouscity.flagging.util.AsyncTaskResult;
+import com.theporouscity.flagging.util.ILXDateOutputFormatter;
+import com.theporouscity.flagging.util.ILXRequestor;
+import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 
 import java.util.List;
 
@@ -136,12 +141,35 @@ public class ViewThreadFragment extends Fragment {
         updateUI();
     }
 
+    private void showError(Exception e)
+    {
+        Log.d(TAG, e.toString());
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e.getMessage());
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showError(String e)
+    {
+        Log.d(TAG, e);
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e);
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void loadThread() {
         mFetching = true;
 
         int numMessagesToLoad;
 
         Log.d(TAG, "messages loaded - loadThread, before load - " + Integer.toString(mMessagesLoadedCount));
+
 
         if (mInitialMessageId == -1) {
 
@@ -151,16 +179,23 @@ public class ViewThreadFragment extends Fragment {
                 numMessagesToLoad = mMessagesLoadedCount;
             }
 
-            mILXRequestor.getThread(mBoardId, mThreadId, -1, numMessagesToLoad,
-                    (Thread thread) -> {
+            mILXRequestor.getThread(getContext(), mBoardId, mThreadId, -1, numMessagesToLoad,
+                    (AsyncTaskResult<Thread> result) -> {
                         mFetching = false;
-                        mThreadHolder = new RichThreadHolder(thread, getContext(), mILXTextOutputFormatter);
-                        mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
-                        updateUI();
-                        mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getRichMessageHolders().size() - 1, getActivity());
-                        mPollWrapper.prepPollItems(getActivity());
-                        mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
-                        Log.d(TAG, "messages loaded - loadThread, no initial, after load - " + Integer.toString(mMessagesLoadedCount));
+                        if (result.getError() == null) {
+                            mThreadHolder = new RichThreadHolder(result.getResult(),
+                                    mILXRequestor.getCurrentAccount(),
+                                    mILXRequestor.getCurrentClient(getContext()),
+                                    getContext(), mILXTextOutputFormatter);
+                            mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
+                            updateUI();
+                            mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getRichMessageHolders().size() - 1, getActivity());
+                            mPollWrapper.prepPollItems(getActivity());
+                            mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
+                            Log.d(TAG, "messages loaded - loadThread, no initial, after load - " + Integer.toString(mMessagesLoadedCount));
+                        } else {
+                            showError(result.getError());
+                        }
                     });
         } else {
 
@@ -170,17 +205,24 @@ public class ViewThreadFragment extends Fragment {
                 numMessagesToLoad = mMessagesLoadedCount;
             }
 
-            mILXRequestor.getThread(mBoardId, mThreadId, mInitialMessageId, numMessagesToLoad,
-                    (Thread thread) -> {
-                        mFetching = false;
-                        mThreadHolder = new RichThreadHolder(thread, getContext(), mILXTextOutputFormatter);
-                        mThreadHolder.getDrawingResources(getContext());
-                        mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
-                        updateUI();
-                        mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getThread().getMessagePosition(mInitialMessageId), getActivity());
-                        mPollWrapper.prepPollItems(getActivity());
-                        mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
-                        Log.d(TAG, "messages loaded - loadThread, with initial, after load - " + Integer.toString(mMessagesLoadedCount));
+            mILXRequestor.getThread(getContext(), mBoardId, mThreadId, mInitialMessageId, numMessagesToLoad,
+                    (AsyncTaskResult<Thread> result) -> {
+                        if (result.getError() == null) {
+                            mFetching = false;
+                            mThreadHolder = new RichThreadHolder(result.getResult(),
+                                    mILXRequestor.getCurrentAccount(),
+                                    mILXRequestor.getCurrentClient(getContext()),
+                                    getContext(), mILXTextOutputFormatter);
+                            mThreadHolder.getDrawingResources(getContext());
+                            mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
+                            updateUI();
+                            mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getThread().getMessagePosition(mInitialMessageId), getActivity());
+                            mPollWrapper.prepPollItems(getActivity());
+                            mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
+                            Log.d(TAG, "messages loaded - loadThread, with initial, after load - " + Integer.toString(mMessagesLoadedCount));
+                        } else {
+                            showError(result.getError());
+                        }
                     });
         }
     }
@@ -199,64 +241,63 @@ public class ViewThreadFragment extends Fragment {
     private void loadEarlierMessages(int numEarlierMessagesToPrepend) {
         // TODO see if there's a way to grab messages X-X'
         int numToRequest = mThreadHolder.getThread().getLocalMessageCount() + numEarlierMessagesToPrepend;
-        mILXRequestor.getThread(mBoardId, mThreadId, -1,
-                numToRequest, (Thread thread) -> {
 
-                    Log.d(TAG, "messages loaded - loadEarlierMessages callback, before update - " + Integer.toString(mMessagesLoadedCount));
+        mILXRequestor.getThread(getContext(), mBoardId, mThreadId, -1,
+                numToRequest, (AsyncTaskResult<Thread> result) -> {
 
-                    mMessagesLoadedCount = numToRequest;
+                    if (result.getError() == null) {
 
-                    Log.d(TAG, "messages loaded - loadEarlierMessages callback, after update - " + Integer.toString(mMessagesLoadedCount));
+                        Thread thread = result.getResult();
+                        mMessagesLoadedCount = numToRequest;
 
-                    mThreadHolder.addMessages(0,
-                            thread.getMessages().subList(0, numEarlierMessagesToPrepend));
-                    mThreadHolder.getThread().updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
+                        mThreadHolder.ingestEarlierMessages(thread, getActivity(), numEarlierMessagesToPrepend);
 
-                    int numHeaderRows = numHeaderRows();
-                    mThreadAdapter.notifyItemRangeInserted(numHeaderRows, numEarlierMessagesToPrepend);
-                    mThreadAdapter.updateLoader();
-                    mRecyclerView.scrollToPosition(numHeaderRows + numEarlierMessagesToPrepend);
-                    mThreadHolder.prepEarlierMessages(numEarlierMessagesToPrepend, getActivity());
+                        int numHeaderRows = numHeaderRows();
+                        mThreadAdapter.notifyItemRangeInserted(numHeaderRows, numEarlierMessagesToPrepend);
+                        mThreadAdapter.updateLoader();
+                        mRecyclerView.scrollToPosition(numHeaderRows + numEarlierMessagesToPrepend);
+                    } else {
+                        showError(result.getError());
+                    }
 
-        });
+                });
     }
 
     private void loadLaterMessages(int numAdditionalToRequest) {
 
-        mILXRequestor.getThread(mBoardId, mThreadId, -1, numAdditionalToRequest,
-                (Thread thread) -> {
+        mILXRequestor.getThread(getContext(), mBoardId, mThreadId, -1, numAdditionalToRequest,
+                (AsyncTaskResult<Thread> result) -> {
 
-                    int numNewMessages = thread.getServerMessageCount() - mThreadHolder.getThread().getServerMessageCount();
-                    if (numNewMessages <= numAdditionalToRequest) {
+                    if (result.getError() == null) {
+                        Thread thread = result.getResult();
+                        int numNewMessages = thread.getServerMessageCount() - mThreadHolder.getThread().getServerMessageCount();
+                        if (numNewMessages <= numAdditionalToRequest) {
 
-                        if (mSwipeRefreshLayoutBottom != null) {
-                            mSwipeRefreshLayoutBottom.setRefreshing(false);
-                        }
-
-                        if (numNewMessages > 0) {
-
-                            Log.d(TAG, "messages loaded - load later callback, before update - " + Integer.toString(mMessagesLoadedCount));
-                            mMessagesLoadedCount += numNewMessages;
-                            Log.d(TAG, "messages loaded - load later callback, after update - " + Integer.toString(mMessagesLoadedCount));
-
-                            int numOldMessages = mThreadHolder.getThread().getLocalMessageCount();
-                            mThreadHolder.addMessages(
-                                    thread.getMessages().subList(numAdditionalToRequest - numNewMessages, numAdditionalToRequest));
-                            mThreadHolder.getThread().updateMetadata(thread.getServerMessageCount(), thread.getLastUpdated());
-
-                            if (!mThreadHolder.getThread().noDuplicates()) {
-                                Log.d(TAG, "******OMG DUPLICATE MESSAGES*******");
+                            if (mSwipeRefreshLayoutBottom != null) {
+                                mSwipeRefreshLayoutBottom.setRefreshing(false);
                             }
 
-                            mThreadAdapter.notifyItemRangeInserted(numHeaderRows() + numOldMessages, numNewMessages);
-                            mRecyclerView.scrollToPosition(numHeaderRows() + numOldMessages);
+                            if (numNewMessages > 0) {
 
+                                mMessagesLoadedCount += numNewMessages;
+                                int numOldMessages = mThreadHolder.getThread().getLocalMessageCount();
+
+                                mThreadHolder.ingestLaterMessages(thread, getActivity(), numAdditionalToRequest - numNewMessages, numAdditionalToRequest);
+
+                                mThreadAdapter.notifyItemRangeInserted(numHeaderRows() + numOldMessages, numNewMessages);
+                                mRecyclerView.scrollToPosition(numHeaderRows() + numOldMessages);
+
+                            }
+
+                        } else {
+                            loadLaterMessages(numNewMessages + 10); // try to make sure this is our last request
                         }
-
                     } else {
-                        loadLaterMessages(numNewMessages + 10); // try to make sure this is our last request
+                        showError(result.getError());
                     }
+
                 });
+
     }
 
     private void updateUI() {
@@ -268,7 +309,7 @@ public class ViewThreadFragment extends Fragment {
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (mThreadHolder == null || mThreadHolder.getThread() == null) {
-                    //mLoadErrorTextView.setVisibility(TextView.VISIBLE); // TODO better way to handle failed thread load
+                    showError("Problem loading thread");
                 } else {
                     mLoadErrorTextView.setVisibility(TextView.INVISIBLE);
                 }
@@ -407,7 +448,7 @@ public class ViewThreadFragment extends Fragment {
         private void openMessage() {
             Intent intent = ViewMessageActivity.newIntent(getActivity(),
                     mRichMessageHolder.getMessage(), mBoardId, mThreadId,
-                    mThreadHolder.getThread().getTitle());
+                    mThreadHolder.getThread().getTitle(), mThreadHolder.getSid());
             startActivity(intent);
         }
     }
@@ -577,7 +618,7 @@ public class ViewThreadFragment extends Fragment {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-            View view = null;
+            View view;
 
             switch (viewType) {
 

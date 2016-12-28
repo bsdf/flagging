@@ -1,51 +1,51 @@
 package com.theporouscity.flagging.ilx;
 
+import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 
-import java.lang.*;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  * Created by bergstroml on 11/4/16.
  */
-
+@Root(name="Bookmark")
 public class Bookmark {
 
     private final static String TAG = "Bookmark";
-    private int boardId;
-    private int threadId;
-    private int bookmarkedMessageId;
-    private String bookmarkThreadTitle;
+
+    @Element(name="BoardId")
+    private int BoardId;
+
+    @Element(name="ThreadId")
+    private int ThreadId;
+
+    @Element(name="MessageId")
+    private int BookmarkedMessageId;
+
+    @Element(name="Title")
+    private String Title;
+
     private Thread mCachedThread;
 
-    public Bookmark(int boardId, int threadId, int bookmarkedMessageId) {
-        this.boardId = boardId;
-        this.threadId = threadId;
-        this.bookmarkedMessageId = bookmarkedMessageId;
-    }
-
     public int getBoardId() {
-        return boardId;
-    }
-
-    public void setBoardId(int boardId) {
-        this.boardId = boardId;
+        return BoardId;
     }
 
     public int getThreadId() {
-        return threadId;
-    }
-
-    public void setThreadId(int threadId) {
-        this.threadId = threadId;
+        return ThreadId;
     }
 
     public int getBookmarkedMessageId() {
-        return bookmarkedMessageId;
+        return BookmarkedMessageId;
     }
 
-    public void setBookmarkedMessageId(int bookmarkedMessageId) {
-        this.bookmarkedMessageId = bookmarkedMessageId;
+    public void setBookmarkedMessageId(int BookmarkedMessageId) {
+        this.BookmarkedMessageId = BookmarkedMessageId;
     }
+
+    public Spanned getTitleForDisplay() { return Html.fromHtml(Title.trim()); }
 
     public void setCachedThread(Thread thread) {
         mCachedThread = thread;

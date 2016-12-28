@@ -7,10 +7,12 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
-import com.theporouscity.flagging.R;
 
 import com.theporouscity.flagging.ilx.Board;
 import com.theporouscity.flagging.ilx.Boards;
+import com.theporouscity.flagging.util.AsyncTaskResult;
+import com.theporouscity.flagging.util.ILXRequestor;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -141,25 +143,51 @@ public class ViewBoardsFragment extends Fragment {
         }
     }
 
+    private void showError(Exception e)
+    {
+        Log.d(TAG, e.toString());
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e.getMessage());
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showError(String e)
+    {
+        Log.d(TAG, e);
+        if (mLoadErrorTextView != null) {
+            mLoadErrorTextView.setText(e);
+            mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+        } else {
+            Toast.makeText(getContext(), e, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void updateBoards() {
 
         mFetching = true;
-        mILXRequestor.getBoards((Boards boards) -> {
-            mFetching = false;
-            mBoards = boards;
-            if (mBoardsForDisplay == null) {
-                mBoardsForDisplay = new ArrayList<Board>();
-            } else {
-                mBoardsForDisplay.clear();
-            }
-            for (Board board : boards.getBoards()) {
-                if (mEditing || board.isEnabled()) {
-                    mBoardsForDisplay.add(board);
-                }
-            }
-            updateUI();
-        }, getContext());
 
+        mILXRequestor.getBoards((AsyncTaskResult<Boards> result) -> {
+            if (result.getError() == null) {
+                mFetching = false;
+                mBoards = result.getResult();
+                if (mBoardsForDisplay == null) {
+                    mBoardsForDisplay = new ArrayList<Board>();
+                } else {
+                    mBoardsForDisplay.clear();
+                }
+                for (Board board : mBoards.getBoards()) {
+                    if (mEditing || board.isEnabled()) {
+                        mBoardsForDisplay.add(board);
+                    }
+                }
+                updateUI();
+            } else {
+                showError(result.getError());
+            }
+        }, getContext());
     }
 
     private void updateUI() {
@@ -170,7 +198,7 @@ public class ViewBoardsFragment extends Fragment {
             } else {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (mBoards == null) {
-                    mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+                    showError("Problem loading boards");
                 }
             }
         }
@@ -237,7 +265,7 @@ public class ViewBoardsFragment extends Fragment {
             boolean newEnabled = mBoard.isEnabled() ? false : true;
 
             mBoard.setEnabled(newEnabled);
-            mILXRequestor.persistBoardEnabledState(mBoard);
+            mILXRequestor.persistBoardEnabledState(mBoard, getContext());
 
         }
     }

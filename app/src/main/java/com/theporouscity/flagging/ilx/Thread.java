@@ -3,7 +3,7 @@ package com.theporouscity.flagging.ilx;
 import android.text.Html;
 import android.text.Spanned;
 
-import com.theporouscity.flagging.PollClosingDate;
+import com.theporouscity.flagging.util.PollClosingDate;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;

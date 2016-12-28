@@ -1,4 +1,4 @@
-package com.theporouscity.flagging;
+package com.theporouscity.flagging.util;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +16,8 @@ import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.text.style.URLSpan;
+
+import com.theporouscity.flagging.ViewThreadActivity;
 import com.theporouscity.flagging.ilx.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
