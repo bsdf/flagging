@@ -14,6 +14,7 @@ import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 import com.theporouscity.flagging.util.ILXUrlParser;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -108,11 +109,15 @@ public class ViewMessageFragment extends Fragment {
         getActivity().setTitle(Html.fromHtml(mThreadName));
 
         mBookmarkTextView.setOnClickListener((View v) -> {
+            Log.d(TAG, "trying to set bookmark");
             mILXRequestor.addBookmark(mBoardId, mThreadId, mMessage.getMessageId(), mThreadSid,
                     getContext(), (AsyncTaskResult<Boolean> result) -> {
+                        Log.d(TAG, "add bookmark returned");
                         if (result.getError() == null) {
+                            Log.d(TAG, "set bookmark");
                             Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
                         } else {
+                            Log.d(TAG, "failed to set bookmark");
                             Toast.makeText(getContext(),
                                     "Problem setting bookmark: " + result.getError().getLocalizedMessage(),
                                     Toast.LENGTH_SHORT).show();

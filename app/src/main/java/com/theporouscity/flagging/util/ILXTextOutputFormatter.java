@@ -39,6 +39,7 @@ import javax.inject.Inject;
 
 public class ILXTextOutputFormatter {
 
+    public static final String TAG = "ILXTextOutputFormatter";
     private UserAppSettings mUserAppSettings;
 
     @Inject
@@ -204,18 +205,105 @@ public class ILXTextOutputFormatter {
         public Drawable getDrawable(String source) {
             LevelListDrawable d = new LevelListDrawable();
             d.addLevel(0, 0, mEmptyImagePlaceholder);
-            d.setBounds(0, 0, mEmptyImagePlaceholder.getIntrinsicWidth(), mEmptyImagePlaceholder.getIntrinsicHeight());
-            new ImageGetterAsyncTask(mActivity, d, mCallback).execute(source);
+            d.setBounds(0, 0,
+                    mEmptyImagePlaceholder.getIntrinsicWidth(),
+                    mEmptyImagePlaceholder.getIntrinsicHeight());
+
+            if (mCallback != null) {
+                new ImageGetterAsyncTask(mActivity, d, mCallback).execute(source);
+            } else {
+                Bitmap bitmap = getBitmap(mActivity, source);
+                processBitmap(bitmap, mActivity, d);
+            }
 
             return d;
         }
 
     }
 
+    private Bitmap getBitmap(Activity activity, String url) {
+        try {
+            try {
+
+                // TODO hopefully we get an onStop or something and we can stop loading images when we navigate away
+
+                    /*DisplayMetrics metrics = new DisplayMetrics();
+                    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                    int resizeWidth, resizeHeight;
+                    resizeWidth = resizeHeight = 0;
+                    if (metrics.widthPixels < metrics.heightPixels) {
+                        resizeWidth = metrics.widthPixels;
+                    } else {
+                        resizeHeight = metrics.heightPixels;
+                    }*/
+
+                // TODO bring this back when we can re-resize to original size if original is smaller
+
+                return Picasso
+                        .with(activity)
+                        .load(url)
+                        //.resize(resizeWidth, resizeHeight)
+                        //.centerInside()
+                        .get();
+
+            } catch (OutOfMemoryError outOfMemoryError) {
+                Log.d(TAG, "OOM trying to get img " + url);
+                return null;
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "Exception trying to get img " + url + " " + e.toString());
+            return null;
+        }
+    }
+
+    private boolean processBitmap(Bitmap bitmap, Activity activity, LevelListDrawable levelListDrawable) {
+        if (activity != null && bitmap != null) {
+            try {
+                DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+
+                // TODO 32 is a magic number, sum of margin/padding in layout ... fix this
+
+                float multiplier = Math.min(
+                        metrics.density,
+                        Math.min((float) (metrics.widthPixels - 32) / bitmap.getWidth(),
+                                (float) (metrics.heightPixels - 32) / bitmap.getHeight()));
+
+                int width = Math.round(bitmap.getWidth() * multiplier);
+                int height = Math.round(bitmap.getHeight() * multiplier);
+
+                    /*
+                    Log.d(TAG, ITAG + "img metrics " + mSource + " " +
+                            Float.toString(metrics.density) + " " +
+                            Integer.toString(metrics.widthPixels) + " " +
+                            Integer.toString(metrics.heightPixels) + " " +
+                            Integer.toString(bitmap.getWidth()) + " " +
+                            " " + Integer.toString(bitmap.getHeight()) +
+                            " " + Float.toString(multiplier) +
+                            " " + Integer.toString(width) +
+                                    " " + Integer.toString(height));*/
+
+                Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+
+                Drawable d = new BitmapDrawable(activity.getResources(), scaledBitmap);
+
+                levelListDrawable.addLevel(1, 1, d);
+                levelListDrawable.setBounds(0, 0, width, height);
+                levelListDrawable.setLevel(1);
+
+                return true;
+            } catch (Exception e) {
+                Log.d(TAG, "exception trying to handle image");
+            }
+        } else {
+            if (bitmap == null) {
+                Log.d(TAG, "null image");
+            }
+        }
+        return false;
+    }
+
     private class ImageGetterAsyncTask extends AsyncTask<String, Void, Bitmap> {
 
-
-        public static final String TAG = "ImageGetterAsyncTask";
         private static final String ITAG = "img ";
         private LevelListDrawable levelListDrawable;
         private final WeakReference<Activity> mActivity;
@@ -232,92 +320,21 @@ public class ILXTextOutputFormatter {
         @Override
         protected Bitmap doInBackground(String... params) {
             mSource = params[0];
-            //Log.d(TAG, ITAG + "getting image " + mSource);
-            try {
-                try {
-
-                    // TODO hopefully we get an onStop or something and we can stop loading images when we navigate away
-
-                    final Activity activity = mActivity.get();
-
-                    /*DisplayMetrics metrics = new DisplayMetrics();
-                    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    int resizeWidth, resizeHeight;
-                    resizeWidth = resizeHeight = 0;
-                    if (metrics.widthPixels < metrics.heightPixels) {
-                        resizeWidth = metrics.widthPixels;
-                    } else {
-                        resizeHeight = metrics.heightPixels;
-                    }*/
-
-                    // TODO bring this back when we can re-resize to original size if original is smaller
-
-                    return Picasso
-                            .with(activity)
-                            .load(mSource)
-                            //.resize(resizeWidth, resizeHeight)
-                            //.centerInside()
-                            .get();
-
-                } catch (OutOfMemoryError outOfMemoryError) {
-                    Log.d(TAG, ITAG + "OOM trying to get img " + mSource);
-                    return null;
-                }
-            } catch (Exception e) {
-                Log.d(TAG, ITAG + "Exception trying to get img " + mSource + " " + e.toString());
-                return null;
-            }
+            Log.d(TAG, ITAG + "getting image " + mSource);
+            final Activity activity = mActivity.get();
+            return getBitmap(activity, mSource);
         }
 
         @Override
         protected void onPostExecute(final Bitmap bitmap) {
             final Activity activity = mActivity.get();
             Log.d(TAG, ITAG + "got image " + mSource);
-            if (activity != null && bitmap != null) {
-                try {
-                    DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-
-                    // TODO 32 is a magic number, sum of margin/padding in layout ... fix this
-
-                    float multiplier = Math.min(
-                            metrics.density,
-                            Math.min((float) (metrics.widthPixels - 32) / bitmap.getWidth(),
-                                    (float) (metrics.heightPixels - 32) / bitmap.getHeight()));
-
-                    int width = Math.round(bitmap.getWidth() * multiplier);
-                    int height = Math.round(bitmap.getHeight() * multiplier);
-
-                    /*
-                    Log.d(TAG, ITAG + "img metrics " + mSource + " " +
-                            Float.toString(metrics.density) + " " +
-                            Integer.toString(metrics.widthPixels) + " " +
-                            Integer.toString(metrics.heightPixels) + " " +
-                            Integer.toString(bitmap.getWidth()) + " " +
-                            " " + Integer.toString(bitmap.getHeight()) +
-                            " " + Float.toString(multiplier) +
-                            " " + Integer.toString(width) +
-                                    " " + Integer.toString(height));*/
-
-                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
-
-                    Drawable d = new BitmapDrawable(activity.getResources(), scaledBitmap);
-
-                    levelListDrawable.addLevel(1, 1, d);
-                    levelListDrawable.setBounds(0, 0, width, height);
-                    levelListDrawable.setLevel(1);
-
-                    if (mCallback != null) {
-                        //Log.d(TAG, ITAG + "calling back for " + mSource);
-                        mCallback.onComplete();
-                    } else {
-                        //Log.d(TAG, ITAG + "no callback for " + mSource);
-                    }
-                } catch (Exception e) {
-                    Log.d(TAG, ITAG + "exception trying to handle image " + mSource + " " + e.toString());
-                }
-            } else {
-                if (bitmap == null) {
-                    //Log.d(TAG, ITAG + "null image " + mSource);
+            if (processBitmap(bitmap, activity, levelListDrawable)) {
+                if (mCallback != null) {
+                    //Log.d(TAG, ITAG + "calling back for " + mSource);
+                    mCallback.onComplete();
+                } else {
+                    //Log.d(TAG, ITAG + "no callback for " + mSource);
                 }
             }
         }

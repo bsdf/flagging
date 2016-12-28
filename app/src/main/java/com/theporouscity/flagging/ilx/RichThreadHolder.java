@@ -39,6 +39,7 @@ public class RichThreadHolder {
     private int mLinkColor;
     private ILXTextOutputFormatter mILXTextOutputFormatter;
     private String mSid = null;
+    private PrepMessagesTask mPrepTask;
 
     public RichThreadHolder(Thread thread, ILXAccount account, OkHttpClient sharedClient,
                             Context context, ILXTextOutputFormatter mILXTextOutputFormatter) {
@@ -108,7 +109,8 @@ public class RichThreadHolder {
         ArrayList<RichMessageHolder> messagesToPrep = getThisMessageAndLater(startPosition);
         // then prep earlier messages, in reverse chronological order
         messagesToPrep.addAll(getEarlierMessages(startPosition));
-        new PrepMessagesTask(activity).execute(messagesToPrep);
+        mPrepTask = new PrepMessagesTask(activity);
+        mPrepTask.execute(messagesToPrep);
     }
 
     public void ingestEarlierMessages(Thread thread, Activity activity, int count) {
@@ -119,7 +121,8 @@ public class RichThreadHolder {
 
     public void prepEarlierMessages(int startPosition, Activity activity) {
         ArrayList<RichMessageHolder> messagesToPrep = getEarlierMessages(startPosition);
-        new PrepMessagesTask(activity).execute(messagesToPrep);
+        mPrepTask = new PrepMessagesTask(activity);
+        mPrepTask.execute(messagesToPrep);
 
     }
 
@@ -132,7 +135,14 @@ public class RichThreadHolder {
     public void prepLaterMessages(int numMessages, Activity activity) {
         ArrayList<RichMessageHolder> messagesToPrep = getThisMessageAndLater(
                 mRichMessageHolders.size() - numMessages);
-        new PrepMessagesTask(activity).execute(messagesToPrep);
+        mPrepTask = new PrepMessagesTask(activity);
+        mPrepTask.execute(messagesToPrep);
+    }
+
+    public void cancelPrepTask() {
+        if (mPrepTask != null) {
+            mPrepTask.cancel(true);
+        }
     }
 
     private ArrayList<RichMessageHolder> getThisMessageAndLater(int startPosition) {
@@ -204,7 +214,9 @@ public class RichThreadHolder {
             }
 
             for (RichMessageHolder m : theMessages) {
-
+                if (isCancelled()) {
+                    break;
+                }
                 m.prepDisplayNameForDisplay();
                 m.prepBodyForDisplayShort(mActivity, null);
             }
