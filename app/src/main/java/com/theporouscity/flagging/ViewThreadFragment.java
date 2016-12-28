@@ -71,6 +71,9 @@ public class ViewThreadFragment extends Fragment {
     @BindView(R.id.fragment_view_thread_appbarlayout)
     AppBarLayout mAppBarLayout;
 
+    @BindView(R.id.fragment_view_thread_fab_speed_dial)
+    FabSpeedDial fabSpeedDial;
+
     @Inject
     ILXRequestor mILXRequestor;
 
@@ -304,7 +307,6 @@ public class ViewThreadFragment extends Fragment {
     }
 
     private void registerFabListeners(View view) {
-        FabSpeedDial fabSpeedDial = (FabSpeedDial) view.findViewById(R.id.fragment_view_thread_fab_speed_dial);
         fabSpeedDial.setMenuListener(new SimpleMenuListenerAdapter() {
             @Override
             public boolean onMenuItemSelected(MenuItem menuItem) {
@@ -407,6 +409,23 @@ public class ViewThreadFragment extends Fragment {
         layoutManager.setStackFromEnd(true);
 
         mRecyclerView.setLayoutManager(layoutManager);
+
+        // hide/show fab based on scrolling
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0 || dy < 0 && fabSpeedDial.isShown())
+                    fabSpeedDial.hide();
+            }
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    fabSpeedDial.show();
+                }
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
 
         mSwipeRefreshLayoutBottom.setOnRefreshListener(() -> {
             loadLaterMessages(25);
