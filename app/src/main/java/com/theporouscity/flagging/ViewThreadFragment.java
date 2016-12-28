@@ -141,6 +141,12 @@ public class ViewThreadFragment extends Fragment {
         updateUI();
     }
 
+    public void onBackPressed() {
+        if (mThreadHolder != null) {
+            mThreadHolder.cancelPrepTask();
+        }
+    }
+
     private void showError(Exception e)
     {
         Log.d(TAG, e.toString());

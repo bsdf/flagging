@@ -9,6 +9,7 @@ import com.theporouscity.flagging.ilx.ILXAccount;
 import com.theporouscity.flagging.ilx.Thread;
 import com.theporouscity.flagging.ilx.RecentlyUpdatedThreads;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.simpleframework.xml.Serializer;
@@ -110,7 +111,7 @@ public class ILXRequestor {
             } else {
                 processBookmarkCallbacks(new AsyncTaskResult<>(result.getError()));
             }
-        }).execute(getCurrentAccount().getBookmarksUrl());
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, getCurrentAccount().getBookmarksUrl());
     }
 
     private void processBookmarkCallbacks(AsyncTaskResult<Bookmarks> result) {
@@ -134,7 +135,7 @@ public class ILXRequestor {
                     } else {
                         callback.onComplete(new AsyncTaskResult<>(result.getError()));
                     }
-                }).execute(url);
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
     }
 
     public UserAppSettings getUserAppSettings(Context context) {
@@ -161,7 +162,7 @@ public class ILXRequestor {
                 }
 
                 boardsCallback.onComplete(new AsyncTaskResult<>(mBoards));
-            }).execute(getCurrentAccount().getBoardsListUrl());
+            }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, getCurrentAccount().getBoardsListUrl());
         } else {
             Log.d(TAG, "returning cached boards");
             boardsCallback.onComplete(new AsyncTaskResult<>(mBoards));
@@ -184,7 +185,7 @@ public class ILXRequestor {
             } else {
                 threadsCallback.onComplete(new AsyncTaskResult<>(result.getError()));
             }
-        }).execute(getCurrentAccount().getUpdatedThreadsUrl(boardId));
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, getCurrentAccount().getUpdatedThreadsUrl(boardId));
     }
 
     public void getSiteNewAnswers(Context context, RecentlyUpdatedThreadsCallback threadsCallback) {
@@ -199,7 +200,7 @@ public class ILXRequestor {
             } else {
                 threadsCallback.onComplete(new AsyncTaskResult<>(result.getError()));
             }
-        }).execute(getCurrentAccount().getSnaUrl());
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, getCurrentAccount().getSnaUrl());
     }
 
     public void getThread(Context context, int boardId, int threadId, int initialMessageId, int count, ThreadCallback threadCallback) {
@@ -223,7 +224,7 @@ public class ILXRequestor {
             } else {
                 threadCallback.onComplete(new AsyncTaskResult<>(result.getError()));
             }
-        }).execute(url);
+        }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
     }
 
     public static final class ILXDateTransform implements Transform<Date> {

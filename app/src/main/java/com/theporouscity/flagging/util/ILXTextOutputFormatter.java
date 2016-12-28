@@ -210,7 +210,8 @@ public class ILXTextOutputFormatter {
                     mEmptyImagePlaceholder.getIntrinsicHeight());
 
             if (mCallback != null) {
-                new ImageGetterAsyncTask(mActivity, d, mCallback).execute(source);
+                new ImageGetterAsyncTask(mActivity, d, mCallback)
+                        .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, source);
             } else {
                 Bitmap bitmap = getBitmap(mActivity, source);
                 processBitmap(bitmap, mActivity, d);
