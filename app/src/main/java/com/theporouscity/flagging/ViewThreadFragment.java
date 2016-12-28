@@ -429,7 +429,6 @@ public class ViewThreadFragment extends Fragment {
         public void bindMessage(RichMessageHolder richMessageHolder) {
             mRichMessageHolder = richMessageHolder;
             ILXTextOutputFormatter.MessageReadyCallback callback = () -> {
-                Log.d(TAG, "requesting message re-layout");
                 mThreadAdapter.notifyItemChanged(getAdapterPosition());
             };
 
@@ -592,7 +591,6 @@ public class ViewThreadFragment extends Fragment {
                 MessageHolder messageHolder = (MessageHolder) holder;
                 int realPosition = position - numHeaderRows();
                 if (realPosition < 0) {
-                    Log.d(TAG, "zero-indexed message with a header row YO WTFUUUUUUUUUUUCK");
                     realPosition = 0;
                 }
                 messageHolder.bindMessage(mThreadHolder.getRichMessageHolders().get(realPosition));

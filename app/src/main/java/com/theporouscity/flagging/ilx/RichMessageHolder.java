@@ -38,6 +38,14 @@ public class RichMessageHolder {
         return mMessage;
     }
 
+    public ILXTextOutputFormatter.MessageReadyCallback getCallback() {
+        return mCallback;
+    }
+
+    public void setCallback(ILXTextOutputFormatter.MessageReadyCallback mCallback) {
+        this.mCallback = mCallback;
+    }
+
     public Spanned getDisplayNameForDisplay() {
         prepDisplayNameForDisplay();
         return mDisplayNameForDisplay;
@@ -56,8 +64,8 @@ public class RichMessageHolder {
             Log.d(TAG, ITAG + "get msg with null callback");
         }
 
-        if (mCallback == null) {
-            mCallback = callback;
+        if (getCallback() == null) {
+            setCallback(callback);
         }
 
         if (mBodyForDisplayShort == null) {
@@ -83,13 +91,7 @@ public class RichMessageHolder {
                             mEmptyPlaceholderImage,
                             mlinkColor,
                             activity,
-                            () -> {
-                                if (mCallback != null) {
-                                    mCallback.onComplete();
-                                } else {
-                                    Log.d(TAG, ITAG + "got img, null callback " + Integer.toString(mMessage.getMessageId()));
-                                }
-                            });
+                            callback);
         }
 
     }
