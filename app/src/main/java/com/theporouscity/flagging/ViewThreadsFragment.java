@@ -48,6 +48,8 @@ public class ViewThreadsFragment extends Fragment {
     private static final String TAG = "ViewThreadsFragment";
     private static final String ARG_BOARD = "board";
     private static final String ARG_MODE = "mode";
+    private static final String BOARDS_FETCH_VAL = "fetchingBoards";
+    private static final String THREADS_FETCH_VAL = "fetchingThreads";
     public static final int MODE_BOARD = 0;
     public static final int MODE_SNA = 1;
     public static final int MODE_MARKS = 2;
@@ -112,7 +114,11 @@ public class ViewThreadsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
-        setRetainInstance(true);
+        if (savedInstanceState != null) {
+            mFetchingBoards = savedInstanceState.getBoolean(BOARDS_FETCH_VAL);
+            mFetchingThreads = savedInstanceState.getBoolean(THREADS_FETCH_VAL);
+        }
+
         mBoard = null;
         mFetchingBoards = false;
         if (getArguments() != null) {
@@ -122,13 +128,20 @@ public class ViewThreadsFragment extends Fragment {
             } else {
                 if (getArguments().getInt(ARG_MODE) == MODE_SNA) {
                     mMode = MODE_SNA;
+                    getBoards();
                 } else if (getArguments().getInt(ARG_MODE) == MODE_MARKS) {
                     mMode = MODE_MARKS;
                 }
-                getBoards();
             }
             updateThreads();
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(BOARDS_FETCH_VAL, mFetchingBoards);
+        outState.putBoolean(THREADS_FETCH_VAL, mFetchingThreads);
     }
 
     @Override
@@ -143,8 +156,20 @@ public class ViewThreadsFragment extends Fragment {
         if (mLoadErrorTextView != null) {
             mLoadErrorTextView.setText(e.getMessage());
             mLoadErrorTextView.setVisibility(TextView.VISIBLE);
+            if (mRecyclerView != null) {
+                mRecyclerView.setVisibility(RecyclerView.INVISIBLE);
+            }
         } else {
             Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void hideError() {
+        if (mLoadErrorTextView != null && mLoadErrorTextView.getVisibility() != TextView.INVISIBLE) {
+            mLoadErrorTextView.setVisibility(TextView.INVISIBLE);
+        }
+        if (mRecyclerView != null && mRecyclerView.getVisibility() != RecyclerView.VISIBLE) {
+            mRecyclerView.setVisibility(RecyclerView.VISIBLE);
         }
     }
 
@@ -181,12 +206,10 @@ public class ViewThreadsFragment extends Fragment {
     private void getBoards() {
         mFetchingBoards = true;
 
-        if (mMode == MODE_SNA || mMode == MODE_MARKS) {
-            mILXRequestor.getBoards(
-                    (AsyncTaskResult<Boards> result) -> {
-                        getBoardsReady(result);
-                    }, getContext());
-        }
+        mILXRequestor.getBoards(
+                (AsyncTaskResult<Boards> result) -> {
+                    getBoardsReady(result);
+                }, getContext());
     }
 
     private void getBoardsReady(AsyncTaskResult<Boards> result) {
@@ -229,21 +252,22 @@ public class ViewThreadsFragment extends Fragment {
 
         updateProgressBar();
 
-        if (!mFetchingThreads && !mFetchingBoards && mLoadErrorTextView != null) {
+        if (!mFetchingThreads && !mFetchingBoards) {
             if (mThreads == null && mBookmarks == null) {
-                showError("Problem loading threads");
+                // don't do anything
             } else if (mMode == MODE_SNA && mThreads.getRecentlyUpdatedThreads().size() == 0) {
                 showError("No recently updated threads");
             } else if (mMode == MODE_MARKS && mBookmarks.getBookmarks().isEmpty()) {
                 showError("No updated bookmarks");
+            } else {
+                hideError();
+                if (mRecyclerView != null
+                        && ((mThreads != null && (mBoards != null || mMode == MODE_BOARD))
+                        || (mMode == MODE_MARKS && mBookmarks != null))) {
+                    mThreadAdapter = new ThreadAdapter();
+                    mRecyclerView.setAdapter(mThreadAdapter);
+                }
             }
-        }
-
-        if (mRecyclerView != null
-                && ((mThreads != null && (mBoards != null || mMode == MODE_BOARD))
-                    || (mMode == MODE_MARKS && mBookmarks != null))) {
-            mThreadAdapter = new ThreadAdapter();
-            mRecyclerView.setAdapter(mThreadAdapter);
         }
     }
 
@@ -290,7 +314,7 @@ public class ViewThreadsFragment extends Fragment {
             });
         }
 
-        updateUI();
+        updateProgressBar();
         return view;
     }
 
