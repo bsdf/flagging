@@ -37,6 +37,7 @@ import butterknife.ButterKnife;
 public class ActivityMainTabs extends AppCompatActivity {
 
     private static final String TAG = "ActivityMainTabs";
+    private static final String MARKS_VAL = "haveBookmarks";
 
     @BindView(R.id.activity_main_tabs_tabs)
     TabLayout mTabLayout;
@@ -57,12 +58,16 @@ public class ActivityMainTabs extends AppCompatActivity {
     UserAppSettings mSettings;
 
     private int mShortAnimationDuration;
-    private boolean mHaveBookmarks = false;
+    private boolean mHaveBookmarks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            mHaveBookmarks = savedInstanceState.getBoolean(MARKS_VAL);
+        }
 
         setContentView(R.layout.activity_main_tabs);
         ((FlaggingApplication) getApplication()).getILXComponent().inject(this);
@@ -71,7 +76,7 @@ public class ActivityMainTabs extends AppCompatActivity {
         mILXRequestor.getBookmarks(this, (AsyncTaskResult<Bookmarks> result) ->
         {
             if (result.getError() == null) {
-                if (!result.getResult().getBookmarks().isEmpty()){
+                if (!result.getResult().getBookmarks().isEmpty()) {
                     mHaveBookmarks = true;
                 } else {
                     mHaveBookmarks = false;
@@ -103,8 +108,19 @@ public class ActivityMainTabs extends AppCompatActivity {
         super.onResume();
         if ((mViewPager.getChildCount() == 2 && mHaveBookmarks) ||
                 mViewPager.getChildCount() == 3 && !mHaveBookmarks) {
-            mViewPager.getAdapter().notifyDataSetChanged();
+
+            if (mViewPager.getAdapter() == null) {
+                setupViewPager(mViewPager);
+            } else {
+                mViewPager.getAdapter().notifyDataSetChanged();
+            }
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(MARKS_VAL, mHaveBookmarks);
     }
 
     // can only modify # of tabs on UI thread
