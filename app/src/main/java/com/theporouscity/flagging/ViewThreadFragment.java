@@ -195,7 +195,6 @@ public class ViewThreadFragment extends Fragment {
                                     getContext(), mILXTextOutputFormatter);
                             mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                             updateUI();
-                            mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getRichMessageHolders().size() - 1, getActivity());
                             mPollWrapper.prepPollItems(getActivity());
                             mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
                             Log.d(TAG, "messages loaded - loadThread, no initial, after load - " + Integer.toString(mMessagesLoadedCount));
@@ -222,7 +221,6 @@ public class ViewThreadFragment extends Fragment {
                             mThreadHolder.getDrawingResources(getContext());
                             mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                             updateUI();
-                            mThreadHolder.prepAllMessagesForDisplay(mThreadHolder.getThread().getMessagePosition(mInitialMessageId), getActivity());
                             mPollWrapper.prepPollItems(getActivity());
                             mMessagesLoadedCount = mThreadHolder.getThread().getLocalMessageCount();
                             Log.d(TAG, "messages loaded - loadThread, with initial, after load - " + Integer.toString(mMessagesLoadedCount));

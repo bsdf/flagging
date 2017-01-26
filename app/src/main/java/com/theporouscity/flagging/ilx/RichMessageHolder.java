@@ -76,7 +76,7 @@ public class RichMessageHolder {
 
     }
 
-    public void prepBodyForDisplayShort(Activity activity,
+    private void prepBodyForDisplayShort(Activity activity,
                                         ILXTextOutputFormatter.MessageReadyCallback callback) {
 
         if (mCallback == null) {

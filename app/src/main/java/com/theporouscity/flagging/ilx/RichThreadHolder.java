@@ -218,7 +218,7 @@ public class RichThreadHolder {
                     break;
                 }
                 m.prepDisplayNameForDisplay();
-                m.prepBodyForDisplayShort(mActivity, null);
+                //m.prepBodyForDisplayShort(mActivity, null);
             }
 
             return null;

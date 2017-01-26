@@ -120,6 +120,7 @@ public class UserAppSettings {
         mLoadPrettyPicturesSetting = loadPrettyPicturesSetting;
     }
 
+    // TODO maybe change this to metered vs unmetered
     public boolean shouldLoadPictures(Context context) {
         if (mLoadPrettyPicturesSetting == LoadPrettyPicturesSetting.ALWAYS) {
             return true;

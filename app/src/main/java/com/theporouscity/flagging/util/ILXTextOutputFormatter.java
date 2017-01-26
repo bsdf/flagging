@@ -17,13 +17,16 @@ import android.text.style.ClickableSpan;
 import android.text.style.ImageSpan;
 import android.text.style.URLSpan;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.target.Target;
 import com.theporouscity.flagging.ViewThreadActivity;
 import com.theporouscity.flagging.ilx.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-
-import com.squareup.picasso.Picasso;
+import android.widget.Toast;
 
 import org.xml.sax.XMLReader;
 
@@ -210,51 +213,26 @@ public class ILXTextOutputFormatter {
                     mEmptyImagePlaceholder.getIntrinsicHeight());
 
             if (mCallback != null) {
-                new ImageGetterAsyncTask(mActivity, d, mCallback)
-                        .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, source);
+
+                Glide
+                        .with(mActivity)
+                        .load(source)
+                        .asBitmap()
+                        .into(new SimpleTarget<Bitmap>() {
+                            @Override
+                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                                processBitmap(resource, mActivity, d);
+                                mCallback.onComplete();
+                            }
+                        });
+
             } else {
-                Bitmap bitmap = getBitmap(mActivity, source);
-                processBitmap(bitmap, mActivity, d);
+                Log.e(TAG, "ILXImgHandler with null callback");
             }
 
             return d;
         }
 
-    }
-
-    private Bitmap getBitmap(Activity activity, String url) {
-        try {
-            try {
-
-                // TODO hopefully we get an onStop or something and we can stop loading images when we navigate away
-
-                    /*DisplayMetrics metrics = new DisplayMetrics();
-                    activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    int resizeWidth, resizeHeight;
-                    resizeWidth = resizeHeight = 0;
-                    if (metrics.widthPixels < metrics.heightPixels) {
-                        resizeWidth = metrics.widthPixels;
-                    } else {
-                        resizeHeight = metrics.heightPixels;
-                    }*/
-
-                // TODO bring this back when we can re-resize to original size if original is smaller
-
-                return Picasso
-                        .with(activity)
-                        .load(url)
-                        //.resize(resizeWidth, resizeHeight)
-                        //.centerInside()
-                        .get();
-
-            } catch (OutOfMemoryError outOfMemoryError) {
-                Log.d(TAG, "OOM trying to get img " + url);
-                return null;
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Exception trying to get img " + url + " " + e.toString());
-            return null;
-        }
     }
 
     private boolean processBitmap(Bitmap bitmap, Activity activity, LevelListDrawable levelListDrawable) {
@@ -303,46 +281,7 @@ public class ILXTextOutputFormatter {
         return false;
     }
 
-    private class ImageGetterAsyncTask extends AsyncTask<String, Void, Bitmap> {
-
-        private static final String ITAG = "img ";
-        private LevelListDrawable levelListDrawable;
-        private final WeakReference<Activity> mActivity;
-        private String mSource;
-        private MessageReadyCallback mCallback;
-
-        public ImageGetterAsyncTask(Activity activity, LevelListDrawable levelListDrawable,
-                                    MessageReadyCallback callback) {
-            mActivity = new WeakReference<Activity>(activity);
-            this.levelListDrawable = levelListDrawable;
-            mCallback = callback;
-        }
-
-        @Override
-        protected Bitmap doInBackground(String... params) {
-            mSource = params[0];
-            Log.d(TAG, ITAG + "getting image " + mSource);
-            final Activity activity = mActivity.get();
-            return getBitmap(activity, mSource);
-        }
-
-        @Override
-        protected void onPostExecute(final Bitmap bitmap) {
-            final Activity activity = mActivity.get();
-            Log.d(TAG, ITAG + "got image " + mSource);
-            if (processBitmap(bitmap, activity, levelListDrawable)) {
-                if (mCallback != null) {
-                    //Log.d(TAG, ITAG + "calling back for " + mSource);
-                    mCallback.onComplete();
-                } else {
-                    //Log.d(TAG, ITAG + "no callback for " + mSource);
-                }
-            }
-        }
-    }
-
     public interface MessageReadyCallback {
         public void onComplete();
     }
-
 }
