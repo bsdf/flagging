@@ -141,12 +141,6 @@ public class ViewThreadFragment extends Fragment {
         updateUI();
     }
 
-    public void onBackPressed() {
-        if (mThreadHolder != null) {
-            mThreadHolder.cancelPrepTask();
-        }
-    }
-
     private void showError(Exception e)
     {
         Log.d(TAG, e.toString());
@@ -190,8 +184,6 @@ public class ViewThreadFragment extends Fragment {
                         mFetching = false;
                         if (result.getError() == null) {
                             mThreadHolder = new RichThreadHolder(result.getResult(),
-                                    mILXRequestor.getCurrentAccount(),
-                                    mILXRequestor.getCurrentClient(getContext()),
                                     getContext(), mILXTextOutputFormatter);
                             mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                             updateUI();
@@ -215,8 +207,6 @@ public class ViewThreadFragment extends Fragment {
                         if (result.getError() == null) {
                             mFetching = false;
                             mThreadHolder = new RichThreadHolder(result.getResult(),
-                                    mILXRequestor.getCurrentAccount(),
-                                    mILXRequestor.getCurrentClient(getContext()),
                                     getContext(), mILXTextOutputFormatter);
                             mThreadHolder.getDrawingResources(getContext());
                             mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
@@ -597,7 +587,7 @@ public class ViewThreadFragment extends Fragment {
                 if (realPosition < 0) {
                     realPosition = 0;
                 }
-                messageHolder.bindMessage(mThreadHolder.getRichMessageHolders().get(realPosition));
+                messageHolder.bindMessage(mThreadHolder.createRichMessageHolder(realPosition));
             } else if (holder instanceof LoaderHolder) {
                 LoaderHolder loaderHolder = (LoaderHolder) holder;
                 loaderHolder.bindLoader();

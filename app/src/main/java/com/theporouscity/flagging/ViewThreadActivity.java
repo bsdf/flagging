@@ -80,15 +80,4 @@ public class ViewThreadActivity extends AppCompatActivity {
             mToolbar.setTitle(title);
         }
     }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        FragmentManager fm = getSupportFragmentManager();
-        ViewThreadFragment fragment = (ViewThreadFragment) fm.findFragmentById(R.id.fragment_container);
-
-        if (fragment != null) {
-            fragment.onBackPressed();
-        }
-    }
 }
