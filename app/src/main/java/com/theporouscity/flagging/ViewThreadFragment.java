@@ -3,6 +3,7 @@ package com.theporouscity.flagging;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
@@ -170,6 +171,7 @@ public class ViewThreadFragment extends Fragment {
 
         Log.d(TAG, "messages loaded - loadThread, before load - " + Integer.toString(mMessagesLoadedCount));
 
+        //TODO remove duplication
 
         if (mInitialMessageId == -1) {
 
@@ -208,7 +210,7 @@ public class ViewThreadFragment extends Fragment {
                             mFetching = false;
                             mThreadHolder = new RichThreadHolder(result.getResult(),
                                     getContext(), mILXTextOutputFormatter);
-                            mThreadHolder.getDrawingResources(getContext());
+                            mThreadHolder.prepSid(getContext(), mILXRequestor);
                             mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                             updateUI();
                             mPollWrapper.prepPollItems(getActivity());
@@ -422,8 +424,9 @@ public class ViewThreadFragment extends Fragment {
 
         public void bindMessage(RichMessageHolder richMessageHolder) {
             mRichMessageHolder = richMessageHolder;
+
             ILXTextOutputFormatter.MessageReadyCallback callback = () -> {
-                mThreadAdapter.notifyItemChanged(getAdapterPosition());
+                postAndNotifyAdapter(new Handler(), mRecyclerView, mThreadAdapter, getAdapterPosition());
             };
 
             mBodyTextView.setText(mRichMessageHolder.getBodyForDisplayShort(getActivity(), callback));
@@ -444,7 +447,26 @@ public class ViewThreadFragment extends Fragment {
                     mThreadHolder.getThread().getTitle(), mThreadHolder.getSid());
             startActivity(intent);
         }
+
+        protected void postAndNotifyAdapter(final Handler handler, final RecyclerView recyclerView,
+                                            final RecyclerView.Adapter adapter, int position) {
+            if (!recyclerView.isComputingLayout()) {
+                adapter.notifyItemChanged(position);
+            }
+
+            /*handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (!recyclerView.isComputingLayout()) {
+                        adapter.notifyItemChanged(position);
+                    } else {
+                        postAndNotifyAdapter(handler, recyclerView, adapter, position);
+                    }
+                }
+            });*/
+        }
     }
+
 
     private class PollItemHolder extends RecyclerView.ViewHolder {
 

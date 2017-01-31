@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
 
 import com.theporouscity.flagging.util.AsyncTaskResult;
+import com.theporouscity.flagging.util.ILXRequestor;
 import com.theporouscity.flagging.util.ILXTextOutputFormatter;
 import com.theporouscity.flagging.R;
 import com.theporouscity.flagging.util.ILXUrlParser;
@@ -61,6 +62,19 @@ public class RichThreadHolder {
     }
 
     public String getSid() { return mSid; }
+
+    public void setSid(String sid) { mSid = sid; }
+
+    public void prepSid(Context context, ILXRequestor requestor) {
+        requestor.getThreadSid(context, mThread.getBoardId(), mThread.getThreadId(),
+                (AsyncTaskResult<String> result) -> {
+                    if (result.getError() == null) {
+                        setSid(result.getResult());
+                    } else {
+                        Log.e(TAG, result.getError().toString());
+                    }
+                });
+    }
 
     public RichMessageHolder createRichMessageHolder(int position) {
         return new RichMessageHolder(this.mILXTextOutputFormatter,

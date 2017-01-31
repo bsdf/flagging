@@ -80,4 +80,9 @@ public class ViewThreadActivity extends AppCompatActivity {
             mToolbar.setTitle(title);
         }
     }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+    }
 }

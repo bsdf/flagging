@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 
@@ -60,6 +62,10 @@ public class ILXRequestor {
 
     public interface AddBookmarkCallback {
         void onComplete(AsyncTaskResult<Boolean> result);
+    }
+
+    public interface GetThreadSidCallback {
+        void onComplete(AsyncTaskResult<String> result);
     }
 
     public ILXRequestor(Serializer mSerializer, OkHttpClient sharedClient) {
@@ -225,6 +231,25 @@ public class ILXRequestor {
                 threadCallback.onComplete(new AsyncTaskResult<>(result.getError()));
             }
         }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
+    }
+
+    public void getThreadSid(Context context, int boardId, int threadId, GetThreadSidCallback callback) {
+        String url = getCurrentAccount().getThreadHtmlUrl(boardId, threadId);
+        new LoggedInRequestTask(getCurrentAccount(), getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+                    if (result.getError() == null) {
+                        Pattern pattern = Pattern.compile("\\?boardid=.+?;sid=([^']+)");
+                        Matcher matcher = pattern.matcher(result.getResult());
+
+                        if (matcher.find() && matcher.group(1) != null) {
+                            callback.onComplete(new AsyncTaskResult<>(matcher.group(1)));
+                        } else {
+                            callback.onComplete(new AsyncTaskResult<>(new Exception("can't find thread sid")));
+                        }
+                    } else {
+                        callback.onComplete(new AsyncTaskResult<>(result.getError()));
+                    }
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
     }
 
     public static final class ILXDateTransform implements Transform<Date> {
