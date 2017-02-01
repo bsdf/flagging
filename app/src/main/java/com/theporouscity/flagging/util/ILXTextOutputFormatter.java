@@ -208,12 +208,18 @@ public class ILXTextOutputFormatter {
                     mEmptyImagePlaceholder.getIntrinsicWidth(),
                     mEmptyImagePlaceholder.getIntrinsicHeight());
 
+            DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+
             if (mCallback != null) {
+
+                // TODO 32 is a magic number, sum of margin/padding in layout ... fix this
 
                 Glide
                         .with(mActivity)
                         .load(source)
                         .asBitmap()
+                        .override(metrics.widthPixels - 32, metrics.heightPixels - 32)
+                        .fitCenter()
                         .into(new SimpleTarget<Bitmap>() {
                             @Override
                             public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
@@ -234,35 +240,10 @@ public class ILXTextOutputFormatter {
     private boolean processBitmap(Bitmap bitmap, Activity activity, LevelListDrawable levelListDrawable) {
         if (activity != null && bitmap != null) {
             try {
-                DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-
-                // TODO 32 is a magic number, sum of margin/padding in layout ... fix this
-
-                float multiplier = Math.min(
-                        metrics.density,
-                        Math.min((float) (metrics.widthPixels - 32) / bitmap.getWidth(),
-                                (float) (metrics.heightPixels - 32) / bitmap.getHeight()));
-
-                int width = Math.round(bitmap.getWidth() * multiplier);
-                int height = Math.round(bitmap.getHeight() * multiplier);
-
-                    /*
-                    Log.d(TAG, ITAG + "img metrics " + mSource + " " +
-                            Float.toString(metrics.density) + " " +
-                            Integer.toString(metrics.widthPixels) + " " +
-                            Integer.toString(metrics.heightPixels) + " " +
-                            Integer.toString(bitmap.getWidth()) + " " +
-                            " " + Integer.toString(bitmap.getHeight()) +
-                            " " + Float.toString(multiplier) +
-                            " " + Integer.toString(width) +
-                                    " " + Integer.toString(height));*/
-
-                Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
-
-                Drawable d = new BitmapDrawable(activity.getResources(), scaledBitmap);
+                Drawable d = new BitmapDrawable(activity.getResources(), bitmap);
 
                 levelListDrawable.addLevel(1, 1, d);
-                levelListDrawable.setBounds(0, 0, width, height);
+                levelListDrawable.setBounds(0, 0, bitmap.getWidth(), bitmap.getHeight());
                 levelListDrawable.setLevel(1);
 
                 return true;
@@ -280,4 +261,6 @@ public class ILXTextOutputFormatter {
     public interface MessageReadyCallback {
         public void onComplete();
     }
+
+
 }
