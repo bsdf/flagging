@@ -12,6 +12,9 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.RSAKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
@@ -44,7 +47,7 @@ public class KeystoreHelper {
                 Calendar notAfter = Calendar.getInstance();
                 notAfter.add(Calendar.YEAR, 1);
                 KeyPairGeneratorSpec spec = new KeyPairGeneratorSpec.Builder(context)
-                        .setAlias(key)
+                        .setAlias(ourKey)
                         .setKeyType("RSA")
                         .setKeySize(2048)
                         .setSubject(new X500Principal("CN=test"))
@@ -62,8 +65,8 @@ public class KeystoreHelper {
 
             // Retrieve the keys
             KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry(ourKey, null);
-            RSAPrivateKey privateKey = (RSAPrivateKey) privateKeyEntry.getPrivateKey();
-            RSAPublicKey publicKey = (RSAPublicKey) privateKeyEntry.getCertificate().getPublicKey();
+            PrivateKey privateKey = privateKeyEntry.getPrivateKey();
+            PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
 
             Log.v(TAG, "private key = " + privateKey.toString());
             Log.v(TAG, "public key = " + publicKey.toString());
@@ -74,7 +77,7 @@ public class KeystoreHelper {
             Log.v(TAG, "plainText = " + value);
             Log.v(TAG, "encryptedDataFilePath = " + encryptedDataFilePath);
 
-            Cipher inCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "AndroidOpenSSL");
+            Cipher inCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             inCipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
             CipherOutputStream cipherOutputStream =
@@ -95,10 +98,10 @@ public class KeystoreHelper {
 
             // Retrieve the keys
             KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(ourKey, null);
-            RSAPrivateKey privateKey = (RSAPrivateKey) privateKeyEntry.getPrivateKey();
-            RSAPublicKey publicKey = (RSAPublicKey) privateKeyEntry.getCertificate().getPublicKey();
+            PrivateKey privateKey = privateKeyEntry.getPrivateKey();
+            PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
 
-            Cipher outCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "AndroidOpenSSL");
+            Cipher outCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             outCipher.init(Cipher.DECRYPT_MODE, privateKey);
 
             String encryptedDataFilePath = context.getFilesDir().getAbsolutePath() + File.separator + key;
