@@ -69,6 +69,7 @@ public class ViewBoardsFragment extends Fragment {
         Log.d(TAG, System.identityHashCode(this) + "OnCreate");
 
         super.onCreate(savedInstanceState);
+        // TODO this is a no-no - should only use retained instance for headless fragments
         setRetainInstance(true);
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 

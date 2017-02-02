@@ -61,8 +61,11 @@ public class UserAppSettings {
                 continue;
             }
             String[] accountVals = serializedAccount.split(":");
+
+            String password = KeystoreHelper.retriveEncryptedString(accountIds[i], context);
+
             mAccounts.add(new ILXAccount(accountIds[i], accountVals[0], accountVals[1],
-                    accountVals[2], accountVals[3]));
+                    accountVals[2], password));
         }
 
         mCurrentAccount = mAccounts.get(0);
@@ -94,9 +97,10 @@ public class UserAppSettings {
         persistString(account.getId(),
                         account.getDomain() + ":" +
                         account.getInstance() + ":" +
-                        account.getUsername() + ":" +
-                        account.getPassword(),
+                        account.getUsername(),
                     context);
+
+        KeystoreHelper.storeEncryptedString(account.getId(), account.getPassword(), context);
     }
 
     public static final String LoadPrettyPicturesSettingKey = "load pretty pictures";

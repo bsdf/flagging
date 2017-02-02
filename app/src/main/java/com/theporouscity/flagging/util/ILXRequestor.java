@@ -233,7 +233,8 @@ public class ILXRequestor {
         }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
     }
 
-    public void getThreadSid(Context context, int boardId, int threadId, GetThreadSidCallback callback) {
+    public void getThreadSid(Context context, int boardId, int threadId,
+                             GetThreadSidCallback callback) {
         String url = getCurrentAccount().getThreadHtmlUrl(boardId, threadId);
         new LoggedInRequestTask(getCurrentAccount(), getCurrentAccount().getHttpClient(context, mSharedHttpClient),
                 (AsyncTaskResult<String> result) -> {
