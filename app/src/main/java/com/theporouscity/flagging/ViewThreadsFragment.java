@@ -1,12 +1,14 @@
 package com.theporouscity.flagging;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
@@ -380,7 +382,7 @@ public class ViewThreadsFragment extends Fragment {
     }
 
     private class BookmarkHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener {
+            implements View.OnClickListener, View.OnLongClickListener {
 
         private Bookmark mBookmark;
         private TextView mTitleTextView;
@@ -388,6 +390,7 @@ public class ViewThreadsFragment extends Fragment {
         public BookmarkHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
             mTitleTextView = (TextView) itemView.findViewById(R.id.list_item_bookmark_title_text_view);
         }
 
@@ -401,6 +404,46 @@ public class ViewThreadsFragment extends Fragment {
             Intent intent = ViewThreadActivity
                     .newIntent(getActivity(), mBookmark.getBoardId(), mBookmark.getThreadId(), mBookmark.getBookmarkedMessageId());
             startActivity(intent);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Remove bookmark from this thread?");
+
+            builder.setPositiveButton("Yes", (DialogInterface dialog, int id) -> {
+                removeBookmark();
+            });
+
+            builder.setNegativeButton("No", (DialogInterface dialog, int id) -> {
+                dialog.cancel();
+            });
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            return true;
+        }
+
+        private void removeBookmark() {
+            mILXRequestor.getThreadSid(getContext(), mBookmark.getBoardId(), mBookmark.getThreadId(),
+                    (AsyncTaskResult<String> result) -> {
+                        if (result.getError() == null) {
+                            mILXRequestor.removeBookmark(mBookmark.getBoardId(), mBookmark.getThreadId(),
+                                    result.getResult(), getContext(), (AsyncTaskResult<Boolean> result2) -> {
+                                        if (result.getError() == null) {
+                                            Toast.makeText(getContext(), "Bookmark removed", Toast.LENGTH_SHORT).show();
+                                            mBookmarks.getBookmarks().remove(mBookmark);
+                                            mThreadAdapter.notifyItemRemoved(getAdapterPosition());
+                                        } else {
+                                            showError(result.getError());
+                                        }
+                                    });
+                        } else {
+                            showError(result.getError());
+                        }
+                    });
         }
     }
 

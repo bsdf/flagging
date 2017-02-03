@@ -64,6 +64,10 @@ public class ILXRequestor {
         void onComplete(AsyncTaskResult<Boolean> result);
     }
 
+    public interface RemoveBookmarkCallback {
+        void onComplete(AsyncTaskResult<Boolean> result);
+    }
+
     public interface GetThreadSidCallback {
         void onComplete(AsyncTaskResult<String> result);
     }
@@ -142,6 +146,23 @@ public class ILXRequestor {
                         callback.onComplete(new AsyncTaskResult<>(result.getError()));
                     }
                 }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
+    }
+
+    public void removeBookmark(int boardId, int threadId, String threadSid,
+                               Context context, RemoveBookmarkCallback callback) {
+
+        String url = getCurrentAccount().getRemoveBookmarkUrl(boardId, threadId, threadSid);
+
+        new LoggedInRequestTask(getCurrentAccount(),
+                getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+                    if (result.getError() == null) {
+                        callback.onComplete(new AsyncTaskResult<>(true));
+                    } else {
+                        callback.onComplete(new AsyncTaskResult<>(result.getError()));
+                    }
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
+
     }
 
     public UserAppSettings getUserAppSettings(Context context) {

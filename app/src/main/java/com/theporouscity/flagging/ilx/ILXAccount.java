@@ -206,6 +206,14 @@ public class ILXAccount implements Parcelable {
         return url;
     }
 
+    public String getRemoveBookmarkUrl(int boardId, int threadId, String threadSid) {
+        String url = getUrlHelper("/DeleteBookmarkControllerServlet");
+        url = url + "?boardid=" + Integer.toString(boardId);
+        url = url + "&threadid=" + Integer.toString(threadId);
+        url = url + "&sid=" + threadSid;
+        return url;
+    }
+
     private String getUrlHelper(String path) {
         return getBaseUrlPath() + path;
     }
