@@ -66,7 +66,6 @@ public class ViewBoardsFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, System.identityHashCode(this) + "OnCreate");
 
         super.onCreate(savedInstanceState);
         // TODO this is a no-no - should only use retained instance for headless fragments
@@ -84,8 +83,6 @@ public class ViewBoardsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        Log.d(TAG, System.identityHashCode(this) + "OnCreateView");
-
         View view = inflater.inflate(R.layout.fragment_view_boards, container, false);
         ButterKnife.bind(this, view);
 
@@ -94,42 +91,6 @@ public class ViewBoardsFragment extends Fragment {
 
         updateUI();
         return view;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "OnResume");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "OnPause");
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        Log.d(TAG, "OnStop");
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        Log.d(TAG, System.identityHashCode(this) + "OnDestroyView");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, System.identityHashCode(this) + "OnDestroy");
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        Log.d(TAG, "OnDetach");
     }
 
     public void toggleEditMode() {

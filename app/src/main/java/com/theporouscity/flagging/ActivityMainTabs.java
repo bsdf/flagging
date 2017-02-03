@@ -145,6 +145,7 @@ public class ActivityMainTabs extends AppCompatActivity {
 
         });
 
+        viewPager.setOffscreenPageLimit(2);
         viewPager.setAdapter(adapter);
     }
 
@@ -181,7 +182,6 @@ public class ActivityMainTabs extends AppCompatActivity {
     }
 
     class ViewPagerAdapter extends FragmentStatePagerAdapter {
-        private List<Fragment> mFragmentList = new ArrayList<>();
         private static final String TAG = "ViewPagerAdapter";
         private FloatingActionButton mFloatingActionButton;
 
@@ -197,13 +197,10 @@ public class ActivityMainTabs extends AppCompatActivity {
 
             if (position == bookmarksPosition()) {
                 theFragment = ViewThreadsFragment.newInstance(false);
-                mFragmentList.add(theFragment);
             } else if (position == snaPosition()) {
                 theFragment = ViewThreadsFragment.newInstance(true);
-                mFragmentList.add(theFragment);
             } else if (position == boardsPosition()) {
                 theFragment = new ViewBoardsFragment();
-                mFragmentList.add(theFragment);
             }
 
             return theFragment;
@@ -249,7 +246,6 @@ public class ActivityMainTabs extends AppCompatActivity {
             // we only get here after notifyDatasetChanged so we know tabs need to change
             // inefficient but this (having bookmarks <-> not having them) is rare
 
-            mFragmentList = new ArrayList<>();
             return POSITION_NONE;
         }
     }

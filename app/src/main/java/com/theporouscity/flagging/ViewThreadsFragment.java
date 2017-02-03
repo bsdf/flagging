@@ -48,8 +48,6 @@ public class ViewThreadsFragment extends Fragment {
     private static final String TAG = "ViewThreadsFragment";
     private static final String ARG_BOARD = "board";
     private static final String ARG_MODE = "mode";
-    private static final String BOARDS_FETCH_VAL = "fetchingBoards";
-    private static final String THREADS_FETCH_VAL = "fetchingThreads";
     public static final int MODE_BOARD = 0;
     public static final int MODE_SNA = 1;
     public static final int MODE_MARKS = 2;
@@ -77,11 +75,11 @@ public class ViewThreadsFragment extends Fragment {
 
     private ThreadAdapter mThreadAdapter;
     private int mMode;
-    private Board mBoard;
-    private Boards mBoards;
+    private Board mBoard = null;
+    private Boards mBoards = null;
     private RecentlyUpdatedThreads mThreads = null;
-    private boolean mFetchingThreads;
-    private boolean mFetchingBoards;
+    private boolean mFetchingThreads = false;
+    private boolean mFetchingBoards = false;
     private Bookmarks mBookmarks = null;
 
     public int getMode() {
@@ -111,11 +109,10 @@ public class ViewThreadsFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, System.identityHashCode(this) + "OnCreate");
         super.onCreate(savedInstanceState);
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
-        mBoard = null;
-        mFetchingBoards = false;
         if (getArguments() != null) {
             if (getArguments().getInt(ARG_MODE) == MODE_BOARD) {
                 mMode = MODE_BOARD;
@@ -128,14 +125,20 @@ public class ViewThreadsFragment extends Fragment {
                     mMode = MODE_MARKS;
                 }
             }
-            updateThreads();
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, System.identityHashCode(this) + "OnStart");
     }
 
     @Override
     public void onResume() {
         super.onResume();
         updateThreads();
+        Log.d(TAG, System.identityHashCode(this) + "OnResume");
     }
 
     private void showError(Exception e)
@@ -172,6 +175,9 @@ public class ViewThreadsFragment extends Fragment {
     }
 
     private void updateThreads() {
+
+        if (mFetchingThreads) return;
+
         mFetchingThreads = true;
 
         if (mMode == MODE_BOARD) {
@@ -280,6 +286,8 @@ public class ViewThreadsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
 
+        Log.d(TAG, System.identityHashCode(this) + "OnCreateView");
+
         if (mMode == MODE_BOARD) {
             getActivity().setTitle(mBoard.getName());
         }
@@ -307,13 +315,15 @@ public class ViewThreadsFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, System.identityHashCode(this) + "OnPause");
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, System.identityHashCode(this) + "OnStop");
     }
 
     private class ThreadHolder extends RecyclerView.ViewHolder
