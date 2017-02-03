@@ -114,11 +114,6 @@ public class ViewThreadsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
-        if (savedInstanceState != null) {
-            mFetchingBoards = savedInstanceState.getBoolean(BOARDS_FETCH_VAL);
-            mFetchingThreads = savedInstanceState.getBoolean(THREADS_FETCH_VAL);
-        }
-
         mBoard = null;
         mFetchingBoards = false;
         if (getArguments() != null) {
@@ -135,13 +130,6 @@ public class ViewThreadsFragment extends Fragment {
             }
             updateThreads();
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(BOARDS_FETCH_VAL, mFetchingBoards);
-        outState.putBoolean(THREADS_FETCH_VAL, mFetchingThreads);
     }
 
     @Override
