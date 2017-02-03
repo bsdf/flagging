@@ -433,7 +433,6 @@ public class ViewThreadsFragment extends Fragment {
                             mILXRequestor.removeBookmark(mBookmark.getBoardId(), mBookmark.getThreadId(),
                                     result.getResult(), getContext(), (AsyncTaskResult<Boolean> result2) -> {
                                         if (result.getError() == null) {
-                                            Toast.makeText(getContext(), "Bookmark removed", Toast.LENGTH_SHORT).show();
                                             mBookmarks.getBookmarks().remove(mBookmark);
                                             mThreadAdapter.notifyItemRemoved(getAdapterPosition());
                                         } else {
