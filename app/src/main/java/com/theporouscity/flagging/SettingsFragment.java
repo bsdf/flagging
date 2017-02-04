@@ -134,7 +134,7 @@ public class SettingsFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            Intent intent = AddEditAccountActivity.newIntent(getContext(), mAccount);
+            Intent intent = AddEditAccountActivity.newIntent(getContext(), mAccount.getId());
             startActivity(intent);
         }
     }

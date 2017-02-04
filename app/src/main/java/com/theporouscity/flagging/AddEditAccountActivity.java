@@ -23,11 +23,11 @@ public class AddEditAccountActivity extends AppCompatActivity {
         AddEditAccountFragment fragment = (AddEditAccountFragment) fm.findFragmentById(R.id.fragment_container);
 
         if (fragment == null) {
-            ILXAccount account = getIntent().getParcelableExtra(EXTRA_ACCOUNT);
+            String accountId = getIntent().getStringExtra(EXTRA_ACCOUNT);
             if (getIntent().getBooleanExtra(EXTRA_NOACCOUNTSYET, false)) {
                 fragment = AddEditAccountFragment.newInstance();
             } else {
-                fragment = AddEditAccountFragment.newInstance(account);
+                fragment = AddEditAccountFragment.newInstance(accountId);
             }
             fm.beginTransaction()
                     .add(R.id.fragment_container, fragment)
@@ -38,10 +38,10 @@ public class AddEditAccountActivity extends AppCompatActivity {
 
     }
 
-    public static Intent newIntent(Context packageContent, ILXAccount account) {
+    public static Intent newIntent(Context packageContent, String accountId) {
         Intent intent = new Intent(packageContent, AddEditAccountActivity.class);
-        if (account != null) {
-            intent.putExtra(EXTRA_ACCOUNT, account);
+        if (accountId != null) {
+            intent.putExtra(EXTRA_ACCOUNT, accountId);
         }
         return intent;
     }

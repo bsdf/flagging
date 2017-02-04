@@ -81,6 +81,15 @@ public class UserAppSettings {
         this.mCurrentAccount = mCurrentAccount;
     }
 
+    public ILXAccount getAccount(String accountId) {
+        for (ILXAccount account : mAccounts) {
+            if (account.getId().equals(accountId)) {
+                return account;
+            }
+        }
+        return null;
+    }
+
     public void saveAccountAndPersist(Context context, ILXAccount account) {
 
         if (!mAccounts.contains(account)) {

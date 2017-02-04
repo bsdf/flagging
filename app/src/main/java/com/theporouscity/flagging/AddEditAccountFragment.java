@@ -56,12 +56,12 @@ public class AddEditAccountFragment extends Fragment {
     private ILXAccount mAccount;
     private boolean mNoAccountsYet;
 
-    public static AddEditAccountFragment newInstance(ILXAccount account) {
+    public static AddEditAccountFragment newInstance(String accountId) {
         AddEditAccountFragment fragment = new AddEditAccountFragment();
 
         Bundle args = new Bundle();
-        if (account != null) {
-            args.putParcelable(ARG_ACCOUNT, account);
+        if (accountId != null) {
+            args.putString(ARG_ACCOUNT, accountId);
         }
         args.putBoolean(ARG_NOACCOUNTSYET, false);
         fragment.setArguments(args);
@@ -83,7 +83,8 @@ public class AddEditAccountFragment extends Fragment {
         ((FlaggingApplication) getActivity().getApplication()).getILXComponent().inject(this);
 
         if (getArguments() != null) {
-            mAccount = getArguments().getParcelable(ARG_ACCOUNT);
+            String id = getArguments().getString(ARG_ACCOUNT);
+            mAccount = mSettings.getAccount(id);
             mNoAccountsYet = getArguments().getBoolean(ARG_NOACCOUNTSYET);
         }
     }
