@@ -427,6 +427,9 @@ public class ViewThreadsFragment extends Fragment {
         }
 
         private void removeBookmark() {
+
+            // TODO hmm
+
             mILXRequestor.getThreadSid(getContext(), mBookmark.getBoardId(), mBookmark.getThreadId(),
                     (AsyncTaskResult<String> result) -> {
                         if (result.getError() == null) {

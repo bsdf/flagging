@@ -1,5 +1,6 @@
 package com.theporouscity.flagging;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -133,7 +134,8 @@ public class SettingsFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            Toast.makeText(getContext(), "Edit this account", Toast.LENGTH_SHORT).show();
+            Intent intent = AddEditAccountActivity.newIntent(getContext(), mAccount);
+            startActivity(intent);
         }
     }
 

@@ -103,7 +103,7 @@ public class ILXRequestor {
     }
 
     public void saveAccount(Context context, ILXAccount account) {
-        mUserAppSettings.addAccountAndPersist(context, account);
+        mUserAppSettings.saveAccountAndPersist(context, account);
     }
 
     public void getBookmarks(Context context, BookmarksCallback bookmarksCallback) {

@@ -16,7 +16,7 @@
         android:layout_gravity="start|center_vertical"
         android:text="Add a new account"
         android:textSize="16sp"
-        android:layout_marginLeft="7dp"
+        android:layout_marginLeft="16dp"
         android:fontFamily="sans-serif"
         android:textColor="@color/colorTextPrimary"
         android:id="@+id/list_item_add_account_caption"/>

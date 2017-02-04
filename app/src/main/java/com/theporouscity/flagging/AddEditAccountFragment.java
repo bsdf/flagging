@@ -108,32 +108,42 @@ public class AddEditAccountFragment extends Fragment {
 
     private void handleSave(View v) {
 
-        // TODO sanitize?
-
         String newServer = mServerEditText.getText().toString();
         String newInstance = mInstanceEditText.getText().toString();
         String newUsername = mUsernameEditText.getText().toString();
         String newPassword = mPasswordEditText.getText().toString();
-
-        if (mAccount != null && mAccount.getDomain() == newServer &&
-                mAccount.getInstance() == newInstance &&
-                mAccount.getUsername() == newUsername &&
-                mAccount.getPassword() == newPassword) {
-            getActivity().finish();
-        }
 
         if (newServer.isEmpty() || newInstance.isEmpty() || newUsername.isEmpty() || newPassword.isEmpty()) {
             Toast.makeText(getContext(), "Fields can't be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        ILXAccount newAccount = new ILXAccount(newServer, newInstance, newUsername, newPassword);
+        if (mAccount != null) {
+            if (mAccount.getDomain() == newServer &&
+                    mAccount.getInstance() == newInstance &&
+                    mAccount.getUsername() == newUsername &&
+                    mAccount.getPassword() == newPassword) {
+                getActivity().finish();
+            }
+        }
 
-        mILXRequestor.login(getContext(), newAccount, (AsyncTaskResult<Boolean> result) -> {
+        final ILXAccount editedAccount = new ILXAccount(newServer, newInstance, newUsername, newPassword);
+
+        mILXRequestor.login(getContext(), editedAccount, (AsyncTaskResult<Boolean> result) -> {
             if (result.getError() == null) {
 
                 Toast.makeText(getContext(), "Logged in successfully", Toast.LENGTH_SHORT).show();
-                mILXRequestor.saveAccount(getContext(), newAccount);
+
+                if (mAccount == null) {
+                    mAccount = editedAccount;
+                } else {
+                    mAccount.setDomain(editedAccount.getDomain());
+                    mAccount.setInstance(editedAccount.getInstance());
+                    mAccount.setUsername(editedAccount.getUsername());
+                    mAccount.setPassword(editedAccount.getPassword());
+                }
+
+                mILXRequestor.saveAccount(getContext(), mAccount);
 
                 if (mNoAccountsYet) {
                     Intent i = new Intent(getContext(), ActivityMainTabs.class);

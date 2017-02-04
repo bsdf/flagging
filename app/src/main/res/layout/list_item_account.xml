@@ -15,7 +15,7 @@
         android:text="an account name"
         android:id="@+id/list_item_account_instance_text_view"
         android:layout_centerVertical="true"
-        android:layout_marginLeft="7dp"
+        android:layout_marginLeft="16dp"
         android:textAppearance="@android:style/TextAppearance.Material.Medium"
         android:textColor="@color/colorTextPrimary"/>
 

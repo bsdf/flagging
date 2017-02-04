@@ -81,7 +81,7 @@ public class UserAppSettings {
         this.mCurrentAccount = mCurrentAccount;
     }
 
-    public void addAccountAndPersist(Context context, ILXAccount account) {
+    public void saveAccountAndPersist(Context context, ILXAccount account) {
 
         if (!mAccounts.contains(account)) {
             mAccounts.add(account);
