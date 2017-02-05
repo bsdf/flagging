@@ -193,6 +193,7 @@ public class ViewThreadFragment extends Fragment {
                         if (result.getError() == null) {
                             mThreadHolder = new RichThreadHolder(result.getResult(),
                                     getContext(), mILXTextOutputFormatter);
+                            mThreadHolder.prepSid(getContext(), mILXRequestor);
                             mPollWrapper = new PollWrapper(mThreadHolder, mILXTextOutputFormatter);
                             updateUI();
                             mPollWrapper.prepPollItems(getActivity());
@@ -329,9 +330,12 @@ public class ViewThreadFragment extends Fragment {
 
         mILXRequestor.addBookmark(mBoardId, mThreadId, lastMessage.getMessageId(), mThreadHolder.getSid(),
                 getContext(), (AsyncTaskResult<Boolean> result) -> {
+                    Log.d(TAG, "add bookmark returned");
                     if (result.getError() == null) {
+                        Log.d(TAG, "set bookmark");
                         Toast.makeText(getContext(), "Bookmark set", Toast.LENGTH_SHORT).show();
                     } else {
+                        Log.d(TAG, "failed to set bookmark");
                         Toast.makeText(getContext(),
                                 "Problem setting bookmark: " + result.getError().getLocalizedMessage(),
                                 Toast.LENGTH_SHORT).show();
