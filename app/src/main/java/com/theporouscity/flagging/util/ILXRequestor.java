@@ -79,6 +79,10 @@ public class ILXRequestor {
         void onComplete(AsyncTaskResult<String> result);
     }
 
+    public interface NewAnswerCallback {
+        void onComplete(AsyncTaskResult<String> result);
+    }
+
     public ILXRequestor(Serializer mSerializer, OkHttpClient sharedClient) {
         this.mSerializer = mSerializer;
         this.mSharedHttpClient = sharedClient;
@@ -322,33 +326,24 @@ public class ILXRequestor {
         }
     }
 
-//    private static final String newAnswerUrl = "http://ilxor.com/ILX/NewAnswerControllerServlet";
-//    public void postAnswer(String message, int boardId, int threadId, String sKey, int messageCount) {
-//        RequestBody body = new FormBody.Builder()
-//                .add("boardId", String.valueOf(boardId))
-//                .add("threadId", String.valueOf(threadId))
-//                .add("messageCount", String.valueOf(messageCount))
-//                .add("sKey", sKey)
-////                .add("sKey", "C79071A24C1647BC224DF2C718A54015")
-//                .add("text", message)
-//                .build();
-//
-//        Request req = new Request.Builder()
-//                .url(newAnswerUrl)
-////                .header("Cookie", "StyleSheet=newold.css; username=\"aGiDYXzdnWd8lWK/Y5psYJkimZJr\"; password=\"QlrFZzKgpnVDkzW0MJJXbA==\"; JSESSIONID=C79071A24C1647BC224DF2C718A54015; __utma=43332989.1687555477.1479489587.1479489587.1479489587.1; __utmc=43332989; __utmz=43332989.1479489587.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)")
-//                .post(body)
-//                .build();
-//
-//        mSharedHttpClient.newCall(req).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//                Log.e(TAG, e.getMessage());
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//                Log.e(TAG, response.toString());
-//            }
-//        });
-//    }
+    private static final String newAnswerUrl = "http://ilxor.com/ILX/NewAnswerControllerServlet";
+    public void postAnswer(Context context, String message, int boardId, int threadId, String sKey, int messageCount, NewAnswerCallback callback) {
+        RequestBody body = new FormBody.Builder()
+                .add("boardId", String.valueOf(boardId))
+                .add("threadId", String.valueOf(threadId))
+                .add("messageCount", String.valueOf(messageCount))
+                .add("sKey", sKey)
+                .add("text", message)
+                .build();
+
+        new LoggedInRequestTask(getCurrentAccount(), "POST", body, getCurrentAccount().getHttpClient(context, mSharedHttpClient),
+                (AsyncTaskResult<String> result) -> {
+                    if (result.getError() == null) {
+                        String responseBody = result.getResult();
+                        callback.onComplete(new AsyncTaskResult<>(responseBody));
+                    } else {
+                        callback.onComplete(new AsyncTaskResult<>(result.getError()));
+                    }
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, newAnswerUrl);
+    }
 }

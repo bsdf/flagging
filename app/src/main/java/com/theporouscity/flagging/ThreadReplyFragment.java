@@ -8,7 +8,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.theporouscity.flagging.util.ILXRequestor;
 
@@ -34,6 +36,9 @@ public class ThreadReplyFragment extends Fragment {
 
     @BindView(R.id.thread_reply_fab)
     FloatingActionButton mReplyFab;
+
+    @BindView(R.id.reply_text)
+    EditText replyText;
 
     @Inject
     ILXRequestor mILXRequestor;
@@ -80,8 +85,21 @@ public class ThreadReplyFragment extends Fragment {
         getActivity().setTitle("Reply to Thread");
 
         mReplyFab.setOnClickListener(v -> {
-            Log.d(TAG, "fab clicked");
-//            mILXRequestor.postAnswer("hello world", boardId, threadId, sKey, messageCount);
+            String reply = replyText.getText().toString();
+            if (reply != null && !reply.trim().equals("")) {
+                Log.d(TAG, "posting reply..");
+                mILXRequestor.postAnswer(getContext(), reply, boardId, threadId, sKey, messageCount,
+                        result -> {
+                            if (result.getError() == null) {
+                                Log.d(TAG, "reply posted.");
+                                Toast.makeText(getContext(), "Reply posted", Toast.LENGTH_SHORT).show();
+                                getActivity().onBackPressed();
+                            } else {
+                                Log.d(TAG, "error posting reply: " + result.getError().toString());
+                                Toast.makeText(getContext(), "Error posting reply", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
         });
 
         return view;
