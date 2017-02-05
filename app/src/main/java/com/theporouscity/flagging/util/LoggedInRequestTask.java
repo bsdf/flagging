@@ -10,19 +10,23 @@ import java.io.IOException;
 
 import okhttp3.Cookie;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
  * Created by bergstroml on 2/26/16.
  */
 public class LoggedInRequestTask extends AsyncTask<String, Void, AsyncTaskResult<String>> {
+    private static final String TAG = "LoggedInRequestTask";
 
     private OkHttpClient mHttpClient;
     private Callback mCallback;
     private ILXAccount mAccount;
-    private final String TAG = "LoggedInRequestTask";
+    private String method;
+    private RequestBody requestBody;
 
     @Override
     protected AsyncTaskResult<String> doInBackground(String... urls) {
@@ -39,11 +43,14 @@ public class LoggedInRequestTask extends AsyncTask<String, Void, AsyncTaskResult
         String url = urls[0];
         Log.d(TAG, "asked for url " + url);
         try {
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
+            Request.Builder builder = new Request.Builder().url(url);
 
-            Response response = mHttpClient.newCall(request).execute();
+            if (method != null) {
+                Log.d(TAG, "got method:  " + method);
+                builder.method(method, requestBody);
+            }
+
+            Response response = mHttpClient.newCall(builder.build()).execute();
             if (response.code() != 200) {
                 return new AsyncTaskResult<>(new ServerInaccessibleException("Server error"));
             }
@@ -111,5 +118,11 @@ public class LoggedInRequestTask extends AsyncTask<String, Void, AsyncTaskResult
         mAccount = account;
         mHttpClient = httpClient;
         mCallback = callback;
+    }
+
+    LoggedInRequestTask(ILXAccount account, String method, RequestBody requestBody, OkHttpClient httpClient, Callback callback) {
+        this(account, httpClient, callback);
+        this.method = method;
+        this.requestBody = requestBody;
     }
 }
