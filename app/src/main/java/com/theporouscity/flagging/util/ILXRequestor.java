@@ -326,8 +326,9 @@ public class ILXRequestor {
         }
     }
 
-    private static final String newAnswerUrl = "http://ilxor.com/ILX/NewAnswerControllerServlet";
     public void postAnswer(Context context, String message, int boardId, int threadId, String sKey, int messageCount, NewAnswerCallback callback) {
+        String url = getCurrentAccount().getNewAnswerUrl();
+
         RequestBody body = new FormBody.Builder()
                 .add("boardId", String.valueOf(boardId))
                 .add("threadId", String.valueOf(threadId))
@@ -344,6 +345,6 @@ public class ILXRequestor {
                     } else {
                         callback.onComplete(new AsyncTaskResult<>(result.getError()));
                     }
-                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, newAnswerUrl);
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, url);
     }
 }

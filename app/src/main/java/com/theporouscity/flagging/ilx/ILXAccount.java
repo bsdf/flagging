@@ -214,6 +214,10 @@ public class ILXAccount implements Parcelable {
         return url;
     }
 
+    public String getNewAnswerUrl() {
+        return getUrlHelper("/NewAnswerControllerServlet");
+    }
+
     private String getUrlHelper(String path) {
         return getBaseUrlPath() + path;
     }
