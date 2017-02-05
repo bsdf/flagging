@@ -16,10 +16,10 @@ import java.util.List;
 @Parcel
 public class PollOptions {
 
-    @ElementList(entry="id",inline=true)
+    @ElementList(entry="Id",inline=true)
     List<Integer> Ids;
 
-    @ElementList(entry="optionText",inline=true)
+    @ElementList(entry="OptionText",inline=true)
     List<String> OptionTexts;
 
     List<PollOption> PollOptions;
